@@ -1,0 +1,7 @@
+SELECT * WHERE {
+  ?s <http://purl.org/goodrelations/includes> ?o .
+  BIND(<http://example.org/rowid>(?s,<http://purl.org/goodrelations/includes>,?o) as ?statement)
+  ?statement <http://purl.org/goodrelations/includes> ?a
+  BIND(<http://example.org/rowid>(?statement,<http://purl.org/goodrelations/includes>,?a) as ?yop)
+  ?yop <http://purl.org/goodrelations/includes> ?z
+}

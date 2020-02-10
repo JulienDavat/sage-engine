@@ -25,6 +25,14 @@ message SavedProjectionIterator {
   }
 }
 
+message SavedBindRowIterator {
+  repeated string values = 1;
+  oneof source {
+    SavedScanIterator scan_source = 2;
+  }
+}
+
+
 message SavedIndexJoinIterator {
   oneof source {
     SavedScanIterator scan_source = 1;

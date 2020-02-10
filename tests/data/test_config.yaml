@@ -29,3 +29,11 @@ graphs:
           ?v1 <http://schema.org/contentSize> ?v3 .
           ?v0 <http://schema.org/eligibleRegion> <http://db.uwaterloo.ca/~galuc/wsdbm/Country9>.
         }
+-
+  name: contextdata
+  uri: http://localhost:8000/sparql/context
+  description: Sample dataset in HDT format, used for testing
+  backend: hdt-file
+  file: tests/data/context.hdt
+
+

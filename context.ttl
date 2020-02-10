@@ -1,0 +1,10 @@
+_:pascal <http://isa> "prof " .
+_:437ba35ff8e698868716568818ebc69a <http://source> "nantes" .
+_:hala <http://isa> "prof " .
+_:4d128c5db08e6e7983ac2913de43bdc6 <http://source> "nantes" .
+_:riri <http://isa> "student " .
+_:1b86a7428cfef0565de09998fbbed954 <http://source> "rennes" .
+_:fifi <http://isa> "student " .
+_:840bb1d7a500ef12816f31097269e5a3 <http://source> "rennes" .
+_:loulou <http://isa> "student " .
+_:0a84a328ea06c0002007190bcca9b905 <http://source> "rennes" .
