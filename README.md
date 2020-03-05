@@ -1,4 +1,4 @@
-(this is a fork of the original sage, for weird experimentations)
+# /!\ this is a fork of the original sage, for weird experimentations /!\
 
 # Sage: a SPARQL query engine for public Linked Data providers
 [![Build Status](https://travis-ci.com/sage-org/sage-engine.svg?branch=master)](https://travis-ci.com/sage-org/sage-engine) [![PyPI version](https://badge.fury.io/py/sage-engine.svg)](https://badge.fury.io/py/sage-engine) [![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://sage-org.github.io/sage-engine/)
