@@ -12,10 +12,7 @@ Then, SaGe has been extended with a new iterator:
 `./sage/query_engine/iterators/bindrow.py`
 As a new iterator exist, the saved plan is changed and protobuf has been updated with the new operator
 see `./sage/query_engine/protobuf/iterors.proto`. The `iterators_pb2.py`has been regenerated to handle the
-presence of the new operator.
-
-Next, the query parser has been modified to recognize the "bind rowid" syntax and insert the BindRowIterator
-in the generated pipeline. You can see it by:
+presence of the new operator. Next, the query parser has been modified to recognize the "bind rowid" syntax and insert the BindRowIterator in the generated pipeline. You can see it by:
 `
 mac-molli-2019:sage-engine molli-p$ python3 explain.py  -q qbind.sparql -d swdf.hdt
 http://example.org/rowid
@@ -77,7 +74,7 @@ Iterator pipeline
 Cardinalities
 -----------------
 []
-`
+```
 
 Modifying the query_parser occurs in `./sage/optimizer/query_parser.py`. 
 The parser by itself is unchanged, but the "builder" (see https://en.wikipedia.org/wiki/Builder_pattern) has been modified
