@@ -32,6 +32,11 @@ def build_left_join_tree(bgp: List[Dict[str, str]], dataset: Dataset, default_gr
     triples = []
     cardinalities = []
 
+    # not common but
+    # happen in query insert where { bind}
+    if len(bgp)==0:
+        return EmptyIterator(),[],[]
+
     # analyze each triple pattern in the BGP
     for triple in bgp:
         # select the graph used to evaluate the pattern

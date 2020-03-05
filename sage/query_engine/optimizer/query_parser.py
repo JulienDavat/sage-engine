@@ -277,6 +277,8 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
                 rowidtp.append(x.n3())
             elif isinstance(x,URIRef):
                 rowidtp.append(str(x))
+            elif isinstance(x,Literal):
+                rowidtp.append(str(x))
             else:
                 raise UnsupportedSPARQL(f"Extend Unsupported SPARQL feature: {x}")
         print(rowidtp)
@@ -341,7 +343,7 @@ def parse_update(query: dict, dataset: Dataset, default_graph: str, as_of: Optio
         if consistency_level == "serializable":
             # build the read iterator
             cardinalities = list()
-            read_iterator = parse_query_node(where_root, dataset, [default_graph], cardinalities, as_of=as_of)
+            read_iterator = parse_query_alt(where_root, dataset, [default_graph], cardinalities, as_of=as_of)
             # get the delete and/or insert templates
             delete_templates = list()
             insert_templates = list()

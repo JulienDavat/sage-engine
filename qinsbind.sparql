@@ -1,0 +1,4 @@
+INSERT { ?z <http://source> 'rennes' }
+WHERE {
+ BIND(<http://example.org/rowid>(<http://donald>, <http://isa>, 'prof') as ?z)
+}
