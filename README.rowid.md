@@ -84,12 +84,12 @@ see function "parse_query_alt" and compare to the previous one "parse_query_node
 leaf left BGP is activated by the 'BGP' builder -> build_left_join_tree. The general idea is that join operators continue the left linear tree initiated by the leaf left BGP.
 
 There is a drawback:
-- Join ordering can be non-optimal -> not the most selective pattern left.
-- I broke the OLD join code managing several BGP from different graph... (can be reinserted, but need to be tested)
+* Join ordering can be non-optimal -> not the most selective pattern left.
+* I broke the OLD join code managing several BGP from different graph... (can be reinserted, but need to be tested)
 
 
 Next several tests has been added to check (can be run with "pytest ./tests/iterators/rowid_iterator_test.py"):
-./tests/iterators/rowid_iterator_test.py (check the iterator itselft)
-./tests/optimizer/parse_rowid_test.py (check if the right pipeline is generated from the query)
-./tests/http/rowid_interface_test.py (check if the query returns the right results)
+* `./tests/iterators/rowid_iterator_test.py` (check the iterator itselft)
+* `./tests/optimizer/parse_rowid_test.py` (check if the right pipeline is generated from the query)
+* `./tests/http/rowid_interface_test.py` (check if the query returns the right results)
 
