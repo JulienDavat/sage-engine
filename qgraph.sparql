@@ -1,7 +1,0 @@
-SELECT ?x WHERE {
-    GRAPH ?g {
-      ?x  a  ?y
-    }
-    ?g  a  ?sig .
-    FILTER ( ?sig > 0.7 )
-}

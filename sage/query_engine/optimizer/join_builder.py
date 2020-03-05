@@ -16,13 +16,13 @@ from sage.query_engine.optimizer.utils import (equality_variables,
 
 def build_left_join_tree(bgp: List[Dict[str, str]], dataset: Dataset, default_graph: str, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[str], Dict[str, str]]:
     """Build a Left-linear join tree from a Basic Graph pattern.
-    
+
     Args:
       * bgp: Basic Graph pattern used to build the join tree.
       * dataset: RDF dataset on which the BGPC is evaluated.
       * default_graph: URI of the default graph used for BGP evaluation.
       * as_of: A timestamp used to perform all reads against a consistent version of the dataset. If `None`, use the latest version of the dataset, which does not guarantee snapshot isolation.
-    
+
     Returns: A tuple (`iterator`, `query_vars`, `cardinalities`) where:
       * `iterator` is the root of the Left-linear join tree.
       * `query_vars` is the list of all SPARQL variables found in the BGP.
@@ -68,6 +68,55 @@ def build_left_join_tree(bgp: List[Dict[str, str]], dataset: Dataset, default_gr
         query_vars = query_vars | get_vars(triple)
     else:
         pipeline = ScanIterator(pattern['iterator'], pattern['triple'], pattern['cardinality'])
+
+    # build the left linear tree of joins
+    while len(triples) > 0:
+        pattern, pos, query_vars = find_connected_pattern(query_vars, triples)
+        # no connected pattern = disconnected BGP => pick the first remaining pattern in the BGP
+        if pattern is None:
+            pattern = triples[0]
+            query_vars = query_vars | get_vars(pattern['triple'])
+            pos = 0
+        graph_uri = pattern['triple']['graph']
+        pipeline = IndexJoinIterator(pipeline, pattern['triple'], dataset.get_graph(graph_uri), as_of=as_of)
+        triples.pop(pos)
+    return pipeline, query_vars, cardinalities
+
+def continue_left_join_tree(iterator: PreemptableIterator, query_vars : List[str], bgp: List[Dict[str, str]], dataset: Dataset, default_graph: str, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[str], Dict[str, str]]:
+    """Build a Left-linear join tree from a Basic Graph pattern.
+
+    Args:
+      * bgp: Basic Graph pattern used to build the join tree.
+      * dataset: RDF dataset on which the BGPC is evaluated.
+      * default_graph: URI of the default graph used for BGP evaluation.
+      * as_of: A timestamp used to perform all reads against a consistent version of the dataset. If `None`, use the latest version of the dataset, which does not guarantee snapshot isolation.
+
+    Returns: A tuple (`iterator`, `query_vars`, `cardinalities`) where:
+      * `iterator` is the root of the Left-linear join tree.
+      * `query_vars` is the list of all SPARQL variables found in the BGP.
+      * `cardinalities` is the list of estimated cardinalities of all triple patterns in the BGP.
+    """
+    # gather metadata about triple patterns
+    triples = []
+    cardinalities = []
+
+    # analyze each triple pattern in the BGP
+    for triple in bgp:
+        # select the graph used to evaluate the pattern
+        graph_uri = triple['graph'] if 'graph' in triple and len(triple['graph']) > 0 else default_graph
+        triple['graph'] = graph_uri
+        # get iterator and statistics about the pattern
+        if dataset.has_graph(graph_uri):
+            it, c = dataset.get_graph(graph_uri).search(triple['subject'], triple['predicate'], triple['object'], as_of=as_of)
+        else:
+            it, c = EmptyIterator(), 0
+        triples += [{'triple': triple, 'cardinality': c, 'iterator': it}]
+        cardinalities += [{'triple': triple, 'cardinality': c}]
+
+    # sort triples by ascending cardinality
+    triples = sorted(triples, key=lambda v: v['cardinality'])
+
+    pipeline=iterator;
 
     # build the left linear tree of joins
     while len(triples) > 0:

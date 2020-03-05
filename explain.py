@@ -42,11 +42,11 @@ def explain(query,hdt):
     print(query)
 
     pq=parseQuery(query)
-    print("------------")
-    print("Parsed Query")
-    print("------------")
+#    print("------------")
+#    print("Parsed Query")
+#    print("------------")
 #    pp.pprint(pq)
-    print(prettify_parsetree(pq))
+#    print(prettify_parsetree(pq))
 
 
     tq = translateQuery(pq)
@@ -57,7 +57,9 @@ def explain(query,hdt):
 
     logical_plan = tq.algebra
     cardinalities = list()
-    iterator = parse_query_node(logical_plan, dataset, 'dummy', cardinalities)
+
+    iterator,cards = parse_query(query, dataset, 'context')
+
 
     print("-----------------")
     print("Iterator pipeline")

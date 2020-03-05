@@ -35,5 +35,4 @@ graphs:
   description: Sample dataset in HDT format, used for testing
   backend: hdt-file
   file: tests/data/context.hdt
-
-
+  

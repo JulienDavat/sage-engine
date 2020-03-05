@@ -1,5 +1,5 @@
-SELECT * WHERE {
-  ?s <http://purl.org/goodrelations/includes> ?o .
-  BIND(<http://example.org/rowid>(?s,<http://purl.org/goodrelations/includes>,?o) as ?statement)
-  ?statement <http://purl.org/goodrelations/includes> ?a
-}
+select ?o1 where {
+ ?s <http://isa> ?o
+ BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
+ ?z <http://source> ?o1
+ }

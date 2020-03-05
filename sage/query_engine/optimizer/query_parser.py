@@ -16,7 +16,9 @@ from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
 from sage.query_engine.iterators.union import BagUnionIterator
+from sage.query_engine.iterators.bindrow import BindRowIterator
 from sage.query_engine.optimizer.join_builder import build_left_join_tree
+from sage.query_engine.optimizer.join_builder import continue_left_join_tree
 from sage.query_engine.update.delete import DeleteOperator
 from sage.query_engine.update.if_exists import IfExistsOperator
 from sage.query_engine.update.insert import InsertOperator
@@ -111,6 +113,7 @@ def get_quads_from_update(node: dict, default_graph: str) -> List[Tuple[str, str
     return quads
 
 
+
 def parse_filter_expr(expr: dict) -> str:
     """Parse a rdflib SPARQL FILTER expression into a string representation.
 
@@ -169,7 +172,7 @@ def parse_query(query: str, dataset: Dataset, default_graph: str) -> Tuple[Preem
     try:
         logical_plan = translateQuery(parseQuery(query)).algebra
         cardinalities = list()
-        iterator = parse_query_node(logical_plan, dataset, [default_graph], cardinalities, as_of=start_timestamp)
+        iterator = parse_query_alt(logical_plan, dataset, [default_graph], cardinalities, as_of=start_timestamp)
         return iterator, cardinalities
     except ParseException:
         return parse_update(query, dataset, default_graph, as_of=start_timestamp)
@@ -221,6 +224,74 @@ def parse_query_node(node: dict, dataset: Dataset, current_graphs: List[str], ca
         # track cardinalities of every triple pattern
         cardinalities += c
         return iterator
+    else:
+        raise UnsupportedSPARQL(f"Unsupported SPARQL feature: {node.name}")
+
+def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], cardinalities: dict, as_of: Optional[datetime] = None) -> PreemptableIterator:
+    """Recursively parse node in the query logical plan to build a preemptable physical query execution plan.
+
+    Args:
+      * node: Node of the logical plan to parse (in rdflib format).
+      * dataset: RDF dataset used to execute the query.
+      * current_graphs: List of IRI of the current RDF graphs queried.
+      * cardinalities: A dict used to track triple patterns cardinalities.
+      * as_of: A timestamp used to perform all reads against a consistent version of the dataset. If `None`, use the latest version of the dataset, which does not guarantee snapshot isolation.
+
+    Returns: An iterator used to evaluate the input node.
+
+    Throws: `UnsupportedSPARQL` is the SPARQL query contains features not supported by the SaGe query engine.
+    """
+    if node.name == 'SelectQuery':
+        # in case of a FROM clause, set the new default graphs used
+        graphs = current_graphs
+        if node.datasetClause is not None:
+            graphs = [format_term(graph_iri.default) for graph_iri in node.datasetClause]
+        return parse_query_alt(node.p, dataset, graphs, cardinalities, as_of=as_of)
+    elif node.name == 'Project':
+        query_vars = list(map(lambda t: '?' + str(t), node.PV))
+        child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
+        return ProjectionIterator(child, query_vars)
+    elif node.name == 'BGP':
+        # bgp_vars = node._vars
+        triples = list(localize_triples(node.triples, current_graphs))
+        iterator, query_vars, c = build_left_join_tree(triples, dataset, current_graphs, as_of=as_of)
+        # track cardinalities of every triple pattern
+        cardinalities += c
+        return iterator
+    elif node.name == 'Union':
+        left = parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
+        right = parse_query_alt(node.p2, dataset, current_graphs, cardinalities, as_of=as_of)
+        return BagUnionIterator(left, right)
+    elif node.name == 'Filter':
+        expression = parse_filter_expr(node.expr)
+        iterator = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
+        return FilterIterator(iterator, expression)
+    elif node.name == 'Extend':
+        bgp_iterator=parse_query_alt(node.p,dataset,current_graphs,cardinalities,as_of=as_of)
+        print("extends:")
+        print(node.expr.expr)
+        print(node.var)
+        rowidtp = []
+        for x in node.expr.expr:
+            if isinstance(x,Variable):
+                rowidtp.append(x.n3())
+            elif isinstance(x,URIRef):
+                rowidtp.append(str(x))
+            else:
+                raise UnsupportedSPARQL(f"Extend Unsupported SPARQL feature: {x}")
+        print(rowidtp)
+        return BindRowIterator(bgp_iterator,rowidtp,'?'+node.var)
+    elif node.name == 'Join':
+        left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
+        if node.p2.name=='BGP':
+            triples=list(localize_triples(node.p2.triples, current_graphs))
+            print("Join P1 _vars")
+            print(node.p1._vars)
+            iterator, query_vars, c=continue_left_join_tree(left,node.p1._vars,triples,dataset,current_graphs)
+            cardinalities += c
+            return iterator
+        else:
+            raise UnsupportedSPARQL(f"Join Unsupported SPARQL feature: {node.p2.name}")
     else:
         raise UnsupportedSPARQL(f"Unsupported SPARQL feature: {node.name}")
 
