@@ -4,40 +4,48 @@ from typing import Dict, List, Optional, Tuple
 
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.utils import find_in_mappings, EmptyIterator
-from sage.query_engine.protobuf.iterators_pb2 import SavedBindRowIterator
+from sage.query_engine.protobuf.iterators_pb2 import SavedBindRowSourceIterator
+from sage.query_engine.exceptions import UnsupportedSPARQL
 
 import hashlib
 
-class BindRowIterator(PreemptableIterator):
-    """A ProjectionIterator evaluates a SPARQL projection (SELECT) in a pipeline of iterators.
+def bounded(tp:Tuple[str, str, str]):
+    """Return False it it exists a variable in the triple pattern"""
+    for var in tp:
+        if var.startswith('?'): return False
+    return True
 
+
+class BindRowSourceIterator(PreemptableIterator):
+    """A Bind Rowid evaluates a SPARQL BIND (BIND) in a pipeline of iterators.
+    ex: BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
     Args:
       * source: Previous iterator in the pipeline.
-      * projection: Projection variables
+      * tp: triple pattern on which rowid must be determined
+      * bindvar: bind variable
     """
 
-    def __init__(self, source: PreemptableIterator, tp:Tuple[str, str, str], bindvar: str):
-        super(BindRowIterator, self).__init__()
-        self._source = source
+    def __init__(self, tp:Tuple[str, str, str], bindvar: str):
+        super(BindRowSourceIterator, self).__init__()
         self._tp= tp
+        if not(bounded(tp)):
+            raise  UnsupportedSPARQL(f"BindRowSource Unsupported SPARQL feature: {tp} not bounded")
         self._bindvar = bindvar
+        if bindvar is None:
+            raise  UnsupportedSPARQL(f"BindRowSource Unsupported SPARQL feature: bind variable not set")
+        self._delivered=False;
 
     def __repr__(self) -> str:
-        return f"<BindRowIdIterator BIND {self._tp} AS {self._bindvar} FROM {self._source}>"
+        return f"<BindRowSourceIdIterator BIND {self._tp} AS {self._bindvar}>"
 
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""
-        return "bindrowid"
+        return "bindrowsourceid"
 
     def has_next(self) -> bool:
         """Return True if the iterator has more item to yield"""
-        return self._source.has_next()
+        return not(self._delivered)
 
-    def bounded(tp:Tuple[str, str, str]):
-        """Return False it it exists a variable in the triple pattern"""
-        for var in tp:
-            if var.startswith('?'): return false
-        return true
 
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
@@ -51,30 +59,22 @@ class BindRowIterator(PreemptableIterator):
         """
         if not self.has_next():
             raise StopAsyncIteration()
-        mappings = await self._source.next()
-        if mappings is None:
-            return None
-        elif self._bindvar is None:
-            return mappings
-        elif self._tp is None:
-            return mappings
 
         new_tuple=()
         for var in self._tp:
-            if var.startswith('?'):
-                new_tuple += (find_in_mappings(var,mappings),)
-            else:
                 new_tuple += (var,)
         tup2str= lambda tup : ''.join(tup)
         # print("hello:"+tup2str(new_tuple))
+        mappings=dict()
         mappings[self._bindvar]="http://"+hashlib.md5(tup2str(new_tuple).encode('utf-8')).hexdigest()
+
+        # this iterator deliver only one mapping.
+        self._delivered=True;
         return mappings
 
-    def save(self) -> SavedBindRowIterator:
+    def save(self) -> SavedBindRowSourceIterator:
         """Save and serialize the iterator as a Protobuf message"""
-        saved_br = SavedBindRowIterator()
+        saved_br = SavedBindRowSourceIterator()
         saved_br.values.extend(self._bindvar)
         saved_br.values.extend(self._tp)
-        source_field = self._source.serialized_name() + '_source'
-        getattr(saved_br, source_field).CopyFrom(self._source.save())
         return saved_br

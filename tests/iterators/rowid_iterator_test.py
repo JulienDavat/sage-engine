@@ -12,7 +12,9 @@ from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 from sage.query_engine.sage_engine import SageEngine
 from sage.query_engine.iterators.scan import ScanIterator
 from sage.query_engine.iterators.bindrow import BindRowIterator
+from sage.query_engine.iterators.bindrowsource import BindRowSourceIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
+from sage.query_engine.iterators.utils import EmptyIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
 from sage.database.hdt.connector import HDTFileConnector
 
@@ -130,6 +132,25 @@ async def test_rowbind_join_proj():
     print(results)
     assert len(results) > 0
     assert done
+
+# Run the equivalent of
+#    select ?z where {
+#      ?s <http://isa> ?o
+#      BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
+#      ?z <http://source> ?o1
+#    }
+@pytest.mark.asyncio
+async def test_rowbind_empty():
+    iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
+    rbs=BindRowSourceIterator(['http://donald','http://isa','connard'],'?z')
+
+    print(rbs)
+
+    (results, saved, done, _) = await engine.execute(rbs, 10e7)
+    print(results)
+    assert len(results) > 0
+    assert done
+
 
 
 # loop = asyncio.get_event_loop()

@@ -17,6 +17,8 @@ from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
 from sage.query_engine.iterators.union import BagUnionIterator
 from sage.query_engine.iterators.bindrow import BindRowIterator
+from sage.query_engine.iterators.utils import EmptyIterator
+from sage.query_engine.iterators.bindrowsource import BindRowSourceIterator
 from sage.query_engine.optimizer.join_builder import build_left_join_tree
 from sage.query_engine.optimizer.join_builder import continue_left_join_tree
 from sage.query_engine.update.delete import DeleteOperator
@@ -282,7 +284,12 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
             else:
                 raise UnsupportedSPARQL(f"Extend Unsupported SPARQL feature: {x}")
         print(rowidtp)
-        return BindRowIterator(bgp_iterator,rowidtp,'?'+node.var)
+        #special case with a bindrow with bounded TP and empty source itertor
+        # happen with insert queries. BindRow is a sink in this very special case.
+        if isinstance(bgp_iterator,EmptyIterator):
+            return BindRowSourceIterator(rowidtp,'?'+node.var)
+        else:
+            return BindRowIterator(bgp_iterator,rowidtp,'?'+node.var)
     elif node.name == 'Join':
         left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
         if node.p2.name=='BGP':
@@ -345,6 +352,8 @@ def parse_update(query: dict, dataset: Dataset, default_graph: str, as_of: Optio
             cardinalities = list()
             read_iterator = parse_query_alt(where_root, dataset, [default_graph], cardinalities, as_of=as_of)
             # get the delete and/or insert templates
+            print("read iterator")
+            print(read_iterator)
             delete_templates = list()
             insert_templates = list()
             if operation.delete is not None:

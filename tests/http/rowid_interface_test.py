@@ -16,7 +16,12 @@ filter_queries = [
           ?s <http://isa> ?o
           BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
           ?z <http://source> ?o1 }
-    """, 5)
+    """, 5),
+    ("""
+        select ?z where {
+        BIND(<http://example.org/rowid>(<http://donald>,<http://isa>,"jerk") as ?z)
+        }
+    """, 1)
 ]
 
 

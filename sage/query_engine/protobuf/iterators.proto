@@ -32,6 +32,10 @@ message SavedBindRowIterator {
   }
 }
 
+message SavedBindRowSourceIterator {
+  repeated string values = 1;
+}
+
 
 message SavedIndexJoinIterator {
   oneof source {

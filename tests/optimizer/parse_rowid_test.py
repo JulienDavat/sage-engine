@@ -27,7 +27,12 @@ queries = [
       BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
       ?z <http://source> ?o1
     }
-    """, 5)
+    """, 5),
+        ("""
+        select ?z where {
+          BIND(<http://example.org/rowid>(<http://donald>,<http://isa>,"jerk") as ?z)
+        }
+        """, 1)
     ]
 
 @pytest.mark.asyncio
@@ -36,7 +41,7 @@ async def test_parse_rowid(query, cardinality):
     iterator,cards = parse_query(query, dataset, 'context')
     print("pipeline:")
     print(iterator)
-    assert len(cards) > 0
+    assert len(cards) >= 0
     assert iterator is not None
 
 #loop = asyncio.get_event_loop()
