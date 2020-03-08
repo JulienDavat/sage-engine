@@ -15,8 +15,7 @@ see `./sage/query_engine/protobuf/iterors.proto`. The `iterators_pb2.py`has been
 presence of the new operator (see https://developers.google.com/protocol-buffers/docs/pythontutorial). Next, the query parser has been modified to recognize the "bind rowid" syntax and insert the BindRowIterator in the generated pipeline. You can see it by:
 
 ```
-$ python3 explain.py  -q qbind.sparql -d swdf.hdt
-http://example.org/rowid
+$ python3 explain.py  qbind.sparql ./tests/data/test_config.yaml http://localhost:8000/sparql/context
 ------------
 Query
 ------------
@@ -77,7 +76,7 @@ Cardinalities
 []
 ```
 
-Modifying the query_parser occurs in `./sage/optimizer/query_parser.py`. 
+Modifying the query_parser occurs in `./sage/optimizer/query_parser.py`.
 The parser by itself is unchanged, but the "builder" (see https://en.wikipedia.org/wiki/Builder_pattern) has been modified
 see function "parse_query_alt" and compare to the previous one "parse_query_node". The problem to solve was to handle new "extend" nodes in the algebra tree. Binds introduce
  orders in the evaluation of patterns ie. binded variables must exist before being used. We see that in the  tree: JOIN.p1 first, then Join.P2. The "join" part of the builder has been rewritten calling 'continue_left_join_tree' for any right BGP. Then, (i hope that), only the
@@ -92,4 +91,4 @@ Next several tests has been added to check (can be run with "pytest ./tests/iter
 * `./tests/iterators/rowid_iterator_test.py` (check the iterator itselft)
 * `./tests/optimizer/parse_rowid_test.py` (check if the right pipeline is generated from the query)
 * `./tests/http/rowid_interface_test.py` (check if the query returns the right results)
-
+* './test/update/insert_rowbind_test.py' (check insert queries)
