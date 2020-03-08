@@ -270,9 +270,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         return FilterIterator(iterator, expression)
     elif node.name == 'Extend':
         bgp_iterator=parse_query_alt(node.p,dataset,current_graphs,cardinalities,as_of=as_of)
-        print("extends:")
-        print(node.expr.expr)
-        print(node.var)
+        #print("extends:"+str(node.expr.expr)+":"+str(node.var))
         rowidtp = []
         for x in node.expr.expr:
             if isinstance(x,Variable):
@@ -283,7 +281,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
                 rowidtp.append(str(x))
             else:
                 raise UnsupportedSPARQL(f"Extend Unsupported SPARQL feature: {x}")
-        print(rowidtp)
+        #print("rowidtp:"+str(rowidtp))
         #special case with a bindrow with bounded TP and empty source itertor
         # happen with insert queries. BindRow is a sink in this very special case.
         if isinstance(bgp_iterator,EmptyIterator):
@@ -294,8 +292,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
         if node.p2.name=='BGP':
             triples=list(localize_triples(node.p2.triples, current_graphs))
-            print("Join P1 _vars")
-            print(node.p1._vars)
+            #print("Join P1 _vars"+str(node.p1._vars))
             iterator, query_vars, c=continue_left_join_tree(left,node.p1._vars,triples,dataset,current_graphs)
             cardinalities += c
             return iterator
@@ -352,8 +349,7 @@ def parse_update(query: dict, dataset: Dataset, default_graph: str, as_of: Optio
             cardinalities = list()
             read_iterator = parse_query_alt(where_root, dataset, [default_graph], cardinalities, as_of=as_of)
             # get the delete and/or insert templates
-            print("read iterator")
-            print(read_iterator)
+            #print("read iterator:"+str(read_iterator))
             delete_templates = list()
             insert_templates = list()
             if operation.delete is not None:

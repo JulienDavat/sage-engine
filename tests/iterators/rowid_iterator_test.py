@@ -47,7 +47,7 @@ async def test_scan_read():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
     scan = ScanIterator(iterator, triple, card)
     (results, saved, done, _) = await engine.execute(scan, 10e7)
-    print(results)
+    #print(results)
     assert len(results) > 0
     assert done
 
@@ -79,7 +79,7 @@ async def test_rowbind():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
     scan=ScanIterator(iterator, triple, card)
     rowbind=BindRowIterator(scan,['?s','http://isa','?o'],'?z')
-    print(rowbind)
+    #print(rowbind)
 
     (results, saved, done, _) = await engine.execute(rowbind, 10e7)
     # while rowbind.has_next():
@@ -103,10 +103,10 @@ async def test_rowbind_join():
     rowbind=BindRowIterator(scan,['?s','http://isa','?o'],'?z')
     join=IndexJoinIterator(rowbind,innerTriple,hdtDoc)
 
-    print(join)
+    #print(join)
 
     (results, saved, done, _) = await engine.execute(join, 10e7)
-    print(results)
+    #print(results)
     assert len(results) > 0
     assert done
 
@@ -126,10 +126,10 @@ async def test_rowbind_join_proj():
     join=IndexJoinIterator(rowbind,innerTriple,hdtDoc)
     proj=ProjectionIterator(join,['?z'])
 
-    print(proj)
+    #print(proj)
 
     (results, saved, done, _) = await engine.execute(proj, 10e7)
-    print(results)
+    #print(results)
     assert len(results) > 0
     assert done
 
@@ -144,10 +144,10 @@ async def test_rowbind_empty():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
     rbs=BindRowSourceIterator(['http://donald','http://isa','connard'],'?z')
 
-    print(rbs)
+    #print(rbs)
 
     (results, saved, done, _) = await engine.execute(rbs, 10e7)
-    print(results)
+    #print(results)
     assert len(results) > 0
     assert done
 
