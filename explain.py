@@ -31,9 +31,15 @@ def rowid(x,y,z):
     return Literal("%s %s %s" % (x, y,z), datatype=XSD.string)
 
 async def execute(iterator):
-    while iterator.has_next():
-        value = await iterator.next()
-        print(value)
+    try:
+        while iterator.has_next():
+            value = await iterator.next()
+            # discard null values
+            if value is not None:
+                print(value)
+    except StopAsyncIteration:
+#        print("stop")
+        pass
 
 
 @click.command()

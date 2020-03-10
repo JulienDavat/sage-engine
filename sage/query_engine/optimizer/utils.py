@@ -11,6 +11,7 @@ def get_vars(triple: Dict[str, str]) -> Set[str]:
 def find_connected_pattern(variables: List[str], triples: List[Dict[str, str]]) -> Tuple[Dict[str, str],int, Set[str]]:
     """Find the first pattern in a set of triples pattern connected to a set of variables"""
     pos = 0
+    #print("fcp:"+str(variables))
     for triple in triples:
         tripleVars = get_vars(triple['triple'])
         if len(variables & tripleVars) > 0:

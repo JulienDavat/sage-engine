@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Tuple
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.utils import find_in_mappings, EmptyIterator
 from sage.query_engine.protobuf.iterators_pb2 import SavedBindRowIterator
+from sage.query_engine.iterators.utils import md5triple
 
-import hashlib
 
 class BindRowIterator(PreemptableIterator):
     """A ProjectionIterator evaluates a SPARQL projection (SELECT) in a pipeline of iterators.
@@ -33,11 +33,6 @@ class BindRowIterator(PreemptableIterator):
         """Return True if the iterator has more item to yield"""
         return self._source.has_next()
 
-    def bounded(tp:Tuple[str, str, str]):
-        """Return False it it exists a variable in the triple pattern"""
-        for var in tp:
-            if var.startswith('?'): return false
-        return true
 
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
@@ -65,9 +60,8 @@ class BindRowIterator(PreemptableIterator):
                 new_tuple += (find_in_mappings(var,mappings),)
             else:
                 new_tuple += (var,)
-        tup2str= lambda tup : ''.join(tup)
-        # print("hello:"+tup2str(new_tuple))
-        mappings[self._bindvar]="http://"+hashlib.md5(tup2str(new_tuple).encode('utf-8')).hexdigest()
+
+        mappings[self._bindvar]=md5triple(new_tuple[0],new_tuple[1],new_tuple[2])
         return mappings
 
     def save(self) -> SavedBindRowIterator:

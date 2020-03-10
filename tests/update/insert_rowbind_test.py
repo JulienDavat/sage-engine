@@ -38,6 +38,20 @@ fixtures = [
             ("http://4bef678a25576879b56a4e3a5aa8d1cd","http://source","\"rennes\""),
             ("http://c2fa74d2d092e3519266a8eb34824559","http://source","\"rennes\"")
         ]
+    ),
+    (
+    """
+    INSERT {
+        <http://donald> <http://isa> 'duck'.
+        ?z <http://source> 'rennes'
+        } WHERE {
+        BIND(<http://example.org/rowid>(<http://donald>, <http://isa>, 'duck') as ?z)
+    }
+    """,
+        [
+            ("http://donald","http://isa","\"duck\""),
+            ("http://c2fa74d2d092e3519266a8eb34824559","http://source","\"rennes\"")
+        ]
     )
 ]
 
@@ -66,11 +80,11 @@ class TestInsertDataInterface(object):
             response = post_sparql(self._client, fetch_query, next_link, 'http://testserver/sparql/update-test')
             assert response.status_code == 200
             response = response.json()
-            print(response)
+            #print(response)
             has_next = response['hasNext']
             next_link = response['next']
             results += response['bindings']
-        print(results)
+        #print(results)
         assert len(results) == len(expected_content)
         for b in results:
             assert (b['?s'], b['?p'], b['?o']) in expected_content

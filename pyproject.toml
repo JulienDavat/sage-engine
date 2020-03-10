@@ -20,6 +20,7 @@ exclude = [ "tests" ]
 
 [tool.poetry.scripts]
 sage = "sage.cli.http_server:start_sage_server"
+sage-query= "sage.cli.commons:sage_query"
 sage-grpc = "sage.cli.grpc_server:start_grpc_server"
 sage-postgres-init = "sage.cli.postgres:init_postgres"
 sage-postgres-index = "sage.cli.postgres:index_postgres"
@@ -40,6 +41,8 @@ grpcio = "^1.26"
 pybind11 = { version = "2.2.4", optional = true }
 hdt = { version = "2.3", optional = true }
 psycopg2-binary = { version = "2.7.7", optional = true }
+coloredlogs = "^14.0"
+email-validator = "^1.0.5"
 
 [tool.poetry.extras]
 hdt = ["pybind11", "hdt"]

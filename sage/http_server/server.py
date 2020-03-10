@@ -45,7 +45,7 @@ def choose_void_format(mimetypes):
 
 async def execute_query(query: str, default_graph_uri: str, next_link: Optional[str], dataset: Dataset) -> Tuple[List[Dict[str, str]], Optional[str], Dict[str, str]]:
     """Execute a query using the SageEngine and returns the appropriate HTTP response.
-    
+
     Any failure will results in a rollback/abort on the current query execution.
 
     Args:
@@ -59,7 +59,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
       * `bindings` is a list of query results.
       * `next_page` is a link to saved query execution state. Sets to `None` if query execution completed during the time quantum.
       * `stats` are statistics about query execution.
-    
+
     Throws: Any exception that have occured during query execution.
     """
     graph = None
@@ -148,7 +148,7 @@ def create_response(mimetypes: List[str], bindings: List[Dict[str, str]], next_p
 
 def run_app(config_file: str) -> FastAPI:
     """Create the HTTP server, compatible with uvicorn/gunicorn.
-    
+
     Argument: SaGe configuration file, in YAML format.
 
     Returns: The FastAPI HTTP application.
@@ -199,6 +199,7 @@ def run_app(config_file: str) -> FastAPI:
     async def sparql_post(request: Request, item: SagePostQuery):
         """Execute a SPARQL query using the Web Preemption model"""
         try:
+            print("POST:"+str(request)+":"+str(item))
             mimetypes = request.headers['accept'].split(",")
             server_url = urlunparse(request.url.components[0:3] + (None, None, None))
             bindings, next_page, stats = await execute_query(item.query, item.defaultGraph, item.next, dataset)
@@ -208,7 +209,7 @@ def run_app(config_file: str) -> FastAPI:
         except Exception as err:
             logging.error(err)
             raise HTTPException(status_code=500, detail=str(err))
-    
+
     @app.get("/void/", description="Get the VoID description of the SaGe server")
     async def server_void(request: Request):
         """Describe all RDF datasets hosted by the Sage endpoint"""
@@ -223,12 +224,12 @@ def run_app(config_file: str) -> FastAPI:
         except Exception as err:
             logging.error(err)
             raise HTTPException(status_code=500, detail=str(err))
-    
+
     @app.get("/.well-known/void/")
     async def well_known():
         """Alias for /void/"""
         return RedirectResponse(url="/void/")
-    
+
     @app.get("/void/{graph_name}", description="Get the VoID description of a RDF Graph hosted by the SaGe server")
     async def graph_void(request: Request, graph_name: str = Field(..., description="Name of the RDF Graph")):
         """Get the VoID description of a RDF Graph hosted by the SaGe server"""
@@ -246,5 +247,5 @@ def run_app(config_file: str) -> FastAPI:
         except Exception as err:
             logging.error(err)
             raise HTTPException(status_code=500, detail=str(err))
-    
+
     return app

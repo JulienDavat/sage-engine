@@ -6,8 +6,7 @@ from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.utils import find_in_mappings, EmptyIterator
 from sage.query_engine.protobuf.iterators_pb2 import SavedBindRowSourceIterator
 from sage.query_engine.exceptions import UnsupportedSPARQL
-
-import hashlib
+from sage.query_engine.iterators.utils import md5triple
 
 def bounded(tp:Tuple[str, str, str]):
     """Return False it it exists a variable in the triple pattern"""
@@ -63,10 +62,8 @@ class BindRowSourceIterator(PreemptableIterator):
         new_tuple=()
         for var in self._tp:
                 new_tuple += (var,)
-        tup2str= lambda tup : ''.join(tup)
-        # print("hello:"+tup2str(new_tuple))
         mappings=dict()
-        mappings[self._bindvar]="http://"+hashlib.md5(tup2str(new_tuple).encode('utf-8')).hexdigest()
+        mappings[self._bindvar]=md5triple(new_tuple[0],new_tuple[1],new_tuple[2])
 
         # this iterator deliver only one mapping.
         self._delivered=True;

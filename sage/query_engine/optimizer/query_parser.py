@@ -292,8 +292,9 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
         if node.p2.name=='BGP':
             triples=list(localize_triples(node.p2.triples, current_graphs))
-            #print("Join P1 _vars"+str(node.p1._vars))
-            iterator, query_vars, c=continue_left_join_tree(left,node.p1._vars,triples,dataset,current_graphs)
+            variables=set(map(lambda t: t.n3(), node.p1._vars))
+            #print("Join P1 _vars"+str(variables))
+            iterator, query_vars, c=continue_left_join_tree(left,variables,triples,dataset,current_graphs)
             cardinalities += c
             return iterator
         else:
