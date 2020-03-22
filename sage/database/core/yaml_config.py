@@ -17,7 +17,7 @@ def load_config(config_file: str) -> Dataset:
 
     Args:
       * config_file: Path to the SaGe configuration file (in YAML format) to load.
-    
+
     Returns:
       A RDF dataset built according to the input configuration file.
     """
@@ -95,6 +95,6 @@ def load_config(config_file: str) -> Dataset:
 
         # build the graph and register it using its URI
         graphs[g_uri] = Graph(g_uri, g_name, g_description, g_connector, quantum=g_quantum, max_results=g_max_results, default_queries=g_queries)
-        logging.info(f"RDF Graph '{g_name}' (backend: {g_config['backend']}) successfully loaded")
+        logging.info(f"RDF Graph '{g_uri}'  (backend: {g_config['backend']}) successfully loaded")
 
     return Dataset(dataset_name, dataset_description, graphs, public_url=public_url, default_query=default_query, analytics=analytics, stateless=is_stateless, statefull_manager=statefull_manager)
