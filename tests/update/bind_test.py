@@ -9,19 +9,20 @@ from tests.http.utils import post_sparql
 # fixutre format: query, expected graph content
 fixtures = [
     (
-        """INSERT DATA { <http://donald> <http://isa> "prof"} """,
+        """INSERT DATA { <http://donald> <http://isa> "duck"} """,
         [
-            ("http://donald","http://isa","\"prof\"")
+            ("http://donald","http://isa","\"duck\"")
         ]
     ),
     (
-        """ INSERT { ?z <http://source> 'rennes' }
-            WHERE {
-                BIND(<http://example.org/rowid>(<http://donald>, <http://isa>, 'prof') as ?z)
-            }
+        """
+        INSERT { ?md5 <http://source> 'rennes' }
+        WHERE {
+        BIND(URI(CONCAT("http://",MD5(CONCAT(STR(<http://donald>),STR(<http://isa>),STR("duck"))))) as ?md5)
+        }
         """,
         [
-            ("http://610075ea5e32c4cb26724c31aa5de3c5","http://source","\"rennes\"")
+            ("http://c2fa74d2d092e3519266a8eb34824559","http://source","\"rennes\"")
         ]
     ),
     (
@@ -30,13 +31,13 @@ fixtures = [
         ?z <http://source> 'rennes'.
         ?w <http://source> 'rennes'
     } WHERE {
-        BIND(<http://example.org/rowid>(<http://donald>, <http://isa>, 'duck') as ?z)
-        BIND(<http://example.org/rowid>(<http://trump>, <http://isa>, 'dick') as ?w)
+        BIND(URI(CONCAT("http://",MD5(CONCAT(STR(<http://donald>),STR(<http://isa>),STR("duck"))))) as ?z)
+        BIND(URI(CONCAT("http://",MD5(CONCAT(STR(<http://trump>),STR(<http://isa>),STR("dick"))))) as ?w)
     }
     """,
         [
-            ("http://4bef678a25576879b56a4e3a5aa8d1cd","http://source","\"rennes\""),
-            ("http://c2fa74d2d092e3519266a8eb34824559","http://source","\"rennes\"")
+            ("http://c2fa74d2d092e3519266a8eb34824559","http://source","\"rennes\""),
+            ("http://4bef678a25576879b56a4e3a5aa8d1cd","http://source","\"rennes\"")
         ]
     ),
     (
@@ -45,7 +46,7 @@ fixtures = [
         <http://donald> <http://isa> 'duck'.
         ?z <http://source> 'rennes'
         } WHERE {
-        BIND(<http://example.org/rowid>(<http://donald>, <http://isa>, 'duck') as ?z)
+        BIND(URI(CONCAT("http://",MD5(CONCAT(STR(<http://donald>),STR(<http://isa>),STR("duck"))))) as ?z)
     }
     """,
         [

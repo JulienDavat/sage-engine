@@ -17,20 +17,21 @@ engine = SageEngine()
 
 queries = [
     ("""
-    select ?s where {
-      ?s <http://isa> ?o
-    }
+        select ?md5 where {
+          ?s <http://isa> ?o
+          BIND(URI(CONCAT("http://",MD5(CONCAT(STR(?s),STR(<http://isa>),STR(?o))))) as ?md5)
+        }
     """, 5),
     ("""
-    select ?z where {
-      ?s <http://isa> ?o
-      BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
-      ?z <http://source> ?o1
-    }
+         select ?o1 where {
+           ?s <http://isa> ?o
+           BIND(URI(CONCAT("http://",MD5(CONCAT(STR(?s),STR(<http://isa>),STR(?o))))) as ?md5)
+           ?md5 <http://source> ?o1
+         }
     """, 5),
         ("""
-        select ?z where {
-          BIND(<http://example.org/rowid>(<http://donald>,<http://isa>,"jerk") as ?z)
+        select ?md5 where {
+        BIND(URI(CONCAT("http://",MD5(CONCAT(STR(<http://donald>),STR(<http://isa>),STR("jerk"))))) as ?md5)
         }
         """, 1)
     ]

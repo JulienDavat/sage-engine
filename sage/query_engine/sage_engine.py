@@ -16,12 +16,12 @@ ExecutionResults = Tuple[List[Dict[str, str]], Optional[RootTree], bool, Optiona
 
 async def executor(pipeline: PreemptableIterator, queue: Queue, limit: int) -> None:
     """Execute a pipeline of iterator under a time quantum.
-    
+
     Args:
       * pipeline: Root of the pipeline of iterator.
       * queue: Async queue used to store query results.
       * limit: Maximum number of query results to fetch from the pipeline.
-    
+
     Throws: Any exception raised during query execution.
     """
     try:
@@ -56,7 +56,7 @@ class SageEngine(object):
           * ``saved_plan`` is the state of the plan saved using protocol-buffers
           * ``is_done`` is True when the plan has completed query evalution, False otherwise
           * ``abort_reason`` is True if the query was aborted due a to concurrency control issue
-        
+
         Throws: Any exception raised during query execution.
         """
         results: List[Dict[str, str]] = list()
@@ -78,8 +78,17 @@ class SageEngine(object):
         except DeleteInsertConflict as err:
             abort_reason = str(err)
         finally:
-            while not queue.empty():
-                results.append(queue.get_nowait())
+            if plan.serialized_name()=='construct':
+                triple=dict()
+                for subject,predicate,object in plan.graph():
+                    triple['s']=subject.n3()
+                    triple['p']=predicate.n3()
+                    triple['o']=object.n3()
+                    #print("!!"+str(triple))
+                    results.append(triple)
+            else:
+                while not queue.empty():
+                    results.append(queue.get_nowait())
         # save the plan if query execution is not done yet and no abort has occurred
         if (not query_done) and abort_reason is None:
             root = RootTree()

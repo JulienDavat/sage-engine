@@ -1,5 +1,0 @@
-select ?o1 where {
- ?s <http://isa> ?o
- BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
- ?z <http://source> ?o1
- }

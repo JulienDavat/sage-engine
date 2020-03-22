@@ -1,7 +1,9 @@
 # utils.py
 # Author: Thomas MINIER - MIT License 2017-2020
 from typing import Dict, List, Optional, Tuple
+from rdflib import BNode, Literal, URIRef, Variable
 import hashlib
+import re
 
 
 class EmptyIterator(object):
@@ -164,3 +166,33 @@ def md5triple(s:str,p:str,o:str) -> str:
     input=s+p+o
     # print("hello:"+tup2str(new_tuple))
     return "http://"+hashlib.md5(input.encode('utf-8')).hexdigest()
+
+def mappings_to_ctx(mappings: Dict[str, str]) -> {}:
+    """re-create a rdflib context (ctx) from a sage bag of mappings (grrr)
+        Args:
+        * mappings: A dictionnary of mappings
+
+        Returns:
+        * A context compatible with rdflib
+
+        Ex:
+        mappings={'?s': 'http://auth12/scma/s3', '?p': 'http://common/scma/p5', '?o': 'o14'}
+        returns:
+         {rdflib.term.Variable('s'): rdflib.term.URIRef('http://auth12/scma/s3'),
+          rdflib.term.Variable('p'): rdflib.term.URIRef('http://common/scma/p5'),
+          rdflib.term.Variable('o'): rdflib.term.Literal('o14')}
+    """
+    ctx=dict()
+    for key,value in mappings.items():
+        #print(key+":"+value)
+        if (key.startswith('?')):
+            key=key[1:]
+        else:
+            print("mappings_to_ctx found "+key+" as key in mappings")
+        if re.match("^http://",value):
+            ctx[Variable(key)]=URIRef(value)
+        elif re.match("^_:",value):
+            ctx[Variable(key)]=BNode(value)
+        else:
+            ctx[Variable(key)]=Literal(value)
+    return ctx

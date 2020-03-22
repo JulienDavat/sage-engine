@@ -4,76 +4,18 @@
 
 See `qbind.sparql` for example
 
-A dummy dataset context.ttl is in `./test/data`
-It has been generated with `./tests/data/picontext.pi`
+A dummy dataset context.md5.ttl is in `./test/data`
+It has been generated with query `./tests/data/contextgen.sparql`
 ttl2hdt has been done with rdf2hdt (in java)
 
 Then, SaGe has been extended with a new iterator:
-`./sage/query_engine/iterators/bindrow.py`
+`./sage/query_engine/iterators/bind.py`
 As a new iterator exist, the saved plan is changed and protobuf has been updated with the new operator
 see `./sage/query_engine/protobuf/iterors.proto`. The `iterators_pb2.py`has been regenerated to handle the
-presence of the new operator (see https://developers.google.com/protocol-buffers/docs/pythontutorial). Next, the query parser has been modified to recognize the "bind rowid" syntax and insert the BindRowIterator in the generated pipeline. You can see it by:
+presence of the new operator (see https://developers.google.com/protocol-buffers/docs/pythontutorial). Next, the query parser has been modified to recognize the "bind" syntax and insert the BindIterator in the generated pipeline. You can see it by:
 
 ```
-$ python3 explain.py  qbind.sparql ./tests/data/test_config.yaml http://localhost:8000/sparql/context
-------------
-Query
-------------
-select ?o1 where {
- ?s <http://isa> ?o
- BIND(<http://example.org/rowid>(?s,<http://isa>,?o) as ?z)
- ?z <http://source> ?o1
- }
-
-------------
-Algebra
-------------
-SelectQuery(
-    p = Project(
-        p = Join(
-            p1 = Extend(
-                p = BGP(
-                    triples = [(rdflib.term.Variable('s'), rdflib.term.URIRef('http://isa'), rdflib.term.Variable('o'))]
-                    _vars = {rdflib.term.Variable('o'), rdflib.term.Variable('s')}
-                    )
-                expr = Function(
-                    iri = http://example.org/rowid
-                    distinct = []
-                    expr = [rdflib.term.Variable('s'), rdflib.term.URIRef('http://isa'), rdflib.term.Variable('o')]
-                    _vars = {rdflib.term.Variable('o'), rdflib.term.Variable('s')}
-                    )
-                var = z
-                _vars = {rdflib.term.Variable('z'), rdflib.term.Variable('o'), rdflib.term.Variable('s')}
-                )
-            p2 = BGP(
-                triples = [(rdflib.term.Variable('z'), rdflib.term.URIRef('http://source'), rdflib.term.Variable('o1'))]
-                _vars = {rdflib.term.Variable('z'), rdflib.term.Variable('o1')}
-                )
-            lazy = True
-            _vars = {rdflib.term.Variable('z'), rdflib.term.Variable('o'), rdflib.term.Variable('s'), rdflib.term.Variable('o1')}
-            )
-        PV = [rdflib.term.Variable('o1')]
-        _vars = {rdflib.term.Variable('z'), rdflib.term.Variable('o'), rdflib.term.Variable('s'), rdflib.term.Variable('o1')}
-        )
-    datasetClause = None
-    PV = [rdflib.term.Variable('o1')]
-    _vars = {rdflib.term.Variable('z'), rdflib.term.Variable('o'), rdflib.term.Variable('s'), rdflib.term.Variable('o1')}
-    )
-None
-extends:
-[rdflib.term.Variable('s'), rdflib.term.URIRef('http://isa'), rdflib.term.Variable('o')]
-z
-['?s', 'http://isa', '?o']
-Join P1 _vars
-{rdflib.term.Variable('z'), rdflib.term.Variable('o'), rdflib.term.Variable('s')}
------------------
-Iterator pipeline
------------------
-<ProjectionIterator SELECT ['?o1'] FROM <IndexJoinIterator (<BindRowIdIterator BIND ['?s', 'http://isa', '?o'] AS ?z FROM <ScanIterator (?s http://isa ?o)>> JOIN { ?z http://source ?o1 })>>
------------------
-Cardinalities
------------------
-[]
+$ python3 explain.py  queries/bind.sparql ./tests/data/test_config.yaml http://localhost:8000/sparql/context
 ```
 
 Modifying the query_parser occurs in `./sage/optimizer/query_parser.py`.
@@ -88,7 +30,7 @@ There is a drawback:
 
 
 Next several tests has been added to check (can be run with "pytest ./tests/iterators/rowid_iterator_test.py"):
-* `./tests/iterators/rowid_iterator_test.py` (check the iterator itselft)
-* `./tests/optimizer/parse_rowid_test.py` (check if the right pipeline is generated from the query)
-* `./tests/http/rowid_interface_test.py` (check if the query returns the right results)
-* './test/update/insert_rowbind_test.py' (check insert queries)
+* `./tests/iterators/bind_iterator_test.py` (check the iterator itselft)
+* `./tests/optimizer/bind_parse_test.py` (check if the right pipeline is generated from the query)
+* `./tests/http/bind_interface_test.py` (check if the query returns the right results)
+* `./test/update/bind_test.py` (check insert queries)

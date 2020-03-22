@@ -11,8 +11,7 @@ from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 
 from sage.query_engine.sage_engine import SageEngine
 from sage.query_engine.iterators.scan import ScanIterator
-from sage.query_engine.iterators.bindrow import BindRowIterator
-from sage.query_engine.iterators.bindrowsource import BindRowSourceIterator
+from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.utils import EmptyIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
@@ -78,10 +77,10 @@ async def test_scan_inner():
 async def test_rowbind():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
     scan=ScanIterator(iterator, triple, card)
-    rowbind=BindRowIterator(scan,['?s','http://isa','?o'],'?z')
+    bind=BindIterator(scan,"MD5(CONCAT(STR(?s),STR('http://isa'),STR(?o)))",'?z')
     #print(rowbind)
 
-    (results, saved, done, _) = await engine.execute(rowbind, 10e7)
+    (results, saved, done, _) = await engine.execute(bind, 10e7)
     # while rowbind.has_next():
     #     value =  await rowbind.next()
     #     print(value)
@@ -100,8 +99,8 @@ async def test_rowbind():
 async def test_rowbind_join():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
     scan=ScanIterator(iterator, triple, card)
-    rowbind=BindRowIterator(scan,['?s','http://isa','?o'],'?z')
-    join=IndexJoinIterator(rowbind,innerTriple,hdtDoc)
+    bind=BindIterator(scan,"URI(CONCAT('http://',MD5(CONCAT(STR(?s),STR('http://isa'),STR(?o)))))",'?z')
+    join=IndexJoinIterator(bind,innerTriple,hdtDoc)
 
     #print(join)
 
@@ -122,8 +121,8 @@ async def test_rowbind_join():
 async def test_rowbind_join_proj():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
     scan=ScanIterator(iterator, triple, card)
-    rowbind=BindRowIterator(scan,['?s','http://isa','?o'],'?z')
-    join=IndexJoinIterator(rowbind,innerTriple,hdtDoc)
+    bind=BindIterator(scan,"URI(CONCAT('http://',MD5(CONCAT(STR(?s),STR('http://isa'),STR(?o)))))",'?z')
+    join=IndexJoinIterator(bind,innerTriple,hdtDoc)
     proj=ProjectionIterator(join,['?z'])
 
     #print(proj)
@@ -142,7 +141,7 @@ async def test_rowbind_join_proj():
 @pytest.mark.asyncio
 async def test_rowbind_empty():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
-    rbs=BindRowSourceIterator(['http://donald','http://isa','connard'],'?z')
+    rbs=BindIterator(None,"MD5(CONCAT('http://donald','http://isa','connard'))",'?z')
 
     #print(rbs)
 

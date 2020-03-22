@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='iterators',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n\x0fiterators.proto\x12\titerators\"R\n\rTriplePattern\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x11\n\tpredicate\x18\x02 \x01(\t\x12\x0e\n\x06object\x18\x03 \x01(\t\x12\r\n\x05graph\x18\x04 \x01(\t\"e\n\x11SavedScanIterator\x12(\n\x06triple\x18\x01 \x01(\x0b\x32\x18.iterators.TriplePattern\x12\x11\n\tlast_read\x18\x02 \x01(\t\x12\x13\n\x0b\x63\x61rdinality\x18\x03 \x01(\x03\"\x95\x02\n\x17SavedProjectionIterator\x12\x0e\n\x06values\x18\x01 \x03(\t\x12\x33\n\x0bscan_source\x18\x02 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x42\x08\n\x06source\"e\n\x14SavedBindRowIterator\x12\x0e\n\x06values\x18\x01 \x03(\t\x12\x33\n\x0bscan_source\x18\x02 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x42\x08\n\x06source\",\n\x1aSavedBindRowSourceIterator\x12\x0e\n\x06values\x18\x01 \x03(\t\"\xfe\x02\n\x16SavedIndexJoinIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x02 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x03 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\'\n\x05inner\x18\x04 \x01(\x0b\x32\x18.iterators.TriplePattern\x12\x37\n\x03muc\x18\x05 \x03(\x0b\x32*.iterators.SavedIndexJoinIterator.MucEntry\x12\x11\n\tlast_read\x18\x06 \x01(\t\x12\x11\n\ttimestamp\x18\x07 \x01(\t\x1a*\n\x08MucEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xd3\x04\n\x15SavedBagUnionIterator\x12\x31\n\tscan_left\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x37\n\tproj_left\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x36\n\nunion_left\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x36\n\tjoin_left\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x35\n\x0b\x66ilter_left\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x32\n\nscan_right\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x01\x12\x38\n\nproj_right\x18\x07 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x01\x12\x37\n\x0bunion_right\x18\x08 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x01\x12\x37\n\njoin_right\x18\t \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x01\x12\x36\n\x0c\x66ilter_right\x18\n \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x01\x42\x06\n\x04leftB\x07\n\x05right\"\xf5\x02\n\x13SavedFilterIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x37\n\rfilter_source\x18\x03 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x12\n\nexpression\x18\x05 \x01(\t\x12\x32\n\x02mu\x18\x06 \x03(\x0b\x32&.iterators.SavedFilterIterator.MuEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\x85\x01\n\x0fSavedInsertData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedInsertData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x85\x01\n\x0fSavedDeleteData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedDeleteData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x9b\x03\n\x08RootTree\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\rinsert_source\x18\x06 \x01(\x0b\x32\x1a.iterators.SavedInsertDataH\x00\x12\x33\n\rdelete_source\x18\x07 \x01(\x0b\x32\x1a.iterators.SavedDeleteDataH\x00\x42\x08\n\x06sourceb\x06proto3'
+  serialized_pb=b'\n\x0fiterators.proto\x12\titerators\"R\n\rTriplePattern\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x11\n\tpredicate\x18\x02 \x01(\t\x12\x0e\n\x06object\x18\x03 \x01(\t\x12\r\n\x05graph\x18\x04 \x01(\t\"e\n\x11SavedScanIterator\x12(\n\x06triple\x18\x01 \x01(\x0b\x32\x18.iterators.TriplePattern\x12\x11\n\tlast_read\x18\x02 \x01(\t\x12\x13\n\x0b\x63\x61rdinality\x18\x03 \x01(\x03\"\xca\x02\n\x17SavedProjectionIterator\x12\x0e\n\x06values\x18\x01 \x03(\t\x12\x33\n\x0bscan_source\x18\x02 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x42\x08\n\x06source\"\xb3\x03\n\x16SavedIndexJoinIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x02 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x03 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x04 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\'\n\x05inner\x18\x05 \x01(\x0b\x32\x18.iterators.TriplePattern\x12\x37\n\x03muc\x18\x06 \x03(\x0b\x32*.iterators.SavedIndexJoinIterator.MucEntry\x12\x11\n\tlast_read\x18\x07 \x01(\t\x12\x11\n\ttimestamp\x18\x08 \x01(\t\x1a*\n\x08MucEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xc8\x05\n\x15SavedBagUnionIterator\x12\x31\n\tscan_left\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x37\n\tproj_left\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x36\n\nunion_left\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x36\n\tjoin_left\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x35\n\x0b\x66ilter_left\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x38\n\x10\x62ind_source_left\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x32\n\nscan_right\x18\x07 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x01\x12\x38\n\nproj_right\x18\x08 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x01\x12\x37\n\x0bunion_right\x18\t \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x01\x12\x37\n\njoin_right\x18\n \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x01\x12\x36\n\x0c\x66ilter_right\x18\x0b \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x01\x12\x39\n\x11\x62ind_source_right\x18\x0c \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x01\x42\x06\n\x04leftB\x07\n\x05right\"\xaa\x03\n\x13SavedFilterIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x37\n\rfilter_source\x18\x03 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x05 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x12\n\nexpression\x18\x06 \x01(\t\x12\x32\n\x02mu\x18\x07 \x03(\x0b\x32&.iterators.SavedFilterIterator.MuEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xb5\x03\n\x11SavedBindIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x37\n\rfilter_source\x18\x03 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x05 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x10\n\x08\x62indexpr\x18\x06 \x01(\t\x12\x0f\n\x07\x62indvar\x18\x07 \x01(\t\x12\x30\n\x02mu\x18\x08 \x03(\x0b\x32$.iterators.SavedBindIterator.MuEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\x84\x03\n\x16SavedConstructIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x0e\n\x06values\x18\x07 \x03(\tB\x08\n\x06source\"\x85\x01\n\x0fSavedInsertData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedInsertData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x85\x01\n\x0fSavedDeleteData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedDeleteData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x8f\x04\n\x08RootTree\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\rinsert_source\x18\x06 \x01(\x0b\x32\x1a.iterators.SavedInsertDataH\x00\x12\x33\n\rdelete_source\x18\x07 \x01(\x0b\x32\x1a.iterators.SavedDeleteDataH\x00\x12\x33\n\x0b\x62ind_source\x18\x08 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12=\n\x10\x63onstruct_source\x18\t \x01(\x0b\x32!.iterators.SavedConstructIteratorH\x00\x42\x08\n\x06sourceb\x06proto3'
 )
 
 
@@ -163,43 +163,9 @@ _SAVEDPROJECTIONITERATOR = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='source', full_name='iterators.SavedProjectionIterator.source',
-      index=0, containing_type=None, fields=[]),
-  ],
-  serialized_start=218,
-  serialized_end=495,
-)
-
-
-_SAVEDBINDROWITERATOR = _descriptor.Descriptor(
-  name='SavedBindRowIterator',
-  full_name='iterators.SavedBindRowIterator',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
     _descriptor.FieldDescriptor(
-      name='values', full_name='iterators.SavedBindRowIterator.values', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='scan_source', full_name='iterators.SavedBindRowIterator.scan_source', index=1,
-      number=2, type=11, cpp_type=10, label=1,
+      name='bind_source', full_name='iterators.SavedProjectionIterator.bind_source', index=5,
+      number=6, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -216,42 +182,11 @@ _SAVEDBINDROWITERATOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
     _descriptor.OneofDescriptor(
-      name='source', full_name='iterators.SavedBindRowIterator.source',
+      name='source', full_name='iterators.SavedProjectionIterator.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=497,
-  serialized_end=598,
-)
-
-
-_SAVEDBINDROWSOURCEITERATOR = _descriptor.Descriptor(
-  name='SavedBindRowSourceIterator',
-  full_name='iterators.SavedBindRowSourceIterator',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='iterators.SavedBindRowSourceIterator.values', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=600,
-  serialized_end=644,
+  serialized_start=218,
+  serialized_end=548,
 )
 
 
@@ -288,8 +223,8 @@ _SAVEDINDEXJOINITERATOR_MUCENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=977,
-  serialized_end=1019,
+  serialized_start=934,
+  serialized_end=976,
 )
 
 _SAVEDINDEXJOINITERATOR = _descriptor.Descriptor(
@@ -321,29 +256,36 @@ _SAVEDINDEXJOINITERATOR = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='inner', full_name='iterators.SavedIndexJoinIterator.inner', index=3,
+      name='bind_source', full_name='iterators.SavedIndexJoinIterator.bind_source', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='muc', full_name='iterators.SavedIndexJoinIterator.muc', index=4,
-      number=5, type=11, cpp_type=10, label=3,
+      name='inner', full_name='iterators.SavedIndexJoinIterator.inner', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='muc', full_name='iterators.SavedIndexJoinIterator.muc', index=5,
+      number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='last_read', full_name='iterators.SavedIndexJoinIterator.last_read', index=5,
-      number=6, type=9, cpp_type=9, label=1,
+      name='last_read', full_name='iterators.SavedIndexJoinIterator.last_read', index=6,
+      number=7, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='timestamp', full_name='iterators.SavedIndexJoinIterator.timestamp', index=6,
-      number=7, type=9, cpp_type=9, label=1,
+      name='timestamp', full_name='iterators.SavedIndexJoinIterator.timestamp', index=7,
+      number=8, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -363,8 +305,8 @@ _SAVEDINDEXJOINITERATOR = _descriptor.Descriptor(
       name='source', full_name='iterators.SavedIndexJoinIterator.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=647,
-  serialized_end=1029,
+  serialized_start=551,
+  serialized_end=986,
 )
 
 
@@ -411,36 +353,50 @@ _SAVEDBAGUNIONITERATOR = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='scan_right', full_name='iterators.SavedBagUnionIterator.scan_right', index=5,
+      name='bind_source_left', full_name='iterators.SavedBagUnionIterator.bind_source_left', index=5,
       number=6, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='proj_right', full_name='iterators.SavedBagUnionIterator.proj_right', index=6,
+      name='scan_right', full_name='iterators.SavedBagUnionIterator.scan_right', index=6,
       number=7, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='union_right', full_name='iterators.SavedBagUnionIterator.union_right', index=7,
+      name='proj_right', full_name='iterators.SavedBagUnionIterator.proj_right', index=7,
       number=8, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='join_right', full_name='iterators.SavedBagUnionIterator.join_right', index=8,
+      name='union_right', full_name='iterators.SavedBagUnionIterator.union_right', index=8,
       number=9, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='filter_right', full_name='iterators.SavedBagUnionIterator.filter_right', index=9,
+      name='join_right', full_name='iterators.SavedBagUnionIterator.join_right', index=9,
       number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='filter_right', full_name='iterators.SavedBagUnionIterator.filter_right', index=10,
+      number=11, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bind_source_right', full_name='iterators.SavedBagUnionIterator.bind_source_right', index=11,
+      number=12, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -463,8 +419,8 @@ _SAVEDBAGUNIONITERATOR = _descriptor.Descriptor(
       name='right', full_name='iterators.SavedBagUnionIterator.right',
       index=1, containing_type=None, fields=[]),
   ],
-  serialized_start=1032,
-  serialized_end=1627,
+  serialized_start=989,
+  serialized_end=1701,
 )
 
 
@@ -501,8 +457,8 @@ _SAVEDFILTERITERATOR_MUENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1952,
-  serialized_end=1993,
+  serialized_start=2079,
+  serialized_end=2120,
 )
 
 _SAVEDFILTERITERATOR = _descriptor.Descriptor(
@@ -541,15 +497,22 @@ _SAVEDFILTERITERATOR = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='expression', full_name='iterators.SavedFilterIterator.expression', index=4,
-      number=5, type=9, cpp_type=9, label=1,
+      name='bind_source', full_name='iterators.SavedFilterIterator.bind_source', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='expression', full_name='iterators.SavedFilterIterator.expression', index=5,
+      number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='mu', full_name='iterators.SavedFilterIterator.mu', index=5,
-      number=6, type=11, cpp_type=10, label=3,
+      name='mu', full_name='iterators.SavedFilterIterator.mu', index=6,
+      number=7, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -569,8 +532,204 @@ _SAVEDFILTERITERATOR = _descriptor.Descriptor(
       name='source', full_name='iterators.SavedFilterIterator.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1630,
-  serialized_end=2003,
+  serialized_start=1704,
+  serialized_end=2130,
+)
+
+
+_SAVEDBINDITERATOR_MUENTRY = _descriptor.Descriptor(
+  name='MuEntry',
+  full_name='iterators.SavedBindIterator.MuEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='iterators.SavedBindIterator.MuEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='iterators.SavedBindIterator.MuEntry.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=b'8\001',
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2079,
+  serialized_end=2120,
+)
+
+_SAVEDBINDITERATOR = _descriptor.Descriptor(
+  name='SavedBindIterator',
+  full_name='iterators.SavedBindIterator',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='scan_source', full_name='iterators.SavedBindIterator.scan_source', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='proj_source', full_name='iterators.SavedBindIterator.proj_source', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='filter_source', full_name='iterators.SavedBindIterator.filter_source', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='join_source', full_name='iterators.SavedBindIterator.join_source', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bind_source', full_name='iterators.SavedBindIterator.bind_source', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bindexpr', full_name='iterators.SavedBindIterator.bindexpr', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bindvar', full_name='iterators.SavedBindIterator.bindvar', index=6,
+      number=7, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='mu', full_name='iterators.SavedBindIterator.mu', index=7,
+      number=8, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_SAVEDBINDITERATOR_MUENTRY, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='source', full_name='iterators.SavedBindIterator.source',
+      index=0, containing_type=None, fields=[]),
+  ],
+  serialized_start=2133,
+  serialized_end=2570,
+)
+
+
+_SAVEDCONSTRUCTITERATOR = _descriptor.Descriptor(
+  name='SavedConstructIterator',
+  full_name='iterators.SavedConstructIterator',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='scan_source', full_name='iterators.SavedConstructIterator.scan_source', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='proj_source', full_name='iterators.SavedConstructIterator.proj_source', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='join_source', full_name='iterators.SavedConstructIterator.join_source', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='union_source', full_name='iterators.SavedConstructIterator.union_source', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='filter_source', full_name='iterators.SavedConstructIterator.filter_source', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bind_source', full_name='iterators.SavedConstructIterator.bind_source', index=5,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='values', full_name='iterators.SavedConstructIterator.values', index=6,
+      number=7, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='source', full_name='iterators.SavedConstructIterator.source',
+      index=0, containing_type=None, fields=[]),
+  ],
+  serialized_start=2573,
+  serialized_end=2961,
 )
 
 
@@ -607,8 +766,8 @@ _SAVEDINSERTDATA_NBINSERTEDENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2090,
-  serialized_end=2139,
+  serialized_start=3048,
+  serialized_end=3097,
 )
 
 _SAVEDINSERTDATA = _descriptor.Descriptor(
@@ -637,8 +796,8 @@ _SAVEDINSERTDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2006,
-  serialized_end=2139,
+  serialized_start=2964,
+  serialized_end=3097,
 )
 
 
@@ -675,8 +834,8 @@ _SAVEDDELETEDATA_NBINSERTEDENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2090,
-  serialized_end=2139,
+  serialized_start=3048,
+  serialized_end=3097,
 )
 
 _SAVEDDELETEDATA = _descriptor.Descriptor(
@@ -705,8 +864,8 @@ _SAVEDDELETEDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2142,
-  serialized_end=2275,
+  serialized_start=3100,
+  serialized_end=3233,
 )
 
 
@@ -766,6 +925,20 @@ _ROOTTREE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bind_source', full_name='iterators.RootTree.bind_source', index=7,
+      number=8, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='construct_source', full_name='iterators.RootTree.construct_source', index=8,
+      number=9, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -781,8 +954,8 @@ _ROOTTREE = _descriptor.Descriptor(
       name='source', full_name='iterators.RootTree.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=2278,
-  serialized_end=2689,
+  serialized_start=3236,
+  serialized_end=3763,
 )
 
 _SAVEDSCANITERATOR.fields_by_name['triple'].message_type = _TRIPLEPATTERN
@@ -790,6 +963,7 @@ _SAVEDPROJECTIONITERATOR.fields_by_name['scan_source'].message_type = _SAVEDSCAN
 _SAVEDPROJECTIONITERATOR.fields_by_name['join_source'].message_type = _SAVEDINDEXJOINITERATOR
 _SAVEDPROJECTIONITERATOR.fields_by_name['union_source'].message_type = _SAVEDBAGUNIONITERATOR
 _SAVEDPROJECTIONITERATOR.fields_by_name['filter_source'].message_type = _SAVEDFILTERITERATOR
+_SAVEDPROJECTIONITERATOR.fields_by_name['bind_source'].message_type = _SAVEDBINDITERATOR
 _SAVEDPROJECTIONITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDPROJECTIONITERATOR.fields_by_name['scan_source'])
 _SAVEDPROJECTIONITERATOR.fields_by_name['scan_source'].containing_oneof = _SAVEDPROJECTIONITERATOR.oneofs_by_name['source']
@@ -802,14 +976,14 @@ _SAVEDPROJECTIONITERATOR.fields_by_name['union_source'].containing_oneof = _SAVE
 _SAVEDPROJECTIONITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDPROJECTIONITERATOR.fields_by_name['filter_source'])
 _SAVEDPROJECTIONITERATOR.fields_by_name['filter_source'].containing_oneof = _SAVEDPROJECTIONITERATOR.oneofs_by_name['source']
-_SAVEDBINDROWITERATOR.fields_by_name['scan_source'].message_type = _SAVEDSCANITERATOR
-_SAVEDBINDROWITERATOR.oneofs_by_name['source'].fields.append(
-  _SAVEDBINDROWITERATOR.fields_by_name['scan_source'])
-_SAVEDBINDROWITERATOR.fields_by_name['scan_source'].containing_oneof = _SAVEDBINDROWITERATOR.oneofs_by_name['source']
+_SAVEDPROJECTIONITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDPROJECTIONITERATOR.fields_by_name['bind_source'])
+_SAVEDPROJECTIONITERATOR.fields_by_name['bind_source'].containing_oneof = _SAVEDPROJECTIONITERATOR.oneofs_by_name['source']
 _SAVEDINDEXJOINITERATOR_MUCENTRY.containing_type = _SAVEDINDEXJOINITERATOR
 _SAVEDINDEXJOINITERATOR.fields_by_name['scan_source'].message_type = _SAVEDSCANITERATOR
 _SAVEDINDEXJOINITERATOR.fields_by_name['join_source'].message_type = _SAVEDINDEXJOINITERATOR
 _SAVEDINDEXJOINITERATOR.fields_by_name['filter_source'].message_type = _SAVEDFILTERITERATOR
+_SAVEDINDEXJOINITERATOR.fields_by_name['bind_source'].message_type = _SAVEDBINDITERATOR
 _SAVEDINDEXJOINITERATOR.fields_by_name['inner'].message_type = _TRIPLEPATTERN
 _SAVEDINDEXJOINITERATOR.fields_by_name['muc'].message_type = _SAVEDINDEXJOINITERATOR_MUCENTRY
 _SAVEDINDEXJOINITERATOR.oneofs_by_name['source'].fields.append(
@@ -821,16 +995,21 @@ _SAVEDINDEXJOINITERATOR.fields_by_name['join_source'].containing_oneof = _SAVEDI
 _SAVEDINDEXJOINITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDINDEXJOINITERATOR.fields_by_name['filter_source'])
 _SAVEDINDEXJOINITERATOR.fields_by_name['filter_source'].containing_oneof = _SAVEDINDEXJOINITERATOR.oneofs_by_name['source']
+_SAVEDINDEXJOINITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDINDEXJOINITERATOR.fields_by_name['bind_source'])
+_SAVEDINDEXJOINITERATOR.fields_by_name['bind_source'].containing_oneof = _SAVEDINDEXJOINITERATOR.oneofs_by_name['source']
 _SAVEDBAGUNIONITERATOR.fields_by_name['scan_left'].message_type = _SAVEDSCANITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['proj_left'].message_type = _SAVEDPROJECTIONITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['union_left'].message_type = _SAVEDBAGUNIONITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['join_left'].message_type = _SAVEDINDEXJOINITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['filter_left'].message_type = _SAVEDFILTERITERATOR
+_SAVEDBAGUNIONITERATOR.fields_by_name['bind_source_left'].message_type = _SAVEDBINDITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['scan_right'].message_type = _SAVEDSCANITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['proj_right'].message_type = _SAVEDPROJECTIONITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['union_right'].message_type = _SAVEDBAGUNIONITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['join_right'].message_type = _SAVEDINDEXJOINITERATOR
 _SAVEDBAGUNIONITERATOR.fields_by_name['filter_right'].message_type = _SAVEDFILTERITERATOR
+_SAVEDBAGUNIONITERATOR.fields_by_name['bind_source_right'].message_type = _SAVEDBINDITERATOR
 _SAVEDBAGUNIONITERATOR.oneofs_by_name['left'].fields.append(
   _SAVEDBAGUNIONITERATOR.fields_by_name['scan_left'])
 _SAVEDBAGUNIONITERATOR.fields_by_name['scan_left'].containing_oneof = _SAVEDBAGUNIONITERATOR.oneofs_by_name['left']
@@ -846,6 +1025,9 @@ _SAVEDBAGUNIONITERATOR.fields_by_name['join_left'].containing_oneof = _SAVEDBAGU
 _SAVEDBAGUNIONITERATOR.oneofs_by_name['left'].fields.append(
   _SAVEDBAGUNIONITERATOR.fields_by_name['filter_left'])
 _SAVEDBAGUNIONITERATOR.fields_by_name['filter_left'].containing_oneof = _SAVEDBAGUNIONITERATOR.oneofs_by_name['left']
+_SAVEDBAGUNIONITERATOR.oneofs_by_name['left'].fields.append(
+  _SAVEDBAGUNIONITERATOR.fields_by_name['bind_source_left'])
+_SAVEDBAGUNIONITERATOR.fields_by_name['bind_source_left'].containing_oneof = _SAVEDBAGUNIONITERATOR.oneofs_by_name['left']
 _SAVEDBAGUNIONITERATOR.oneofs_by_name['right'].fields.append(
   _SAVEDBAGUNIONITERATOR.fields_by_name['scan_right'])
 _SAVEDBAGUNIONITERATOR.fields_by_name['scan_right'].containing_oneof = _SAVEDBAGUNIONITERATOR.oneofs_by_name['right']
@@ -861,11 +1043,15 @@ _SAVEDBAGUNIONITERATOR.fields_by_name['join_right'].containing_oneof = _SAVEDBAG
 _SAVEDBAGUNIONITERATOR.oneofs_by_name['right'].fields.append(
   _SAVEDBAGUNIONITERATOR.fields_by_name['filter_right'])
 _SAVEDBAGUNIONITERATOR.fields_by_name['filter_right'].containing_oneof = _SAVEDBAGUNIONITERATOR.oneofs_by_name['right']
+_SAVEDBAGUNIONITERATOR.oneofs_by_name['right'].fields.append(
+  _SAVEDBAGUNIONITERATOR.fields_by_name['bind_source_right'])
+_SAVEDBAGUNIONITERATOR.fields_by_name['bind_source_right'].containing_oneof = _SAVEDBAGUNIONITERATOR.oneofs_by_name['right']
 _SAVEDFILTERITERATOR_MUENTRY.containing_type = _SAVEDFILTERITERATOR
 _SAVEDFILTERITERATOR.fields_by_name['scan_source'].message_type = _SAVEDSCANITERATOR
 _SAVEDFILTERITERATOR.fields_by_name['proj_source'].message_type = _SAVEDPROJECTIONITERATOR
 _SAVEDFILTERITERATOR.fields_by_name['filter_source'].message_type = _SAVEDFILTERITERATOR
 _SAVEDFILTERITERATOR.fields_by_name['join_source'].message_type = _SAVEDINDEXJOINITERATOR
+_SAVEDFILTERITERATOR.fields_by_name['bind_source'].message_type = _SAVEDBINDITERATOR
 _SAVEDFILTERITERATOR.fields_by_name['mu'].message_type = _SAVEDFILTERITERATOR_MUENTRY
 _SAVEDFILTERITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDFILTERITERATOR.fields_by_name['scan_source'])
@@ -879,6 +1065,55 @@ _SAVEDFILTERITERATOR.fields_by_name['filter_source'].containing_oneof = _SAVEDFI
 _SAVEDFILTERITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDFILTERITERATOR.fields_by_name['join_source'])
 _SAVEDFILTERITERATOR.fields_by_name['join_source'].containing_oneof = _SAVEDFILTERITERATOR.oneofs_by_name['source']
+_SAVEDFILTERITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDFILTERITERATOR.fields_by_name['bind_source'])
+_SAVEDFILTERITERATOR.fields_by_name['bind_source'].containing_oneof = _SAVEDFILTERITERATOR.oneofs_by_name['source']
+_SAVEDBINDITERATOR_MUENTRY.containing_type = _SAVEDBINDITERATOR
+_SAVEDBINDITERATOR.fields_by_name['scan_source'].message_type = _SAVEDSCANITERATOR
+_SAVEDBINDITERATOR.fields_by_name['proj_source'].message_type = _SAVEDPROJECTIONITERATOR
+_SAVEDBINDITERATOR.fields_by_name['filter_source'].message_type = _SAVEDFILTERITERATOR
+_SAVEDBINDITERATOR.fields_by_name['join_source'].message_type = _SAVEDINDEXJOINITERATOR
+_SAVEDBINDITERATOR.fields_by_name['bind_source'].message_type = _SAVEDBINDITERATOR
+_SAVEDBINDITERATOR.fields_by_name['mu'].message_type = _SAVEDBINDITERATOR_MUENTRY
+_SAVEDBINDITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDBINDITERATOR.fields_by_name['scan_source'])
+_SAVEDBINDITERATOR.fields_by_name['scan_source'].containing_oneof = _SAVEDBINDITERATOR.oneofs_by_name['source']
+_SAVEDBINDITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDBINDITERATOR.fields_by_name['proj_source'])
+_SAVEDBINDITERATOR.fields_by_name['proj_source'].containing_oneof = _SAVEDBINDITERATOR.oneofs_by_name['source']
+_SAVEDBINDITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDBINDITERATOR.fields_by_name['filter_source'])
+_SAVEDBINDITERATOR.fields_by_name['filter_source'].containing_oneof = _SAVEDBINDITERATOR.oneofs_by_name['source']
+_SAVEDBINDITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDBINDITERATOR.fields_by_name['join_source'])
+_SAVEDBINDITERATOR.fields_by_name['join_source'].containing_oneof = _SAVEDBINDITERATOR.oneofs_by_name['source']
+_SAVEDBINDITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDBINDITERATOR.fields_by_name['bind_source'])
+_SAVEDBINDITERATOR.fields_by_name['bind_source'].containing_oneof = _SAVEDBINDITERATOR.oneofs_by_name['source']
+_SAVEDCONSTRUCTITERATOR.fields_by_name['scan_source'].message_type = _SAVEDSCANITERATOR
+_SAVEDCONSTRUCTITERATOR.fields_by_name['proj_source'].message_type = _SAVEDPROJECTIONITERATOR
+_SAVEDCONSTRUCTITERATOR.fields_by_name['join_source'].message_type = _SAVEDINDEXJOINITERATOR
+_SAVEDCONSTRUCTITERATOR.fields_by_name['union_source'].message_type = _SAVEDBAGUNIONITERATOR
+_SAVEDCONSTRUCTITERATOR.fields_by_name['filter_source'].message_type = _SAVEDFILTERITERATOR
+_SAVEDCONSTRUCTITERATOR.fields_by_name['bind_source'].message_type = _SAVEDBINDITERATOR
+_SAVEDCONSTRUCTITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDCONSTRUCTITERATOR.fields_by_name['scan_source'])
+_SAVEDCONSTRUCTITERATOR.fields_by_name['scan_source'].containing_oneof = _SAVEDCONSTRUCTITERATOR.oneofs_by_name['source']
+_SAVEDCONSTRUCTITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDCONSTRUCTITERATOR.fields_by_name['proj_source'])
+_SAVEDCONSTRUCTITERATOR.fields_by_name['proj_source'].containing_oneof = _SAVEDCONSTRUCTITERATOR.oneofs_by_name['source']
+_SAVEDCONSTRUCTITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDCONSTRUCTITERATOR.fields_by_name['join_source'])
+_SAVEDCONSTRUCTITERATOR.fields_by_name['join_source'].containing_oneof = _SAVEDCONSTRUCTITERATOR.oneofs_by_name['source']
+_SAVEDCONSTRUCTITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDCONSTRUCTITERATOR.fields_by_name['union_source'])
+_SAVEDCONSTRUCTITERATOR.fields_by_name['union_source'].containing_oneof = _SAVEDCONSTRUCTITERATOR.oneofs_by_name['source']
+_SAVEDCONSTRUCTITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDCONSTRUCTITERATOR.fields_by_name['filter_source'])
+_SAVEDCONSTRUCTITERATOR.fields_by_name['filter_source'].containing_oneof = _SAVEDCONSTRUCTITERATOR.oneofs_by_name['source']
+_SAVEDCONSTRUCTITERATOR.oneofs_by_name['source'].fields.append(
+  _SAVEDCONSTRUCTITERATOR.fields_by_name['bind_source'])
+_SAVEDCONSTRUCTITERATOR.fields_by_name['bind_source'].containing_oneof = _SAVEDCONSTRUCTITERATOR.oneofs_by_name['source']
 _SAVEDINSERTDATA_NBINSERTEDENTRY.containing_type = _SAVEDINSERTDATA
 _SAVEDINSERTDATA.fields_by_name['nb_inserted'].message_type = _SAVEDINSERTDATA_NBINSERTEDENTRY
 _SAVEDDELETEDATA_NBINSERTEDENTRY.containing_type = _SAVEDDELETEDATA
@@ -890,6 +1125,8 @@ _ROOTTREE.fields_by_name['union_source'].message_type = _SAVEDBAGUNIONITERATOR
 _ROOTTREE.fields_by_name['filter_source'].message_type = _SAVEDFILTERITERATOR
 _ROOTTREE.fields_by_name['insert_source'].message_type = _SAVEDINSERTDATA
 _ROOTTREE.fields_by_name['delete_source'].message_type = _SAVEDDELETEDATA
+_ROOTTREE.fields_by_name['bind_source'].message_type = _SAVEDBINDITERATOR
+_ROOTTREE.fields_by_name['construct_source'].message_type = _SAVEDCONSTRUCTITERATOR
 _ROOTTREE.oneofs_by_name['source'].fields.append(
   _ROOTTREE.fields_by_name['scan_source'])
 _ROOTTREE.fields_by_name['scan_source'].containing_oneof = _ROOTTREE.oneofs_by_name['source']
@@ -911,14 +1148,20 @@ _ROOTTREE.fields_by_name['insert_source'].containing_oneof = _ROOTTREE.oneofs_by
 _ROOTTREE.oneofs_by_name['source'].fields.append(
   _ROOTTREE.fields_by_name['delete_source'])
 _ROOTTREE.fields_by_name['delete_source'].containing_oneof = _ROOTTREE.oneofs_by_name['source']
+_ROOTTREE.oneofs_by_name['source'].fields.append(
+  _ROOTTREE.fields_by_name['bind_source'])
+_ROOTTREE.fields_by_name['bind_source'].containing_oneof = _ROOTTREE.oneofs_by_name['source']
+_ROOTTREE.oneofs_by_name['source'].fields.append(
+  _ROOTTREE.fields_by_name['construct_source'])
+_ROOTTREE.fields_by_name['construct_source'].containing_oneof = _ROOTTREE.oneofs_by_name['source']
 DESCRIPTOR.message_types_by_name['TriplePattern'] = _TRIPLEPATTERN
 DESCRIPTOR.message_types_by_name['SavedScanIterator'] = _SAVEDSCANITERATOR
 DESCRIPTOR.message_types_by_name['SavedProjectionIterator'] = _SAVEDPROJECTIONITERATOR
-DESCRIPTOR.message_types_by_name['SavedBindRowIterator'] = _SAVEDBINDROWITERATOR
-DESCRIPTOR.message_types_by_name['SavedBindRowSourceIterator'] = _SAVEDBINDROWSOURCEITERATOR
 DESCRIPTOR.message_types_by_name['SavedIndexJoinIterator'] = _SAVEDINDEXJOINITERATOR
 DESCRIPTOR.message_types_by_name['SavedBagUnionIterator'] = _SAVEDBAGUNIONITERATOR
 DESCRIPTOR.message_types_by_name['SavedFilterIterator'] = _SAVEDFILTERITERATOR
+DESCRIPTOR.message_types_by_name['SavedBindIterator'] = _SAVEDBINDITERATOR
+DESCRIPTOR.message_types_by_name['SavedConstructIterator'] = _SAVEDCONSTRUCTITERATOR
 DESCRIPTOR.message_types_by_name['SavedInsertData'] = _SAVEDINSERTDATA
 DESCRIPTOR.message_types_by_name['SavedDeleteData'] = _SAVEDDELETEDATA
 DESCRIPTOR.message_types_by_name['RootTree'] = _ROOTTREE
@@ -944,20 +1187,6 @@ SavedProjectionIterator = _reflection.GeneratedProtocolMessageType('SavedProject
   # @@protoc_insertion_point(class_scope:iterators.SavedProjectionIterator)
   })
 _sym_db.RegisterMessage(SavedProjectionIterator)
-
-SavedBindRowIterator = _reflection.GeneratedProtocolMessageType('SavedBindRowIterator', (_message.Message,), {
-  'DESCRIPTOR' : _SAVEDBINDROWITERATOR,
-  '__module__' : 'iterators_pb2'
-  # @@protoc_insertion_point(class_scope:iterators.SavedBindRowIterator)
-  })
-_sym_db.RegisterMessage(SavedBindRowIterator)
-
-SavedBindRowSourceIterator = _reflection.GeneratedProtocolMessageType('SavedBindRowSourceIterator', (_message.Message,), {
-  'DESCRIPTOR' : _SAVEDBINDROWSOURCEITERATOR,
-  '__module__' : 'iterators_pb2'
-  # @@protoc_insertion_point(class_scope:iterators.SavedBindRowSourceIterator)
-  })
-_sym_db.RegisterMessage(SavedBindRowSourceIterator)
 
 SavedIndexJoinIterator = _reflection.GeneratedProtocolMessageType('SavedIndexJoinIterator', (_message.Message,), {
 
@@ -995,6 +1224,28 @@ SavedFilterIterator = _reflection.GeneratedProtocolMessageType('SavedFilterItera
   })
 _sym_db.RegisterMessage(SavedFilterIterator)
 _sym_db.RegisterMessage(SavedFilterIterator.MuEntry)
+
+SavedBindIterator = _reflection.GeneratedProtocolMessageType('SavedBindIterator', (_message.Message,), {
+
+  'MuEntry' : _reflection.GeneratedProtocolMessageType('MuEntry', (_message.Message,), {
+    'DESCRIPTOR' : _SAVEDBINDITERATOR_MUENTRY,
+    '__module__' : 'iterators_pb2'
+    # @@protoc_insertion_point(class_scope:iterators.SavedBindIterator.MuEntry)
+    })
+  ,
+  'DESCRIPTOR' : _SAVEDBINDITERATOR,
+  '__module__' : 'iterators_pb2'
+  # @@protoc_insertion_point(class_scope:iterators.SavedBindIterator)
+  })
+_sym_db.RegisterMessage(SavedBindIterator)
+_sym_db.RegisterMessage(SavedBindIterator.MuEntry)
+
+SavedConstructIterator = _reflection.GeneratedProtocolMessageType('SavedConstructIterator', (_message.Message,), {
+  'DESCRIPTOR' : _SAVEDCONSTRUCTITERATOR,
+  '__module__' : 'iterators_pb2'
+  # @@protoc_insertion_point(class_scope:iterators.SavedConstructIterator)
+  })
+_sym_db.RegisterMessage(SavedConstructIterator)
 
 SavedInsertData = _reflection.GeneratedProtocolMessageType('SavedInsertData', (_message.Message,), {
 
@@ -1036,6 +1287,7 @@ _sym_db.RegisterMessage(RootTree)
 
 _SAVEDINDEXJOINITERATOR_MUCENTRY._options = None
 _SAVEDFILTERITERATOR_MUENTRY._options = None
+_SAVEDBINDITERATOR_MUENTRY._options = None
 _SAVEDINSERTDATA_NBINSERTEDENTRY._options = None
 _SAVEDDELETEDATA_NBINSERTEDENTRY._options = None
 # @@protoc_insertion_point(module_scope)

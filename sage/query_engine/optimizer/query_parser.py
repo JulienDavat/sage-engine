@@ -6,9 +6,10 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pyparsing
 from pyparsing import ParseException
-from rdflib import BNode, Literal, URIRef, Variable
 from rdflib.plugins.sparql.algebra import translateQuery, translateUpdate
 from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
+from rdflib import BNode, Literal, URIRef, Variable
+
 
 from sage.database.core.dataset import Dataset
 from sage.query_engine.exceptions import UnsupportedSPARQL
@@ -16,9 +17,9 @@ from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
 from sage.query_engine.iterators.union import BagUnionIterator
-from sage.query_engine.iterators.bindrow import BindRowIterator
+from sage.query_engine.iterators.construct import ConstructIterator
+from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.utils import EmptyIterator
-from sage.query_engine.iterators.bindrowsource import BindRowSourceIterator
 from sage.query_engine.optimizer.join_builder import build_left_join_tree
 from sage.query_engine.optimizer.join_builder import continue_left_join_tree
 from sage.query_engine.update.delete import DeleteOperator
@@ -114,7 +115,51 @@ def get_quads_from_update(node: dict, default_graph: str) -> List[Tuple[str, str
                 quads += [(format_term(s), format_term(p), format_term(o), format_term(g)) for s, p, o in triples]
     return quads
 
+def parse_bind_expr(expr: dict) -> str:
+    """Parse a rdflib SPARQL BIND expression into a string representation.
 
+    Argument: SPARQL BIND expression in rdflib format.
+
+    Returns: The SPARQL BIND expression in string format.
+    """
+
+    #print("PBE:"+str(expr))
+    if not hasattr(expr, 'name'):
+        if type(expr) is BNode:
+            return f"?v_{expr}"
+        else:
+            return expr.n3()
+    else:
+        if expr.name == 'RelationalExpression':
+            return f"({parse_bind_expr(expr.expr)} {expr.op} {parse_bind_expr(expr.other)})"
+        elif expr.name == 'AdditiveExpression':
+            expression = parse_bind_expr(expr.expr)
+            for i in range(len(expr.op)):
+                expression = f"({expression} {expr.op[i]} {parse_bind_expr(expr.other[i])})"
+            return expression
+        elif expr.name == 'ConditionalAndExpression':
+            expression = parse_bind_expr(expr.expr)
+            for other in expr.other:
+                expression = f"({expression} && {parse_bind_expr(other)})"
+            return expression
+        elif expr.name == 'ConditionalOrExpression':
+            expression = parse_bind_expr(expr.expr)
+            for other in expr.other:
+                expression = f"({expression} || {parse_bind_expr(other)})"
+            return expression
+        elif expr.name.startswith('Builtin_IF'):
+            return f"IF({parse_bind_expr(expr.arg1)},{parse_bind_expr(expr.arg2)},{parse_bind_expr(expr.arg3)})"
+        elif expr.name.startswith('Builtin_CONCAT'):
+            expression=parse_bind_expr(expr.arg[0])
+            items=[parse_bind_expr(i) for i in expr.arg]
+            return f"CONCAT({','.join(items)})"
+        elif expr.name.startswith('Builtin_REPLACE'):
+            return f"REPLACE({parse_bind_expr(expr.arg)},\"{expr.pattern}\",\"{expr.replacement}\")"
+        elif expr.name.startswith('Builtin_REGEX'):
+            return f"REGEX({parse_bind_expr(expr.text)},\"{expr.pattern}\")"
+        elif expr.name.startswith('Builtin_'):
+            return f"{expr.name[8:]}({parse_bind_expr(expr.arg)})"
+    raise UnsupportedSPARQL(f"Unsupported SPARQL BIND expression: {expr.name}")
 
 def parse_filter_expr(expr: dict) -> str:
     """Parse a rdflib SPARQL FILTER expression into a string representation.
@@ -123,6 +168,7 @@ def parse_filter_expr(expr: dict) -> str:
 
     Returns: The SPARQL FILTER expression in string format.
     """
+#    if False:
     if not hasattr(expr, 'name'):
         if type(expr) is BNode:
             return f"?v_{expr}"
@@ -146,7 +192,10 @@ def parse_filter_expr(expr: dict) -> str:
             for other in expr.other:
                 expression = f"({expression} || {parse_filter_expr(other)})"
             return expression
+        elif expr.name.startswith('Builtin_REGEX'):
+            return f"(REGEX({parse_filter_expr(expr.text)},\"{expr.pattern}\"))"
         elif expr.name.startswith('Builtin_'):
+            #print("pouet:"+str(expr.arg))
             return f"{expr.name[8:]}({parse_filter_expr(expr.arg)})"
         raise UnsupportedSPARQL(f"Unsupported SPARQL FILTER expression: {expr.name}")
 
@@ -249,6 +298,12 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         if node.datasetClause is not None:
             graphs = [format_term(graph_iri.default) for graph_iri in node.datasetClause]
         return parse_query_alt(node.p, dataset, graphs, cardinalities, as_of=as_of)
+    elif node.name == 'ConstructQuery':
+        graphs = current_graphs
+        if node.datasetClause is not None:
+            graphs = [format_term(graph_iri.default) for graph_iri in node.datasetClause]
+        child=parse_query_alt(node.p, dataset, graphs, cardinalities, as_of=as_of)
+        return ConstructIterator(child,node.template)
     elif node.name == 'Project':
         query_vars = list(map(lambda t: '?' + str(t), node.PV))
         child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
@@ -270,24 +325,12 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         return FilterIterator(iterator, expression)
     elif node.name == 'Extend':
         bgp_iterator=parse_query_alt(node.p,dataset,current_graphs,cardinalities,as_of=as_of)
-        #print("extends:"+str(node.expr.expr)+":"+str(node.var))
-        rowidtp = []
-        for x in node.expr.expr:
-            if isinstance(x,Variable):
-                rowidtp.append(x.n3())
-            elif isinstance(x,URIRef):
-                rowidtp.append(str(x))
-            elif isinstance(x,Literal):
-                rowidtp.append(str(x))
-            else:
-                raise UnsupportedSPARQL(f"Extend Unsupported SPARQL feature: {x}")
-        #print("rowidtp:"+str(rowidtp))
-        #special case with a bindrow with bounded TP and empty source itertor
-        # happen with insert queries. BindRow is a sink in this very special case.
+        expression = parse_bind_expr(node.expr)
+        print("expression:"+str(expression))
         if isinstance(bgp_iterator,EmptyIterator):
-            return BindRowSourceIterator(rowidtp,'?'+node.var)
+            return BindIterator(None,expression,'?'+node.var)
         else:
-            return BindRowIterator(bgp_iterator,rowidtp,'?'+node.var)
+            return BindIterator(bgp_iterator,expression,'?'+node.var)
     elif node.name == 'Join':
         left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
         if node.p2.name=='BGP':

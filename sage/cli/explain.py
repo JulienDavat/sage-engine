@@ -1,34 +1,40 @@
 #!/usr/bin/python
-
-from sage.cli.utils import load_graph
-from sage.database.core.yaml_config import load_config
-
 from rdflib.plugins.sparql.algebra import translateQuery, translateUpdate
 from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 from rdflib.plugins.sparql.algebra import pprintAlgebra
 from rdflib.plugins.sparql.parserutils import prettify_parsetree
-# seems that register custom function not present in rdflib 4.2.2
-# only on very last version
-from rdflib.plugins.sparql.operators import register_custom_function
 from rdflib import BNode, Graph, Literal, Namespace, RDFS, XSD
+
+from sage.cli.utils import load_graph
+from sage.database.core.yaml_config import load_config
+from sage.query_engine.sage_engine import SageEngine
+from sage.query_engine.optimizer.query_parser import parse_query
+from sage.http_server.server import run_app
+from starlette.testclient import TestClient
+from tests.http.utils import post_sparql
+
 import inspect
 import click
 import coloredlogs
 import logging
 import asyncio
+import math
+import pprint
+import json
 
 # be sure to load what i beleive ;)
 #print(inspect.getfile(register_custom_function))
 #print(inspect.getfile(parseQuery))
 
-from sage.query_engine.sage_engine import SageEngine
-from sage.query_engine.optimizer.query_parser import parse_query
-import math
-import pprint
+# seems that register custom function not present in rdflib 4.2.2
+# only on very last version > 4.5
+#from rdflib.plugins.sparql.operators import register_custom_function
+#def rowid(x,y,z):
+#    return Literal("%s %s %s" % (x, y,z), datatype=XSD.string)
+    # SAGE = Namespace('http://example.org/')
+    # print(SAGE.rowid)
+#    register_custom_function(SAGE.rowid, rowid)
 
-
-def rowid(x,y,z):
-    return Literal("%s %s %s" % (x, y,z), datatype=XSD.string)
 
 async def execute(iterator):
     try:
@@ -74,9 +80,6 @@ def explain(query_file,config_file,graph_uri,indentnb,update,parse):
     if query is None:
         exit(1)
 
-    SAGE = Namespace('http://example.org/')
-    print(SAGE.rowid)
-    register_custom_function(SAGE.rowid, rowid)
 
     print("------------")
     print("Query")
@@ -127,17 +130,16 @@ def explain(query_file,config_file,graph_uri,indentnb,update,parse):
     print("-----------------")
     print("Results")
     print("-----------------")
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(execute(iterator))
-    loop.close()
 
-    # discard null values
-
-    # quota = graph.quota / 1000
-    # max_results = graph.max_results
-    # bindings, saved_plan, is_done, abort_reason = await engine.execute(iterator, quota, max_results)
-    # print(str(bindings))
-
+    client=TestClient(run_app(config_file))
+    next_link = None
+    response = post_sparql(client, query, next_link, graph_uri)
+    response=response.json()
+    print(json.dumps(response,indent=4))
+    print("next:"+str(response['next']))
+#    loop = asyncio.get_event_loop()
+#    loop.run_until_complete(execute(iterator))
+#    loop.close()
 
 if __name__ == '__main__':
     explain()

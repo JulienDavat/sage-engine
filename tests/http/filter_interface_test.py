@@ -24,7 +24,13 @@ filter_queries = [
             <http://db.uwaterloo.ca/~galuc/wsdbm/Offer1000> <http://purl.org/goodrelations/price> ?price .
             FILTER(isLiteral(?price))
         }
-    """, 1)
+    """, 1),
+    ("""
+        SELECT * WHERE {
+            ?v0 <http://schema.org/keywords> ?v8.
+        FILTER REGEX(STR(?v8),"(pounds|panickiest)").
+        }
+    """, 4)
 ]
 
 

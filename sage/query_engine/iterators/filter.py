@@ -16,22 +16,29 @@ from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 
 def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable]:
     """Convert a N3 term to a RDFLib Term.
-    
+
     Argument: A RDF Term in N3 format.
 
     Returns: The RDF Term in rdflib format.
     """
-    if value.startswith('http'):
+    #print("!!to_rdflib_term:"+str(value))
+    if value.startswith('http') or value.startswith('file') or value.startswith('mailto'):
         return URIRef(value)
     elif '"^^http' in value:
         index = value.find('"^^http')
         value = f"{value[0:index+3]}<{value[index+3:]}>"
-    return from_n3(value)
+        return from_n3(value)
+
+    try:
+        result=from_n3(value)
+        return result;
+    except KeyError:
+        return URIRef(value) 
 
 
 class FilterIterator(PreemptableIterator):
     """A FilterIterator evaluates a FILTER clause in a pipeline of iterators.
-    
+
     Args:
       * source: Previous iterator in the pipeline.
       * expression: A SPARQL FILTER expression.
@@ -58,7 +65,7 @@ class FilterIterator(PreemptableIterator):
 
     def _evaluate(self, bindings: Dict[str, str]) -> bool:
         """Evaluate the FILTER expression with a set mappings.
-        
+
         Argument: A set of solution mappings.
 
         Returns: The outcome of evaluating the SPARQL FILTER on the input set of solution mappings.
@@ -72,7 +79,7 @@ class FilterIterator(PreemptableIterator):
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 
-        This function may contains `non interruptible` clauses which must 
+        This function may contains `non interruptible` clauses which must
         be atomically evaluated before preemption occurs.
 
         Returns: A set of solution mappings, or `None` if none was produced during this call.
