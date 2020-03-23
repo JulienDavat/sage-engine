@@ -1,14 +1,25 @@
-# projection.py
-# Author: Thomas MINIER - MIT License 2017-2020
+# construct.py
+# Author: Pascal Molli - MIT License 2017-2020
 
 from rdflib import BNode, Literal, URIRef, Variable
 from rdflib import Graph
 from typing import Dict, List, Optional
 
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
-from sage.query_engine.protobuf.iterators_pb2 import SavedConstructIterator
+from sage.query_engine.protobuf.iterators_pb2 import (SavedConstructIterator,TriplePattern)
 from sage.query_engine.iterators.utils import find_in_mappings
 
+def convert_construct_template(template):
+    result=[]
+    for triple_pattern in template:
+        tp=[]
+        for term in triple_pattern:
+            if isinstance(term,Variable):
+                tp.append(term.n3())
+            else:
+                tp.append(str(term))
+        result.append((tp[0],tp[1],tp[2]))
+    return result
 
 class ConstructIterator(PreemptableIterator):
     """A ConstructIterator evaluates a SPARQL construct (CONSTRUCT) in a pipeline of iterators.
@@ -58,15 +69,18 @@ class ConstructIterator(PreemptableIterator):
         for triple in self._template:
             bounded_triple = []
             for term in triple:
-                if isinstance(term,Variable):
-                    mu=find_in_mappings(term.n3(),mappings)
-                    if mu.startswith('http'):
-                        bounded_triple.append(URIRef(mu))
-                    else:
-                        bounded_triple.append(Literal(str(mu)))
+                if term.startswith('?'):
+                    bounded_triple.append(find_in_mappings(term,mappings))
                 else:
                     bounded_triple.append(term)
-            self._graph.add((bounded_triple[0],bounded_triple[1],bounded_triple[2]))
+            for i in range(0, len(bounded_triple)):
+                if bounded_triple[i].startswith("http"):
+                    bounded_triple[i]=URIRef(bounded_triple[i])
+                elif bounded_triple[i].startswith("_:"):
+                    bounded_triple[i]=BNode(bounded_triple[i])
+                else:
+                    bounded_triple[i]=Literal(str(bounded_triple[i]))
+            self._graph.add( (bounded_triple[0],bounded_triple[1],bounded_triple[2]) )
         return None
 
     def save(self) -> SavedConstructIterator:
@@ -74,5 +88,15 @@ class ConstructIterator(PreemptableIterator):
         saved_constr = SavedConstructIterator()
         source_field = self._source.serialized_name() + '_source'
         getattr(saved_constr, source_field).CopyFrom(self._source.save())
-        saved_constr.values.extend(self._template)
+
+        tp_list=[]
+        for tp in self._template:
+            tp_save=TriplePattern()
+            tp_save.subject=tp[0]
+            tp_save.predicate=tp[1]
+            tp_save.object=tp[2]
+            tp_save.graph=""
+            tp_list.append(tp_save)
+        saved_constr.template.extend(tp_list)
+        #print("construct_save:"+str(saved_constr))
         return saved_constr

@@ -36,16 +36,16 @@ import json
 #    register_custom_function(SAGE.rowid, rowid)
 
 
-async def execute(iterator):
-    try:
-        while iterator.has_next():
-            value = await iterator.next()
-            # discard null values
-            if value is not None:
-                print(value)
-    except StopAsyncIteration:
-#        print("stop")
-        pass
+# async def execute(iterator):
+#     try:
+#         while iterator.has_next():
+#             value = await iterator.next()
+#             # discard null values
+#             if value is not None:
+#                 print(value)
+#     except StopAsyncIteration:
+# #        print("stop")
+#         pass
 
 
 @click.command()
@@ -132,11 +132,29 @@ def explain(query_file,config_file,graph_uri,indentnb,update,parse):
     print("-----------------")
 
     client=TestClient(run_app(config_file))
+
+    # next_link = None
+    # response = post_sparql(client, query, next_link, graph_uri)
+    # response=response.json()
+    # print(json.dumps(response,indent=4))
+    # print("next:"+str(response['next']))
+
+
+    nbResults = 0
+    nbCalls = 0
+    hasNext = True
     next_link = None
-    response = post_sparql(client, query, next_link, graph_uri)
-    response=response.json()
-    print(json.dumps(response,indent=4))
-    print("next:"+str(response['next']))
+    while hasNext:
+        response = post_sparql(client, query, next_link, graph_uri)
+        response = response.json()
+        nbResults += len(response['bindings'])
+        hasNext = response['hasNext']
+        next_link = response['next']
+        nbCalls += 1
+
+        print(json.dumps(response['bindings'],indent=4))
+
+
 #    loop = asyncio.get_event_loop()
 #    loop.run_until_complete(execute(iterator))
 #    loop.close()

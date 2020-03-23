@@ -5,6 +5,8 @@ from typing import Dict, Optional, Union
 
 from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
+from sage.query_engine.iterators.bind import BindIterator
+from sage.query_engine.iterators.construct import ConstructIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
@@ -15,19 +17,21 @@ from sage.query_engine.protobuf.iterators_pb2 import (RootTree,
                                                       SavedFilterIterator,
                                                       SavedIndexJoinIterator,
                                                       SavedProjectionIterator,
-                                                      SavedScanIterator)
+                                                      SavedScanIterator,
+                                                      SavedBindIterator,
+                                                      SavedConstructIterator)
 from sage.query_engine.protobuf.utils import protoTriple_to_dict
 
-SavedProtobufPlan = Union[RootTree,SavedBagUnionIterator,SavedFilterIterator,SavedIndexJoinIterator,SavedProjectionIterator,SavedScanIterator]
+SavedProtobufPlan = Union[RootTree,SavedBagUnionIterator,SavedFilterIterator,SavedIndexJoinIterator,SavedProjectionIterator,SavedScanIterator,SavedBindIterator,SavedConstructIterator]
 
 
 def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator:
     """Load a preemptable physical query execution plan from a saved state.
-    
+
     Args:
       * saved_plan: Saved query execution plan.
       * dataset: RDF dataset used to execute the plan.
-    
+
     Returns:
       The pipeline of iterator used to continue query execution.
     """
@@ -48,17 +52,21 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
         return load_nlj(saved_plan, dataset)
     elif type(saved_plan) is SavedBagUnionIterator:
         return load_union(saved_plan, dataset)
+    elif type(saved_plan) is SavedBindIterator:
+        return load_bind(saved_plan, dataset)
+    elif type(saved_plan) is SavedConstructIterator:
+        return load_construct(saved_plan, dataset)
     else:
         raise Exception(f"Unknown iterator type '{type(saved_plan)}' when loading controls")
 
 
 def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset) -> PreemptableIterator:
     """Load a ProjectionIterator from a protobuf serialization.
-    
+
     Args:
       * saved_plan: Saved query execution plan.
       * dataset: RDF dataset used to execute the plan.
-    
+
     Returns:
       The pipeline of iterator used to continue query execution.
     """
@@ -70,11 +78,11 @@ def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset) -> Pr
 
 def load_filter(saved_plan: SavedFilterIterator, dataset: Dataset) -> PreemptableIterator:
     """Load a FilterIterator from a protobuf serialization.
-    
+
     Args:
       * saved_plan: Saved query execution plan.
       * dataset: RDF dataset used to execute the plan.
-    
+
     Returns:
       The pipeline of iterator used to continue query execution.
     """
@@ -85,14 +93,51 @@ def load_filter(saved_plan: SavedFilterIterator, dataset: Dataset) -> Preemptabl
         mu = saved_plan.mu
     return FilterIterator(source, saved_plan.expression, mu=mu)
 
+def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIterator:
+    """Load a BindIterator from a protobuf serialization.
 
-def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIterator:
-    """Load a ScanIterator from a protobuf serialization.
-    
     Args:
       * saved_plan: Saved query execution plan.
       * dataset: RDF dataset used to execute the plan.
-    
+
+    Returns:
+      The pipeline of iterator used to continue query execution.
+    """
+    sourceField = saved_plan.WhichOneof('source')
+    source = load(getattr(saved_plan, sourceField), dataset)
+
+    mu = None
+    if len(saved_plan.mu) > 0:
+        mu = saved_plan.mu
+    return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu)
+
+def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> PreemptableIterator:
+    """Load a ConstructIterator from a protobuf serialization.
+
+    Args:
+      * saved_plan: Saved query execution plan.
+      * dataset: RDF dataset used to execute the plan.
+
+    Returns:
+      The pipeline of iterator used to continue query execution.
+    """
+    sourceField = saved_plan.WhichOneof('source')
+    source = load(getattr(saved_plan, sourceField), dataset)
+    # saved as a list of triplePattern Objects, but Iterator waits for a list of tuple
+    template=[]
+    for tp in saved_plan.template:
+        template.append( (tp.subject,tp.predicate,tp.object) )
+    return ConstructIterator(source, template)
+
+
+
+def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIterator:
+    """Load a ScanIterator from a protobuf serialization.
+
+    Args:
+      * saved_plan: Saved query execution plan.
+      * dataset: RDF dataset used to execute the plan.
+
     Returns:
       The pipeline of iterator used to continue query execution.
     """
@@ -104,11 +149,11 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
 
 def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> PreemptableIterator:
     """Load a IndexJoinIterator from a protobuf serialization.
-    
+
     Args:
       * saved_plan: Saved query execution plan.
       * dataset: RDF dataset used to execute the plan.
-    
+
     Returns:
       The pipeline of iterator used to continue query execution.
     """
@@ -128,11 +173,11 @@ def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> Preemptabl
 
 def load_union(saved_plan: SavedBagUnionIterator, dataset: Dataset) -> PreemptableIterator:
     """Load a BagUnionIterator from a protobuf serialization.
-    
+
     Args:
       * saved_plan: Saved query execution plan.
       * dataset: RDF dataset used to execute the plan.
-    
+
     Returns:
       The pipeline of iterator used to continue query execution.
     """

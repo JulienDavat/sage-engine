@@ -1,6 +1,7 @@
 # server.py
 # Author: Thomas MINIER - MIT License 2017-2020
 import logging
+import traceback
 from sys import setrecursionlimit
 from time import time
 from typing import Dict, List, Optional, Tuple
@@ -199,7 +200,7 @@ def run_app(config_file: str) -> FastAPI:
     async def sparql_post(request: Request, item: SagePostQuery):
         """Execute a SPARQL query using the Web Preemption model"""
         try:
-            print("POST:"+str(request)+":"+str(item))
+            #print("server.py:"+str(request)+":"+str(item))
             mimetypes = request.headers['accept'].split(",")
             server_url = urlunparse(request.url.components[0:3] + (None, None, None))
             bindings, next_page, stats = await execute_query(item.query, item.defaultGraph, item.next, dataset)
@@ -207,6 +208,7 @@ def run_app(config_file: str) -> FastAPI:
         except HTTPException as err:
             raise err
         except Exception as err:
+            #traceback.print_stack()
             logging.error(err)
             raise HTTPException(status_code=500, detail=str(err))
 

@@ -36,7 +36,7 @@ class ScanIterator(PreemptableIterator):
     def serialized_name(self):
         """Get the name of the iterator, as used in the plan serialization protocol"""
         return "scan"
-    
+
     def last_read(self) -> str:
         return self._source.last_read()
 
@@ -47,7 +47,7 @@ class ScanIterator(PreemptableIterator):
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 
-        This function may contains `non interruptible` clauses which must 
+        This function may contains `non interruptible` clauses which must
         be atomically evaluated before preemption occurs.
 
         Returns: A set of solution mappings, or `None` if none was produced during this call.

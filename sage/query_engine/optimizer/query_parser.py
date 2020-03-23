@@ -17,7 +17,7 @@ from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
 from sage.query_engine.iterators.union import BagUnionIterator
-from sage.query_engine.iterators.construct import ConstructIterator
+from sage.query_engine.iterators.construct import ConstructIterator, convert_construct_template
 from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.utils import EmptyIterator
 from sage.query_engine.optimizer.join_builder import build_left_join_tree
@@ -303,7 +303,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         if node.datasetClause is not None:
             graphs = [format_term(graph_iri.default) for graph_iri in node.datasetClause]
         child=parse_query_alt(node.p, dataset, graphs, cardinalities, as_of=as_of)
-        return ConstructIterator(child,node.template)
+        return ConstructIterator(child,convert_construct_template(node.template))
     elif node.name == 'Project':
         query_vars = list(map(lambda t: '?' + str(t), node.PV))
         child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
@@ -326,7 +326,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
     elif node.name == 'Extend':
         bgp_iterator=parse_query_alt(node.p,dataset,current_graphs,cardinalities,as_of=as_of)
         expression = parse_bind_expr(node.expr)
-        print("expression:"+str(expression))
+        #print("expression:"+str(expression))
         if isinstance(bgp_iterator,EmptyIterator):
             return BindIterator(None,expression,'?'+node.var)
         else:

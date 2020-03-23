@@ -79,13 +79,8 @@ class SageEngine(object):
             abort_reason = str(err)
         finally:
             if plan.serialized_name()=='construct':
-                triple=dict()
-                for subject,predicate,object in plan.graph():
-                    triple['s']=subject.n3()
-                    triple['p']=predicate.n3()
-                    triple['o']=object.n3()
-                    #print("!!"+str(triple))
-                    results.append(triple)
+                for s,p,o in plan.graph():
+                    results.append({'s':s.n3(),'p':p.n3(),'o':str(o)})
             else:
                 while not queue.empty():
                     results.append(queue.get_nowait())

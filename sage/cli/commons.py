@@ -57,6 +57,7 @@ def sage_query(entrypoint, default_graph_uri, query, file, format, limit):
         response = requests.post(entrypoint, headers=headers, data=dumps(payload))
         json_response = response.json()
         #print(str(json_response))
+
         has_next = json_response['next']
         payload["next"] = json_response["next"]
         for bindings in json_response['bindings']:

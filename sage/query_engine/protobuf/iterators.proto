@@ -93,7 +93,7 @@ message SavedConstructIterator {
     SavedFilterIterator filter_source = 5;
     SavedBindIterator bind_source = 6;
   }
-  repeated string values = 7;
+  repeated TriplePattern template = 7;
 }
 
 message SavedInsertData {
