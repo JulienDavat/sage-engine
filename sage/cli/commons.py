@@ -101,10 +101,10 @@ def sage_query_star(entrypoint, default_graph_uri, query, file, format, limit):
     hasNext = True
     next_link = None
     while hasNext:
-        response = post_sparql(client, query, next_link, 'http://testserver/sparql/watdiv100')
+        response = post_sparql(client, query, next_link, default_graph_uri)
         response = response.json()
         nbResults += len(response['bindings'])
         hasNext = response['hasNext']
         next_link = response['next']
         nbCalls += 1
-        print(str(response['bindings']))
+        print(json.dumps(response['bindings'],indent=4))
