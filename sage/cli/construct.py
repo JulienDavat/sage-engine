@@ -29,13 +29,15 @@ from time import time
 coloredlogs.install(level='INFO', fmt='%(asctime)s - %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
 
+
 @click.command()
 @click.argument("entrypoint")
 @click.argument("default_graph_uri")
 @click.option("-q", "--query", type=str, default=None, help="SPARQL query to execute (passed in command-line)")
 @click.option("-f", "--file", type=str, default=None, help="File containing a SPARQL query to execute")
 @click.option("-l", "--limit", type=int, default=None, help="Maximum number of solutions bindings to fetch, similar to the SPARQL LIMIT modifier.")
-def sage_client(entrypoint, default_graph_uri, query, file, limit):
+@click.option("--format", type=click.Choice(["n3", "nquads","nt","pretty-xml","trig","trix","turtle","xml"]), default="nt", help="Format of the results set, formatted according to W3C SPARQL standards.")
+def sage_client_construct(entrypoint, default_graph_uri, query, file, limit,format):
     """
         Send a SPARQL query to a SaGe server hosted at ENTRYPOINT, with DEFAULT_GRAPH_URI as the default RDF Graph. It does not act as a Smart client, so only queries supported by the server will be evaluated.
 
@@ -73,35 +75,45 @@ def sage_client(entrypoint, default_graph_uri, query, file, limit):
     nbResults = 0
     nbCalls = 0
 
+    g=Graph()
+
     start=time()
-    while has_next and count < limit:
+    while has_next:
         response = requests.post(entrypoint, headers=headers, data=dumps(payload))
         json_response = response.json()
         has_next = json_response['next']
         payload["next"] = json_response["next"]
         nbResults += len(json_response['bindings'])
         nbCalls += 1
-        for bindings in json_response['bindings']:
-            print(str(bindings))
-        count += 1
-        if count >= limit:
+
+        buffer=""
+        for triple in json_response['bindings']:
+            line=triple['s']+" "+triple['p']+" "+triple['o']+" . \n"
+            buffer=buffer+line
+        g.parse(data=buffer, format='nt')
+        logger.info("{} calls, {} triples, {} triples in graph".format(nbCalls,nbResults,len(g)))
+        if len(g)>=limit:
             break
+
     end=time()
     logger.info("finished in {}s".format(end-start))
     logger.info("made {} calls".format(nbCalls))
     logger.info("got {} mappings".format(nbResults))
+    logger.info("gathered a graph of {} triples".format(len(g)))
+
 
 @click.command()
 @click.argument("config_file")
 @click.argument("default_graph_uri")
 @click.option("-q", "--query", type=str, default=None, help="SPARQL query to execute (passed in command-line)")
 @click.option("-f", "--file", type=str, default=None, help="File containing a SPARQL query to execute")
+@click.option("--format", type=click.Choice(["n3", "nquads","nt","pretty-xml","trig","trix","turtle","xml"]), default="nt", help="Format of the results set, formatted according to W3C SPARQL standards.")
 @click.option("-l", "--limit", type=int, default=None, help="Maximum number of solutions bindings to fetch, similar to the SPARQL LIMIT modifier.")
-def sage_query(config_file, default_graph_uri, query, file, limit):
+def sage_query_construct(config_file, default_graph_uri, query, file, format, limit):
     """
-        Execute a SPARQL query on an embedded Sage Server.
+        Execute a SPARQL CONSTRUCT query to a SaGe server.
 
-        Example usage: sage-query config.yaml http://example.org/swdf-postgres -f queries/spo.sparql
+        Example usage: sage-construct config.yaml http://example.org/swdf-postgres -f queries/construct.sparql
     """
     # assert that we have a query to evaluate
     if query is None and file is None:
@@ -118,11 +130,13 @@ def sage_query(config_file, default_graph_uri, query, file, limit):
 
     client=TestClient(run_app(config_file))
 
+
     nbResults = 0
     nbCalls = 0
     hasNext = True
     next_link = None
-    count=0
+
+    g=Graph()
     start = time()
 
     while hasNext:
@@ -132,13 +146,20 @@ def sage_query(config_file, default_graph_uri, query, file, limit):
         hasNext = response['hasNext']
         next_link = response['next']
         nbCalls += 1
-        for bindings in response['bindings']:
-            print(str(bindings))
-        count += 1
-        if count >= limit:
+        buffer=""
+        for triple in response['bindings']:
+            line=triple['s']+" "+triple['p']+" "+triple['o']+" . \n"
+            buffer=buffer+line
+        g.parse(data=buffer, format='nt')
+        logger.info("{} calls, {} triples, {} triples in graph".format(nbCalls,nbResults,len(g)))
+        if len(g)>=limit:
             break
+
 
     end= time()
     logger.info("finished in {}s".format(end-start))
     logger.info("made {} calls".format(nbCalls))
-    logger.info("got {} mappings".format(nbResults))
+    logger.info("got {} triples".format(nbResults))
+    logger.info("gathered a graph of {} triples".format(len(g)))
+
+    print(g.serialize(format=format))
