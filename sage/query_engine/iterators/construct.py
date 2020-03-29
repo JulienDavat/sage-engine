@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.protobuf.iterators_pb2 import (SavedConstructIterator,TriplePattern)
 from sage.query_engine.iterators.utils import find_in_mappings
+from sage.query_engine.iterators.filter import to_rdflib_term
 
 def convert_construct_template(template):
     result=[]
@@ -70,16 +71,18 @@ class ConstructIterator(PreemptableIterator):
             bounded_triple = []
             for term in triple:
                 if term.startswith('?'):
-                    bounded_triple.append(find_in_mappings(term,mappings))
+                    bounded_triple.append(to_rdflib_term(find_in_mappings(term,mappings)))
                 else:
-                    bounded_triple.append(term)
-            for i in range(0, len(bounded_triple)):
-                if bounded_triple[i].startswith("http"):
-                    bounded_triple[i]=URIRef(bounded_triple[i])
-                elif bounded_triple[i].startswith("_:"):
-                    bounded_triple[i]=BNode(bounded_triple[i])
-                else:
-                    bounded_triple[i]=Literal(str(bounded_triple[i]))
+                    bounded_triple.append(to_rdflib_term(term))
+            #line=bounded_triple[0]+" "+bounded_triple[1]+" "+bounded_triple[2]+" . "
+            # for i in range(0, len(bounded_triple)):
+            #     if bounded_triple[i].startswith("http"):
+            #         bounded_triple[i]=URIRef(bounded_triple[i])
+            #     elif bounded_triple[i].startswith("_:"):
+            #         bounded_triple[i]=BNode(bounded_triple[i])
+            #     else:
+            #         bounded_triple[i]=Literal(str(bounded_triple[i]))
+            #self._graph.parse(data=line, format='nt')
             self._graph.add( (bounded_triple[0],bounded_triple[1],bounded_triple[2]) )
         return None
 

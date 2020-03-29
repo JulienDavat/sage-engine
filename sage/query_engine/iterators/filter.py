@@ -2,38 +2,60 @@
 # Author: Thomas MINIER - MIT License 2017-2020
 from typing import Dict, Optional, Union
 
-from rdflib import Literal, URIRef, Variable
+from rdflib import Literal, URIRef, Variable, BNode
 from rdflib.plugins.sparql.algebra import translateQuery
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.sparql import Bindings, QueryContext
 from rdflib.util import from_n3
+from rdflib.plugins.parsers.ntriples import unquote,uriquote
+from rdflib.term import _is_valid_uri
 
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.primitives import PreemptiveLoop
 from sage.query_engine.protobuf.iterators_pb2 import SavedFilterIterator
 from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 
+import logging
+logger = logging.getLogger(__name__)
+import warnings
 
-def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable]:
+
+def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable,BNode]:
     """Convert a N3 term to a RDFLib Term.
 
     Argument: A RDF Term in N3 format.
 
     Returns: The RDF Term in rdflib format.
     """
-    #print("!!to_rdflib_term:"+str(value))
+#    if value.startswith('_:'):
+#        return BNode(value)
     if value.startswith('http') or value.startswith('file') or value.startswith('mailto'):
-        return URIRef(value)
+        uri=unquote(value)
+        uri=uriquote(uri)
+        if _is_valid_uri(uri):
+            return URIRef(uri)
+        else:
+            logger.warning('to_rdflib_term: %s invalid uri.'%value)
+            return Literal(uri)
+    #managing Literals
+    #"That Seventies Show"^^<http://www.w3.org/2001/XMLSchema#string>
     elif '"^^http' in value:
         index = value.find('"^^http')
         value = f"{value[0:index+3]}<{value[index+3:]}>"
         return from_n3(value)
 
+    # carefull
+    # >>> from_n3('lit')
+    #rdflib.term.BNode('lit')
+    #>>> from_n3('"lit"')
+    #rdflib.term.Literal('lit')
     try:
         result=from_n3(value)
         return result;
     except KeyError:
-        return URIRef(value) 
+        logger.warning('to_rdflib_term: %s cannot be converted to n3.'%value)
+        #print("oopps:"+value)
+        return Literal(value)
 
 
 class FilterIterator(PreemptableIterator):

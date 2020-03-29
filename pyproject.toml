@@ -20,7 +20,9 @@ exclude = [ "tests" ]
 
 [tool.poetry.scripts]
 sage = "sage.cli.http_server:start_sage_server"
+sage-client= "sage.cli.commons:sage_client"
 sage-query= "sage.cli.commons:sage_query"
+sage-construct= "sage.cli.commons:sage_query_construct"
 sage-explain= "sage.cli.explain:explain"
 sage-grpc = "sage.cli.grpc_server:start_grpc_server"
 sage-postgres-init = "sage.cli.postgres:init_postgres"

@@ -6,6 +6,10 @@ from asyncio import get_event_loop, wait_for
 from math import inf
 from typing import Dict, List, Optional, Tuple
 
+from rdflib import BNode, Literal, URIRef, Variable
+from rdflib import Graph
+from rdflib.plugins.serializers.nt import _quoteLiteral
+
 from sage.query_engine.exceptions import DeleteInsertConflict, TooManyResults
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.primitives import PreemptiveLoop
@@ -80,7 +84,7 @@ class SageEngine(object):
         finally:
             if plan.serialized_name()=='construct':
                 for s,p,o in plan.graph():
-                    results.append({'s':s.n3(),'p':p.n3(),'o':str(o)})
+                        results.append({'s':s.n3(),'p':p.n3(),'o':o.n3()})
             else:
                 while not queue.empty():
                     results.append(queue.get_nowait())

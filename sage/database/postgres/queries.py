@@ -13,7 +13,7 @@ def get_start_query(subj: str, pred: str, obj: str, table_name: str) -> Tuple[st
       * pred: Predicate of the triple pattern.
       * obj: Object of the triple pattern.
       * table_name: Name of the SQL table to scan for RDF triples.
-    
+
     Returns:
       A tuple with the prepared SQL query and its parameters.
     """
@@ -24,7 +24,8 @@ def get_start_query(subj: str, pred: str, obj: str, table_name: str) -> Tuple[st
         query += "WHERE subject = %s AND predicate = %s AND object = %s ORDER BY subject, predicate, object"
         params = (subj, pred, obj)
     elif kind == '???':
-        query += "ORDER BY subject, predicate, object"
+#        query += "ORDER BY subject, predicate, object"
+        query += "ORDER BY predicate, object, subject"
     elif kind == 's??':
         query += "WHERE subject = %s ORDER BY subject, predicate, object"
         params = [subj]
@@ -60,7 +61,7 @@ def get_resume_query(subj: str, pred: str, obj: str, last_read: Tuple[str, str, 
       * last_read: The SQL row from whoch to resume scanning.
       * table_name: Name of the SQL table to scan for RDF triples.
       * symbol: Symbol used to perform the keyset pagination. Defaults to ">=".
-    
+
     Returns:
       A tuple with the prepared SQL query and its parameters.
     """
@@ -71,8 +72,9 @@ def get_resume_query(subj: str, pred: str, obj: str, last_read: Tuple[str, str, 
     if kind == 'spo':
         return None, None
     elif kind == '???':
-        query += f"WHERE (subject, predicate, object) {symbol} (%s, %s, %s) ORDER BY subject, predicate, object"
-        params = (last_s, last_p, last_o)
+#        query += f"WHERE (subject, predicate, object) {symbol} (%s, %s, %s) ORDER BY subject, predicate, object"
+        query += f"WHERE (predicate, object, subject) {symbol} (%s, %s, %s) ORDER BY predicate, object, subject"
+        params = (last_p, last_o, last_s)
     elif kind == 's??':
         query += f"WHERE subject = %s AND (predicate, object) {symbol} (%s, %s) ORDER BY subject, predicate, object"
         params = (last_s, last_p, last_o)

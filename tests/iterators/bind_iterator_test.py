@@ -61,9 +61,6 @@ async def test_scan_inner():
     iterator, card = hdtDoc.search(innerTriple['subject'], innerTriple['predicate'], innerTriple['object'])
     scan = ScanIterator(iterator, innerTriple, card)
     (results, saved, done, _) = await engine.execute(scan, 10e7)
-    # while scan.has_next():
-    #     value =  await scan.next()
-    #     print(value)
     assert len(results) > 0
     assert done
 
@@ -78,12 +75,8 @@ async def test_rowbind():
     iterator, card = hdtDoc.search(triple['subject'], triple['predicate'], triple['object'])
     scan=ScanIterator(iterator, triple, card)
     bind=BindIterator(scan,"MD5(CONCAT(STR(?s),STR('http://isa'),STR(?o)))",'?z')
-    #print(rowbind)
 
     (results, saved, done, _) = await engine.execute(bind, 10e7)
-    # while rowbind.has_next():
-    #     value =  await rowbind.next()
-    #     print(value)
     assert len(results) > 0
     assert done
 

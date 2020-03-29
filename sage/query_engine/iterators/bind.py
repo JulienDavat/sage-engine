@@ -60,7 +60,7 @@ class BindIterator(PreemptableIterator):
 
         Argument: A set of solution mappings.
 
-        Returns: The outcome of evaluating the SPARQL FILTER on the input set of solution mappings.
+        Returns: The outcome of evaluating the SPARQL BIND on the input set of solution mappings.
         """
 #        print("bind_eval:"+str(bindings))
         context = None

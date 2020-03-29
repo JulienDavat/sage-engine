@@ -49,15 +49,26 @@ import json
 
 
 @click.command()
-@click.argument("query_file")
 @click.argument("config_file")
 @click.argument("graph_uri")
+@click.option("-q", "--query", type=str, default=None, help="SPARQL query to execute (passed in command-line)")
+@click.option("-f", "--file", type=str, default=None, help="File containing a SPARQL query to execute")
 @click.option("-u", "--update", is_flag=True, help="explain a SPARQL update query")
 @click.option("-p", "--parse", is_flag=True, help="print the query parse tree")
 @click.option("-i", "--indentnb", default=2, help="pretty print indent value")
 def explain(query_file,config_file,graph_uri,indentnb,update,parse):
     coloredlogs.install(level='INFO', fmt='%(asctime)s - %(levelname)s %(message)s')
     logger = logging.getLogger(__name__)
+
+    if query is None and file is None:
+        print("Error: you must specificy a query to execute, either with --query or --file. See sage-query --help for more informations.")
+        exit(1)
+
+    # load query from file if required
+    if file is not None:
+        with open(file) as query_file:
+            query = query_file.read()
+
 
     dataset = load_config(config_file)
     if dataset is None:
@@ -126,33 +137,33 @@ def explain(query_file,config_file,graph_uri,indentnb,update,parse):
     print("-----------------")
     pp.pprint(cards)
 
-
-    print("-----------------")
-    print("Results")
-    print("-----------------")
-
-    client=TestClient(run_app(config_file))
-
+    ## if you want to run it call sage-query !
+    # print("-----------------")
+    # print("Results")
+    # print("-----------------")
+    #
+    # client=TestClient(run_app(config_file))
+    #
+    # # next_link = None
+    # # response = post_sparql(client, query, next_link, graph_uri)
+    # # response=response.json()
+    # # print(json.dumps(response,indent=4))
+    # # print("next:"+str(response['next']))
+    #
+    #
+    # nbResults = 0
+    # nbCalls = 0
+    # hasNext = True
     # next_link = None
-    # response = post_sparql(client, query, next_link, graph_uri)
-    # response=response.json()
-    # print(json.dumps(response,indent=4))
-    # print("next:"+str(response['next']))
-
-
-    nbResults = 0
-    nbCalls = 0
-    hasNext = True
-    next_link = None
-    while hasNext:
-        response = post_sparql(client, query, next_link, graph_uri)
-        response = response.json()
-        nbResults += len(response['bindings'])
-        hasNext = response['hasNext']
-        next_link = response['next']
-        nbCalls += 1
-
-        print(json.dumps(response['bindings'],indent=4))
+    # while hasNext:
+    #     response = post_sparql(client, query, next_link, graph_uri)
+    #     response = response.json()
+    #     nbResults += len(response['bindings'])
+    #     hasNext = response['hasNext']
+    #     next_link = response['next']
+    #     nbCalls += 1
+    #
+    #     print(json.dumps(response['bindings'],indent=4))
 
 
 #    loop = asyncio.get_event_loop()
