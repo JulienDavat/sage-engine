@@ -28,7 +28,7 @@ from sage.query_engine.sage_engine import SageEngine
 class SagePostQuery(BaseModel):
     """Data model for the body of POST SPARQL queries"""
     query: str = Field(..., description="The SPARQL query to execute.")
-    defaultGraph: str = Field(..., description="The URI of the default RDF graph queried.")
+    defaultGraph: str = Field(None, description="(Optional) The URI of the default RDF graph queried.")
     next: str = Field(None, description="(Optional) A next link used to resume query execution from a saved state.")
 
 def choose_void_format(mimetypes):
@@ -170,7 +170,6 @@ def run_app(config_file: str) -> FastAPI:
     # Build the RDF dataset from the configuration file
     dataset = load_config(config_file)
 
-
     @app.get("/")
     async def root():
         return "The SaGe SPARQL query server is running!"
@@ -200,10 +199,10 @@ def run_app(config_file: str) -> FastAPI:
     async def sparql_post(request: Request, item: SagePostQuery):
         """Execute a SPARQL query using the Web Preemption model"""
         try:
-            #print("server.py:"+str(request)+":"+str(item))
             mimetypes = request.headers['accept'].split(",")
+            default_graph_uri = item.defaultGraph if item.defaultGraph is not None else dataset.default_graph
+            bindings, next_page, stats = await execute_query(item.query, default_graph_uri, item.next, dataset)
             server_url = urlunparse(request.url.components[0:3] + (None, None, None))
-            bindings, next_page, stats = await execute_query(item.query, item.defaultGraph, item.next, dataset)
             return create_response(mimetypes, bindings, next_page, stats, server_url)
         except HTTPException as err:
             raise err

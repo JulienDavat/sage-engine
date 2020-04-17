@@ -56,7 +56,7 @@ import json
 @click.option("-u", "--update", is_flag=True, help="explain a SPARQL update query")
 @click.option("-p", "--parse", is_flag=True, help="print the query parse tree")
 @click.option("-i", "--indentnb", default=2, help="pretty print indent value")
-def explain(query_file,config_file,graph_uri,indentnb,update,parse):
+def explain(query,file,config_file,graph_uri,indentnb,update,parse):
     coloredlogs.install(level='INFO', fmt='%(asctime)s - %(levelname)s %(message)s')
     logger = logging.getLogger(__name__)
 
@@ -84,9 +84,6 @@ def explain(query_file,config_file,graph_uri,indentnb,update,parse):
     engine = SageEngine()
     pp = pprint.PrettyPrinter(indent=indentnb)
 
-    query='';
-    with open(query_file,'r') as f:
-        query = f.read()
 
     if query is None:
         exit(1)

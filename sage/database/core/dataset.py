@@ -20,11 +20,12 @@ class Dataset(object):
       * statefull_manager: StatefullManager used to store saved plan (required in statefull mode).
     """
 
-    def __init__(self, name: str, description: str, graphs: Dict[str, Graph], public_url: Optional[str] = None, default_query: Optional[str] = None, analytics=None, stateless=True, statefull_manager: Optional[StatefullManager] = None):
+    def __init__(self, name: str, description: str, graphs: Dict[str, Graph], default_graph: Optional[str] = None, public_url: Optional[str] = None, default_query: Optional[str] = None, analytics=None, stateless=True, statefull_manager: Optional[StatefullManager] = None):
         super(Dataset, self).__init__()
         self._name = name
         self._desciption = description
         self._graphs = graphs
+        self._default_graph=default_graph
         self._public_url = public_url
         self._default_query = default_query
         self._analytics = analytics
@@ -71,6 +72,11 @@ class Dataset(object):
         # DEPRECATED
         return None
 
+    @property
+    def default_graph(self):
+        return self._default_graph
+
+
     def describe(self, url: str) -> Iterable[Dict[str, str]]:
         """Get a generator over dataset descriptions.
 
@@ -85,7 +91,7 @@ class Dataset(object):
 
     def get_graph(self, graph_uri: str) -> Optional[Graph]:
         """Get a RDF graph given its URI, otherwise returns None.
-          
+
         Args:
           * graph_uri: URI of the RDF graph to access.
 
@@ -96,7 +102,7 @@ class Dataset(object):
 
     def has_graph(self, graph_uri: str) -> bool:
         """Test if a RDF graph exists in the RDF dataset.
-        
+
         Args:
           * graph_uri: URI of the RDF graph to access.
 

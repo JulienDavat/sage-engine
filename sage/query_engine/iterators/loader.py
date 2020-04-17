@@ -104,7 +104,10 @@ def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIte
       The pipeline of iterator used to continue query execution.
     """
     sourceField = saved_plan.WhichOneof('source')
-    source = load(getattr(saved_plan, sourceField), dataset)
+    source = None
+    #print("sourcefield:"+str(sourceField))
+    if sourceField is not None:
+        source = load(getattr(saved_plan, sourceField), dataset)
 
     mu = None
     if len(saved_plan.mu) > 0:

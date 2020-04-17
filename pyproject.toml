@@ -22,6 +22,7 @@ exclude = [ "tests" ]
 sage = "sage.cli.http_server:start_sage_server"
 sage-client= "sage.cli.commons:sage_client"
 sage-query= "sage.cli.commons:sage_query"
+sage-multi= "sage.cli.tclient:sage_client_multi"
 sage-client-construct= "sage.cli.construct:sage_client_construct"
 sage-query-construct= "sage.cli.construct:sage_query_construct"
 sage-debug= "sage.cli.debug:sage_query_debug"

@@ -56,6 +56,7 @@ def load_config(config_file: str) -> Dataset:
         # same kind of usage than custom DB backends
         statefull_manager = HashMapManager()
 
+
     # get default time quantum & maximum number of results per page
     if 'quota' in config:
         if config['quota'] == 'inf':
@@ -70,6 +71,11 @@ def load_config(config_file: str) -> Dataset:
     else:
         logging.warning("You are using SaGe without limitations on the number of results sent per page. This is fine, but be carefull as very large page of results can have unexpected serialization time.")
         max_results = inf
+
+    #get default-graph-uri
+    default_graph=None
+    if 'default_graph_uri' in config:
+        default_graph=config['default_graph_uri']
 
     # build all RDF graphs found in the configuration file
     graphs = dict()
@@ -97,4 +103,10 @@ def load_config(config_file: str) -> Dataset:
         graphs[g_uri] = Graph(g_uri, g_name, g_description, g_connector, quantum=g_quantum, max_results=g_max_results, default_queries=g_queries)
         logging.info(f"RDF Graph '{g_uri}'  (backend: {g_config['backend']}) successfully loaded")
 
-    return Dataset(dataset_name, dataset_description, graphs, public_url=public_url, default_query=default_query, analytics=analytics, stateless=is_stateless, statefull_manager=statefull_manager)
+    if default_graph is not None and graphs[default_graph] is None:
+        logging.error(f"default_graph_uri {default_graph}, does not exist")
+    else:
+        logging.info(f"Default Graph is '{default_graph}'")
+
+
+    return Dataset(dataset_name, dataset_description, graphs, default_graph=default_graph, public_url=public_url, default_query=default_query, analytics=analytics, stateless=is_stateless, statefull_manager=statefull_manager)
