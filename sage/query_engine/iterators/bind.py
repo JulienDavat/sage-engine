@@ -14,7 +14,7 @@ from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.primitives import PreemptiveLoop
 from sage.query_engine.iterators.utils import find_in_mappings, EmptyIterator
 from sage.query_engine.protobuf.iterators_pb2 import SavedBindIterator
-#from sage.query_engine.iterators.utils import md5triple,mappings_to_ctx
+from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 from sage.query_engine.iterators.filter import to_rdflib_term
 
 class BindIterator(PreemptableIterator):
@@ -114,5 +114,5 @@ class BindIterator(PreemptableIterator):
         saved_bind.bindexpr= self._expr
         saved_bind.bindvar=self._bindvar
         if self._mu is not None:
-            pyDict_to_protoDict(self._mu, saved_filter.mu)
+            pyDict_to_protoDict(self._mu, saved_bind.mu)
         return saved_bind
