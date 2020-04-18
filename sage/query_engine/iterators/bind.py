@@ -109,8 +109,9 @@ class BindIterator(PreemptableIterator):
     def save(self) -> SavedBindIterator:
         """Save and serialize the iterator as a Protobuf message"""
         saved_bind = SavedBindIterator()
-        source_field = self._source.serialized_name() + '_source'
-        getattr(saved_bind, source_field).CopyFrom(self._source.save())
+        if self._source is not None:
+            source_field = self._source.serialized_name() + '_source'
+            getattr(saved_bind, source_field).CopyFrom(self._source.save())
         saved_bind.bindexpr= self._expr
         saved_bind.bindvar=self._bindvar
         if self._mu is not None:

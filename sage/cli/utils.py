@@ -3,7 +3,8 @@
 from sys import exit
 from os.path import isfile
 from yaml import load, FullLoader
-from rdflib import Graph
+from rdflib import Graph, BNode, Literal, URIRef
+
 from hdt import HDTDocument
 
 
@@ -45,6 +46,8 @@ def __n3_to_str(triple):
         o = o[1:len(o) - 1]
     return (s, p, o)
 
+# def __check_hdt_triple(triple):
+#     s=
 
 def get_rdf_reader(file_path, format='nt'):
     """Get an iterator over RDF triples from a file"""
