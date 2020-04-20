@@ -157,6 +157,8 @@ def parse_bind_expr(expr: dict) -> str:
             return f"REPLACE({parse_bind_expr(expr.arg)},\"{expr.pattern}\",\"{expr.replacement}\")"
         elif expr.name.startswith('Builtin_REGEX'):
             return f"REGEX({parse_bind_expr(expr.text)},\"{expr.pattern}\")"
+        elif expr.name.startswith('Builtin_CONTAINS'):
+            return f"(CONTAINS({parse_filter_expr(expr.arg1)},{parse_filter_expr(expr.arg2)}))"
         elif expr.name.startswith('Builtin_'):
             return f"{expr.name[8:]}({parse_bind_expr(expr.arg)})"
     raise UnsupportedSPARQL(f"Unsupported SPARQL BIND expression: {expr.name}")
@@ -194,6 +196,8 @@ def parse_filter_expr(expr: dict) -> str:
             return expression
         elif expr.name.startswith('Builtin_REGEX'):
             return f"(REGEX({parse_filter_expr(expr.text)},\"{expr.pattern}\"))"
+        elif expr.name.startswith('Builtin_CONTAINS'):
+            return f"(CONTAINS({parse_filter_expr(expr.arg1)},{parse_filter_expr(expr.arg2)}))"
         elif expr.name.startswith('Builtin_'):
             #print("pouet:"+str(expr.arg))
             return f"{expr.name[8:]}({parse_filter_expr(expr.arg)})"

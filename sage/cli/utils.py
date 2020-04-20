@@ -54,7 +54,7 @@ def get_rdf_reader(file_path, format='nt'):
     iterator = None
     nb_triples = 0
     # load standard RDF formats using rdflib
-    if format == 'nt' or format == 'ttl':
+    if format == 'nt' or format == 'ttl' or format== 'n3':
         g = Graph()
         g.parse(file_path, format=format)
         nb_triples = len(g)

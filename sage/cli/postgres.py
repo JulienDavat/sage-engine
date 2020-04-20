@@ -135,7 +135,7 @@ def index_postgres(config, graph_name):
 @click.argument("rdf_file")
 @click.argument("config")
 @click.argument("graph_name")
-@click.option("-f", "--format", type=click.Choice(["nt", "ttl", "hdt"]),
+@click.option("-f", "--format", type=click.Choice(["nt", "ttl", "hdt","n3"]),
               default="nt", show_default=True, help="Format of the input file. Supported: nt (N-triples), ttl (Turtle) and hdt (HDT).")
 @click.option("-b", "--block_size", type=int, default=100, show_default=True,
               help="Block size used for the bulk loading")
@@ -190,6 +190,123 @@ def put_postgres(config, graph_name, rdf_file, format, block_size, commit_thresh
                 connection.commit()
                 # logger.info("All changes were successfully committed.")
                 to_commit = 0
+    end = time()
+    logger.info("RDF triples ingestion successfully completed in {}s".format(end - start))
+
+    # run an ANALYZE query to rebuild statistics
+    logger.info("Rebuilding table statistics...")
+    start = time()
+    cursor.execute("ANALYZE {}".format(table_name))
+    end = time()
+    logger.info("Table statistics successfully rebuilt in {}s".format(end - start))
+
+    # commit and cleanup connection
+    logger.info("Committing and cleaning up...")
+    connection.commit()
+    cursor.close()
+    connection.close()
+    logger.info("RDF data from file '{}' successfully inserted into RDF graph '{}'".format(rdf_file, table_name))
+
+
+#--- 8<-------------
+
+from rdflib.plugins.parsers.ntriples import NTriplesParser, Sink
+import sys
+
+class StreamSink(Sink):
+    """
+    A sink is used to store the results of parsing, this almost matches the sink
+    example shown in ntriples:
+      https://github.com/RDFLib/rdflib/blob/395a40101fe133d97f454ee61da0fc748a93b007/rdflib/plugins/parsers/ntriples.py#L43
+    """
+    bucket = list()
+    length = 0
+    to_commit=0
+
+    def __init__(self, bucket_size,insert_into_query,cursor,connection,commit_threshold,logger):
+        self._bucket_size = bucket_size
+        self._insert_into_query=insert_into_query
+        self._cursor=cursor
+        self._connection=connection
+        self._commit_threshold=commit_threshold
+        # insert rdf triples
+        self.to_commit = 0
+        self._logger=logger
+
+    def triple(self, s, p, o):
+        self.length += 1
+
+        # max size for a btree index cell in postgres
+        if sys.getsizeof(o)<2730:
+            # try str(o) to get rid of strange unicode...
+            #  a= rdflib.term.Literal('\ud802\udc50', lang='en')
+            self.bucket.append((s, p, o))
+        else:
+            self._logger.info("truncated object {}".format(o))
+            # 2 bytes for an utf-8 ??
+            self.bucket.append((s,p,o[:1000]))
+        self.to_commit +=1
+        if len(self.bucket) >= self._bucket_size:
+            try :
+                execute_values(self._cursor, self._insert_into_query, self.bucket, page_size=self._bucket_size)
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                self._logger.error("bucket rejected {}".format(self.bucket))
+            self.bucket = list()
+
+        if self.to_commit >= self._commit_threshold:
+            # logger.info("Commit threshold reached. Committing all changes...")
+            self._connection.commit();
+            self._logger.info("inserted {} triples".format(self.length))
+            self.to_commit = 0
+
+        #print "Stream of triples s={s}, p={p}, o={o}".format(s=s, p=p, o=o)
+
+
+@click.command()
+@click.argument("rdf_file")
+@click.argument("config")
+@click.argument("graph_name")
+@click.option("-b", "--block_size", type=int, default=100, show_default=True,
+              help="Block size used for the bulk loading")
+@click.option("-c", "--commit_threshold", type=int, default=500000, show_default=True,
+              help="Commit after sending this number of RDF triples")
+def stream_postgres(config, graph_name, rdf_file, block_size, commit_threshold):
+    """
+        Insert RDF triples from file RDF_FILE into the RDF graph GRAPH_NAME, described in the configuration file CONFIG. The graph must use the PostgreSQL or PostgreSQL-MVCC backend.
+    """
+    # install logger
+    coloredlogs.install(level='INFO', fmt='%(asctime)s - %(levelname)s %(message)s')
+    logger = logging.getLogger(__name__)
+
+    # load graph from config file
+    graph, kind = load_graph(config, graph_name, logger, backends=['postgres', 'postgres-mvcc'])
+    enable_mvcc = kind == 'postgres-mvcc'
+
+    # init PostgreSQL connection
+    logger.info("Connecting to PostgreSQL server...")
+    connection = connect_postgres(graph)
+    logger.info("Connected to PostgreSQL server")
+    if connection is None:
+        exit(1)
+    # turn off autocommit
+    connection.autocommit = False
+
+    # compute SQL table name and the bulk load SQL query
+    table_name = graph['name']
+    insert_into_query = p_utils.get_postgres_insert_into(table_name, enable_mvcc=enable_mvcc)
+
+    cursor = connection.cursor()
+
+
+    logger.info("Reading NT RDF source file...(I hope)")
+#    iterator, nb_triples = get_rdf_reader(rdf_file, format=format)
+
+    start = time()
+    n = NTriplesParser(StreamSink(block_size,insert_into_query,cursor,connection,commit_threshold,logger))
+    with open(rdf_file, "rb") as anons:
+        n.parse(anons)
+
     end = time()
     logger.info("RDF triples ingestion successfully completed in {}s".format(end - start))
 
