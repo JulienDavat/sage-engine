@@ -240,7 +240,8 @@ class StreamSink(Sink):
         if sys.getsizeof(o)<2730:
             # try str(o) to get rid of strange unicode...
             #  a= rdflib.term.Literal('\ud802\udc50', lang='en')
-            self.bucket.append((s, p, o))
+            # a= rdflib.term.Literal('What tнe⃗ ♯$*! D⃗\ud835\udfb1 \ud835\udcccΣ (k)πow!?', lang='en')
+            self.bucket.append((s, p, o.n3().encode('utf-8','replace')))
         else:
             self._logger.info("truncated object {}".format(o))
             # 2 bytes for an utf-8 ??
