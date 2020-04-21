@@ -56,6 +56,9 @@ def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable,BNode]:
         logger.warning('to_rdflib_term: %s cannot be converted to n3.'%value)
         #print("oopps:"+value)
         return Literal(value)
+    except :
+        logger.warning('to_rdflib_term: %s can\'t be converted to n3.'%value)
+        return Literal(value)
 
 
 class FilterIterator(PreemptableIterator):

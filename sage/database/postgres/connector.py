@@ -21,7 +21,7 @@ def fetch_histograms(cursor, table_name: str, attribute_name: str) -> Tuple[int,
       * cursor: A psycopg cursor.
       * table_name: Name of the SQL table from which we should retrieve histograms.
       * attribute_name: Table attribute from which we should retrieve histograms.
-    
+
     Returns:
       A tuple (`null_frac`, `n_distinct`, `selectivities`, `sum_most_common_freqs`) where:
       * `null_frac` is the fraction of null values in the histogram.
@@ -36,16 +36,19 @@ def fetch_histograms(cursor, table_name: str, attribute_name: str) -> Tuple[int,
     # build selectivity table
     selectivities = {}
     cpt = 0
-    for common_val in most_common_vals[1:-1].split(","):
-        if cpt < len(most_common_freqs):
-            selectivities[common_val] = most_common_freqs[cpt]
-        cpt += 1
-    return (null_frac, n_distinct, selectivities, sum(most_common_freqs))
+    sum_mcf =0
+    if most_common_vals is not None:
+        for common_val in most_common_vals[1:-1].split(","):
+            if cpt < len(most_common_freqs):
+                selectivities[common_val] = most_common_freqs[cpt]
+                cpt += 1
+        sum_mcf=sum(most_common_freqs)
+    return (null_frac, n_distinct, selectivities, sum_mcf)
 
 
 class PostgresIterator(DBIterator):
     """A PostgresIterator fetches RDF triples from a PostgreSQL table using batch queries and lazy loading.
-    
+
     Args:
       * cursor: A psycopg cursor. This cursor must only be used for this iterator, to avoid side-effects.
       * connection: A psycopg connection.
@@ -250,7 +253,7 @@ class PostgresConnector(DatabaseConnector):
           * object: Object of the triple pattern.
           * last_read: A RDF triple ID. When set, the search is resumed for this RDF triple.
           * as_of: A version timestamp. When set, perform all reads against a consistent snapshot represented by this timestamp.
-          
+
         Returns:
           A tuple (`iterator`, `cardinality`), where `iterator` is a Python iterator over RDF triples matching the given triples pattern, and `cardinality` is the estimated cardinality of the triple pattern.
         """
@@ -290,7 +293,7 @@ class PostgresConnector(DatabaseConnector):
 
     def from_config(config: dict):
         """Build a PostgresConnector from a configuration object.
-        
+
         The configuration object must contains the following fields: 'dbname', 'name', 'user' and 'password'.
         Optional fields are: 'host', 'port' and 'fetch_size'.
         """
@@ -305,7 +308,7 @@ class PostgresConnector(DatabaseConnector):
 
     def insert(self, subject: str, predicate: str, obj: str) -> None:
         """Insert a RDF triple into the RDF graph.
-        
+
         Args:
           * subject: Subject of the RDF triple.
           * predicate: Predicate of the RDF triple.
@@ -321,7 +324,7 @@ class PostgresConnector(DatabaseConnector):
 
     def delete(self, subject: str, predicate: str, obj: str) -> None:
         """Delete a RDF triple from the RDF graph.
-        
+
         Args:
           * subject: Subject of the RDF triple.
           * predicate: Predicate of the RDF triple.
