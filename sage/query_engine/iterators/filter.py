@@ -6,7 +6,7 @@ from rdflib import Literal, URIRef, Variable, BNode
 from rdflib.plugins.sparql.algebra import translateQuery
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.sparql import Bindings, QueryContext
-from rdflib.util import from_n3
+from rdflib.util import from_n3,to_term
 from rdflib.plugins.parsers.ntriples import unquote,uriquote
 from rdflib.term import _is_valid_uri
 
@@ -20,45 +20,55 @@ logger = logging.getLogger(__name__)
 import warnings
 
 
-def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable,BNode]:
+def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable, BNode]:
     """Convert a N3 term to a RDFLib Term.
 
     Argument: A RDF Term in N3 format.
 
     Returns: The RDF Term in rdflib format.
     """
-#    if value.startswith('_:'):
-#        return BNode(value)
+# Tbe real pb:
+# From variable -> we create mappings by reading in the base
+# however:
+#  - We dont remember if it was a URI, Bnode, or litteral
+#  - And when we want to process filters, or bindings with RDFLib
+# we have to convert strings to RDFTerm in order to process them with
+# rdflib evaluation functions
+
     if value.startswith('http') or value.startswith('file') or value.startswith('mailto'):
-        uri=unquote(value)
-        uri=uriquote(uri)
-        if _is_valid_uri(uri):
-            return URIRef(uri)
-        else:
-            logger.warning('to_rdflib_term: %s invalid uri.'%value)
-            return Literal(uri)
+        return URIRef(value)
     #managing Literals
     #"That Seventies Show"^^<http://www.w3.org/2001/XMLSchema#string>
+    # generate N3 repr and parse...
     elif '"^^http' in value:
         index = value.find('"^^http')
         value = f"{value[0:index+3]}<{value[index+3:]}>"
-        return from_n3(value)
+    try:
+        result=from_n3(value)
+#        print(value+"->"+result)
+    except:
+        result=Literal(value)
+#        print(value+"-->"+result)
+        # raise SystemExit(0)
+    return result
+        #return Literal(value)
+
 
     # carefull
     # >>> from_n3('lit')
     #rdflib.term.BNode('lit')
     #>>> from_n3('"lit"')
     #rdflib.term.Literal('lit')
-    try:
-        result=from_n3(value)
-        return result;
-    except KeyError:
-        logger.warning('to_rdflib_term: %s cannot be converted to n3.'%value)
-        #print("oopps:"+value)
-        return Literal(value)
-    except :
-        logger.warning('to_rdflib_term: %s can\'t be converted to n3.'%value)
-        return Literal(value)
+    # try:
+    #     result=from_n3(value)
+    #     return result;
+    # except KeyError:
+    #     logger.warning('to_rdflib_term: %s cannot be converted to RDF term.'%value)
+    #     #print("oopps:"+value)
+    #     return Literal(value)
+    # except :
+    #     logger.warning('to_rdflib_term: %s can\'t be converted to RDF term.'%value)
+    #     return Literal(value)
 
 
 class FilterIterator(PreemptableIterator):

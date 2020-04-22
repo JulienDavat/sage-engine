@@ -239,9 +239,9 @@ class StreamSink(Sink):
         # max size for a btree index cell in postgres
         if sys.getsizeof(o)<2730:
             # try str(o) to get rid of strange unicode...
-            #  a= rdflib.term.Literal('\ud802\udc50', lang='en')
             # a= rdflib.term.Literal('What tнe⃗ ♯$*! D⃗\ud835\udfb1 \ud835\udcccΣ (k)πow!?', lang='en')
-            self.bucket.append((s, p, o.n3().encode('utf-8','replace')))
+            # encode -> transform string to byte using encoding, replace fix wrong unicode
+            self.bucket.append((s, p, str(o).encode('utf-8','replace').decode('utf-8')))
         else:
             self._logger.info("truncated object {}".format(o))
             # 2 bytes for an utf-8 ??
