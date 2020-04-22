@@ -32,18 +32,21 @@ def fetch_histograms(cursor, table_name: str, attribute_name: str) -> Tuple[int,
     base_query = f"SELECT null_frac, n_distinct, most_common_vals, most_common_freqs FROM pg_stats WHERE tablename = '{table_name}' AND attname = '{attribute_name}'"
     cursor.execute(base_query)
     record = cursor.fetchone()
-    null_frac, n_distinct, most_common_vals, most_common_freqs = record
-    # build selectivity table
-    selectivities = {}
-    cpt = 0
-    sum_mcf =0
-    if most_common_vals is not None:
-        for common_val in most_common_vals[1:-1].split(","):
-            if cpt < len(most_common_freqs):
-                selectivities[common_val] = most_common_freqs[cpt]
-                cpt += 1
-        sum_mcf=sum(most_common_freqs)
-    return (null_frac, n_distinct, selectivities, sum_mcf)
+    if record is None:
+        return (0,1000,{},0)
+    else:
+        null_frac, n_distinct, most_common_vals, most_common_freqs = record
+        # build selectivity table
+        selectivities = {}
+        cpt = 0
+        sum_mcf =0
+        if most_common_vals is not None:
+            for common_val in most_common_vals[1:-1].split(","):
+                if cpt < len(most_common_freqs):
+                    selectivities[common_val] = most_common_freqs[cpt]
+                    cpt += 1
+            sum_mcf=sum(most_common_freqs)
+        return (null_frac, n_distinct, selectivities, sum_mcf)
 
 
 class PostgresIterator(DBIterator):

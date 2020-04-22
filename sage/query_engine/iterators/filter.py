@@ -18,7 +18,7 @@ from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 import logging
 logger = logging.getLogger(__name__)
 import warnings
-
+import sys
 
 def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable, BNode]:
     """Convert a N3 term to a RDFLib Term.
@@ -40,35 +40,16 @@ def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable, BNode]:
     #managing Literals
     #"That Seventies Show"^^<http://www.w3.org/2001/XMLSchema#string>
     # generate N3 repr and parse...
-    elif '"^^http' in value:
-        index = value.find('"^^http')
-        value = f"{value[0:index+3]}<{value[index+3:]}>"
-    try:
-        result=from_n3(value)
-#        print(value+"->"+result)
+    result=None
+    try :
+        if value.startswith('"'):
+            result=from_n3(value)
+        else:
+            result=from_n3('"'+value+'"')
     except:
-        result=Literal(value)
-#        print(value+"-->"+result)
-        # raise SystemExit(0)
+        logger.warning(f'to_rdflib_term: {value} cannot be converted to RDF term. reason: {sys.exc_info()[0]}')
+        result=Literal(value.encode('utf-8','replace').decode('utf-8'))
     return result
-        #return Literal(value)
-
-
-    # carefull
-    # >>> from_n3('lit')
-    #rdflib.term.BNode('lit')
-    #>>> from_n3('"lit"')
-    #rdflib.term.Literal('lit')
-    # try:
-    #     result=from_n3(value)
-    #     return result;
-    # except KeyError:
-    #     logger.warning('to_rdflib_term: %s cannot be converted to RDF term.'%value)
-    #     #print("oopps:"+value)
-    #     return Literal(value)
-    # except :
-    #     logger.warning('to_rdflib_term: %s can\'t be converted to RDF term.'%value)
-    #     return Literal(value)
 
 
 class FilterIterator(PreemptableIterator):

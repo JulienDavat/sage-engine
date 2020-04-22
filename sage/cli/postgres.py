@@ -9,6 +9,8 @@ from psycopg2.extras import execute_values
 import coloredlogs
 import logging
 from time import time
+from rdflib.util import from_n3
+
 
 
 def bucketify(iterable, bucket_size):
@@ -219,11 +221,12 @@ class StreamSink(Sink):
     example shown in ntriples:
       https://github.com/RDFLib/rdflib/blob/395a40101fe133d97f454ee61da0fc748a93b007/rdflib/plugins/parsers/ntriples.py#L43
     """
-    bucket = list()
+    #bucket = list()
     length = 0
     to_commit=0
 
-    def __init__(self, bucket_size,insert_into_query,cursor,connection,commit_threshold,logger):
+    def __init__(self, bucket,  bucket_size,insert_into_query,cursor,connection,commit_threshold,logger):
+        self.bucket=bucket
         self._bucket_size = bucket_size
         self._insert_into_query=insert_into_query
         self._cursor=cursor
@@ -236,33 +239,28 @@ class StreamSink(Sink):
     def triple(self, s, p, o):
         self.length += 1
 
+        ow=o.n3()
+
         # max size for a btree index cell in postgres
-        if sys.getsizeof(o)<2730:
-            # try str(o) to get rid of strange unicode...
-            # a= rdflib.term.Literal('What tнe⃗ ♯$*! D⃗\ud835\udfb1 \ud835\udcccΣ (k)πow!?', lang='en')
-            # encode -> transform string to byte using encoding, replace fix wrong unicode
-            self.bucket.append((s, p, str(o).encode('utf-8','replace').decode('utf-8')))
+        # for experiments !! otherwise index md5 on object
+        if sys.getsizeof(ow)<2730:
+            self.bucket.append((s, p, ow))
         else:
             self._logger.info("truncated object {}".format(o))
             # 2 bytes for an utf-8 ??
-            self.bucket.append((s,p,o[:1000]))
+            self.bucket.append((s,p,ow[:1000]))
         self.to_commit +=1
         if len(self.bucket) >= self._bucket_size:
             try :
                 execute_values(self._cursor, self._insert_into_query, self.bucket, page_size=self._bucket_size)
             except:
-                print("Unexpected error:", sys.exc_info()[0])
-                self._logger.error("bucket rejected {}".format(self.bucket))
-            self.bucket = list()
+                self._logger.error(f"bucket rejected {self.bucket}. Reason {sys.exc_info()[0]}")
+            self.bucket.clear()
 
         if self.to_commit >= self._commit_threshold:
-            # logger.info("Commit threshold reached. Committing all changes...")
             self._connection.commit();
             self._logger.info("inserted {} triples".format(self.length))
             self.to_commit = 0
-
-        #print "Stream of triples s={s}, p={p}, o={o}".format(s=s, p=p, o=o)
-
 
 @click.command()
 @click.argument("rdf_file")
@@ -304,9 +302,17 @@ def stream_postgres(config, graph_name, rdf_file, block_size, commit_threshold):
 #    iterator, nb_triples = get_rdf_reader(rdf_file, format=format)
 
     start = time()
-    n = NTriplesParser(StreamSink(block_size,insert_into_query,cursor,connection,commit_threshold,logger))
+    bucket= list()
+    n = NTriplesParser(StreamSink(bucket, block_size,insert_into_query,cursor,connection,commit_threshold,logger))
     with open(rdf_file, "rb") as anons:
         n.parse(anons)
+    try :
+        print("remaining bucket:"+str(bucket))
+        execute_values(cursor, insert_into_query, bucket, page_size=block_size)
+    except:
+        logger.error("Failed to insert:"+str(bucket))
+
+    connection.commit()
 
     end = time()
     logger.info("RDF triples ingestion successfully completed in {}s".format(end - start))
