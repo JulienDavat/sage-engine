@@ -85,6 +85,10 @@ class SageEngine(object):
             if plan.serialized_name()=='construct':
                 for s,p,o in plan.graph():
                         results.append({'s':s.n3(),'p':p.n3(),'o':o.n3()})
+            elif plan.serialized_name()=='reduc':
+                #print(str(plan.results()))
+                for b in plan.results():
+                    results.append(b)
             else:
                 while not queue.empty():
                     results.append(queue.get_nowait())

@@ -35,21 +35,34 @@ def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable, BNode]:
 # we have to convert strings to RDFTerm in order to process them with
 # rdflib evaluation functions
 
-    if value.startswith('http') or value.startswith('file') or value.startswith('mailto'):
+    ## if data has been ingested with postgres sput !!
+    if value.startswith('"'):
+        try:
+            return from_n3(value)
+        except:
+            return Literal(f"{sys.exc_info()[0]}")
+    elif value.startswith('_'):
+        return BNode(value)
+    elif value.startswith('http'):
         return URIRef(value)
-    #managing Literals
-    #"That Seventies Show"^^<http://www.w3.org/2001/XMLSchema#string>
-    # generate N3 repr and parse...
-    result=None
-    try :
-        if value.startswith('"'):
-            result=from_n3(value)
-        else:
-            result=from_n3('"'+value+'"')
-    except:
-        logger.warning(f'to_rdflib_term: {value} cannot be converted to RDF term. reason: {sys.exc_info()[0]}')
-        result=Literal(value.encode('utf-8','replace').decode('utf-8'))
-    return result
+    else:
+        return Literal(value)
+
+    # if value.startswith('http') or value.startswith('file') or value.startswith('mailto'):
+    #     return URIRef(value)
+    # #managing Literals
+    # #"That Seventies Show"^^<http://www.w3.org/2001/XMLSchema#string>
+    # # generate N3 repr and parse...
+    # result=None
+    # try :
+    #     if value.startswith('"'):
+    #         result=from_n3(value)
+    #     else:
+    #         result=from_n3('"'+value+'"')
+    # except:
+    #     logger.warning(f'to_rdflib_term: {value} cannot be converted to RDF term. reason: {sys.exc_info()[0]}')
+    #     result=Literal(value.encode('utf-8','replace').decode('utf-8'))
+    # return result
 
 
 class FilterIterator(PreemptableIterator):
@@ -91,6 +104,26 @@ class FilterIterator(PreemptableIterator):
         context = QueryContext(bindings=b)
         context.prologue = self._prologue
         return self._compiled_expression.eval(context)
+
+    def next_sync(self) -> Optional[Dict[str, str]]:
+        """ Only for internal test !!
+        """
+        if not self.has_next():
+            raise StopAsyncIteration()
+        if self._mu is None:
+            self._mu = self._source.next_sync()
+#        with PreemptiveLoop() as loop:
+#            while not self._evaluate(self._mu):
+#                self._mu = await self._source.next()
+#                await loop.tick()
+        while not self._evaluate(self._mu):
+            self._mu =  self._source.next_sync()
+        if not self.has_next():
+            raise StopAsyncIteration()
+        mu = self._mu
+        self._mu = None
+        return mu
+
 
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.

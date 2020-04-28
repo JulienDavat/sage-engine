@@ -10,13 +10,13 @@ class PreemptiveLoop(object):
     Otherwise, such loops never yield back to the scheduler, which breaks the Round-Robin
     scheduling algorithm of the preemptive Web server.
     Yielding is performed using the `tick()` method.
-    
+
     However, a call to `asyncio.sleep(0)` costs a lot in term of performance, so we only
-    trigger every `threshold` calls to the tick() method. 
+    trigger every `threshold` calls to the tick() method.
     **This parameter defaults to 50 cycles**.
-    So, to optimize query execution performance, on need to minimize 
+    So, to optimize query execution performance, on need to minimize
     the use of loops in the pipeline of iterators and optimize the `threshold` value.
-    
+
     Argument: Number of ticks between each call to asyncio.sleep
 
     Example:
@@ -29,6 +29,7 @@ class PreemptiveLoop(object):
     def __init__(self, threshold=50):
         super(PreemptiveLoop, self).__init__()
         self._cpt = 0
+        #print(f" !!! threshold:{threshold}")
         self._threshold = threshold
 
     def __enter__(self):

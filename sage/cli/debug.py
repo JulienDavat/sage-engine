@@ -20,6 +20,7 @@ from math import inf
 from sys import exit
 import json
 import asyncio
+import uvloop
 
 import coloredlogs
 import logging
@@ -57,6 +58,10 @@ def sage_query_debug(config_file, default_graph_uri, query, file, limit ):
         print("Error: you must specificy a query to execute, either with --query or --file. See sage-query --help for more informations.")
         exit(1)
 
+    ## setting the log level of the asyncio logger to logging.DEBUG, for example the following snippet of code can be run at startup of the application:
+    #logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.DEBUG)
+
     if limit is None:
         limit = inf
 
@@ -79,3 +84,7 @@ def sage_query_debug(config_file, default_graph_uri, query, file, limit ):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(execute(engine,iterator,limit))
     loop.close()
+
+
+if __name__ == '__main__':
+    sage_query_debug()

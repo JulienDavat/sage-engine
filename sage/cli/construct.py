@@ -100,6 +100,7 @@ def sage_client_construct(entrypoint, default_graph_uri, query, file, limit,form
     logger.info("made {} calls".format(nbCalls))
     logger.info("got {} mappings".format(nbResults))
     logger.info("gathered a graph of {} triples".format(len(g)))
+    print(g.serialize(format=format).decode('utf8'))
 
 
 @click.command()
@@ -162,4 +163,4 @@ def sage_query_construct(config_file, default_graph_uri, query, file, format, li
     logger.info("got {} triples".format(nbResults))
     logger.info("gathered a graph of {} triples".format(len(g)))
 
-    print(g.serialize(format=format))
+    print(g.serialize(format=format).decode('utf8'))

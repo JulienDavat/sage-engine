@@ -13,6 +13,13 @@ message SavedScanIterator {
   TriplePattern triple = 1;
   string last_read = 2;
   int64 cardinality = 3;
+  int64 progress = 4;
+}
+
+message SavedReducedIterator {
+  oneof source {
+    SavedProjectionIterator proj_source = 1;
+   }
 }
 
 message SavedProjectionIterator {
@@ -115,5 +122,6 @@ message RootTree {
     SavedDeleteData delete_source = 7;
     SavedBindIterator bind_source=8;
     SavedConstructIterator construct_source = 9;
+    SavedReducedIterator reduc_source = 10;
   }
 }

@@ -17,6 +17,57 @@ from sage.query_engine.protobuf.iterators_pb2 import SavedBindIterator
 from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 from sage.query_engine.iterators.filter import to_rdflib_term
 
+from rdflib.plugins.sparql.operators import register_custom_function
+
+from urllib.parse import urlparse
+import codecs
+
+def myfunc(expr,ctx):
+    #print(str(expr))
+    return Literal(f"hello:{str(expr.expr[0])}")
+
+def rowid(expr,ctx):
+    print(str(ctx))
+    return URIRef("md5")
+
+class Dummy:
+    expr: None
+
+def summary(e,ctx):
+    s=e.expr[0]
+    p=e.expr[1]
+    o=e.expr[2]
+    ps=None
+    po=None
+    if isinstance(s,URIRef):
+        surl=urlparse(str(s))
+        ps = surl.scheme+"://"+surl.netloc
+        if isinstance(o,URIRef):
+            ourl=urlparse(str(o))
+            po=ourl.scheme+"://"+ourl.netloc
+            return f"<{ps}> <{p}> <{po}> ."
+        else:
+            return f"<{ps}> <{p}> \"lit\" ."
+    else:
+        return None
+
+def esummary(s,p,o):
+    if s.startswith("http"):
+        surl=urlparse(s)
+        ps=surl.scheme+"://"+surl.netloc
+        if o.startswith("http"):
+            ourl=urlparse(str(o))
+            po="<"+ourl.scheme+"://"+ourl.netloc+">"
+        else:
+            po='"lit"'
+        return(f"<{ps}> <{p}> {po} .")
+    else:
+        return None
+
+
+register_custom_function(URIRef("hello"),myfunc,raw=True)
+register_custom_function(URIRef("summ"),summary,raw=True)
+
 class BindIterator(PreemptableIterator):
     """A BindIterator evaluates a BIND statement in a pipeline of iterators.
 
@@ -33,6 +84,8 @@ class BindIterator(PreemptableIterator):
         self._bindvar = bindvar
         self._mu = mu
         self._delivered=False;
+        #print("bindexpr:"+bindexpr)
+        #print("bindvar:"+bindexpr)
 
         compiled_expr = parseQuery(f"SELECT * WHERE {{?s ?p ?o . BIND({bindexpr} as {bindvar})}}")
         compiled_expr = translateQuery(compiled_expr)
@@ -63,6 +116,20 @@ class BindIterator(PreemptableIterator):
         Returns: The outcome of evaluating the SPARQL BIND on the input set of solution mappings.
         """
 #        print("bind_eval:"+str(bindings))
+        ## For experiments on summaries
+        if self._expr.startswith("<esumm>"):
+            #print("express summ")
+            s=URIRef(bindings['?s'])
+            p=URIRef(bindings['?p'])
+            o=Literal(bindings['?o'])
+            dummy=Dummy()
+            dummy.expr=[s,p,o]
+            self._result= summary(dummy,None)
+            return self._result
+        elif self._expr.startswith("<fsumm>"):
+            self._result=esummary(bindings['?s'],bindings['?p'],bindings['?o'])
+            return self._result
+
         context = None
         if bindings is None:
             context=QueryContext(Bindings())
@@ -73,6 +140,40 @@ class BindIterator(PreemptableIterator):
         context.prologue = self._prologue
         self._result=self._compiled_expression.eval(context)
         return self._result
+
+    def next_sync(self) -> Optional[Dict[str, str]]:
+        """Get the next item from the iterator, following the iterator protocol.
+
+        This function may contains `non interruptible` clauses which must
+        be atomically evaluated before preemption occurs.
+
+        Returns: A set of solution mappings, or `None` if none was produced during this call.
+
+        Throws: `StopAsyncIteration` if the iterator cannot produce more items.
+        """
+        if not self.has_next():
+            raise StopAsyncIteration()
+
+        if self._source is None:
+            mappings=dict()
+            mappings[self._bindvar]=str(self._evaluate(self._mu))
+            self._delivered=True
+            return mappings
+        else:
+            if self._mu is None:
+                self._mu =  self._source.next_sync()
+            # with PreemptiveLoop() as loop:
+            #     while not self._evaluate(self._mu):
+            #         self._mu = await self._source.next()
+            #         await loop.tick()
+            self._evaluate(self._mu)
+            if not self.has_next():
+                raise StopAsyncIteration()
+            mu = self._mu
+            mu[self._bindvar]=str(self._result)
+            self._mu = None
+            return mu
+
 
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.

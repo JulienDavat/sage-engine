@@ -20,12 +20,13 @@ class ScanIterator(PreemptableIterator):
       * cardinality: The cardinality of the triple pattern.
     """
 
-    def __init__(self, source: DBIterator, triple: Dict[str, str], cardinality: int = 0):
+    def __init__(self, source: DBIterator, triple: Dict[str, str], cardinality: int = 0, progress: int = 0):
         super(ScanIterator, self).__init__()
         self._source = source
         self._triple = triple
         self._variables = vars_positions(triple['subject'], triple['predicate'], triple['object'])
         self._cardinality = cardinality
+        self._progress = progress
 
     def __len__(self) -> int:
         return self._cardinality
@@ -44,6 +45,18 @@ class ScanIterator(PreemptableIterator):
         """Return True if the iterator has more item to yield"""
         return self._source.has_next()
 
+    def next_sync(self) -> Optional[Dict[str, str]]:
+        """ test !!
+        """
+        if not self.has_next():
+            raise StopAsyncIteration()
+        triple = next(self._source)
+        self._progress+=1
+        if triple is None:
+            return None
+        return selection(triple, self._variables)
+
+
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 
@@ -57,6 +70,7 @@ class ScanIterator(PreemptableIterator):
         if not self.has_next():
             raise StopAsyncIteration()
         triple = next(self._source)
+        self._progress+=1
         if triple is None:
             return None
         return selection(triple, self._variables)
@@ -72,4 +86,5 @@ class ScanIterator(PreemptableIterator):
         saved_scan.triple.CopyFrom(triple)
         saved_scan.last_read = self._source.last_read()
         saved_scan.cardinality = self._cardinality
+        saved_scan.progress = self._progress
         return saved_scan

@@ -11,6 +11,9 @@ import logging
 from time import time
 from rdflib.util import from_n3
 
+# install logger
+coloredlogs.install(level='INFO', fmt='%(asctime)s - %(levelname)s %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def bucketify(iterable, bucket_size):
@@ -212,8 +215,34 @@ def put_postgres(config, graph_name, rdf_file, format, block_size, commit_thresh
 
 #--- 8<-------------
 
-from rdflib.plugins.parsers.ntriples import NTriplesParser, Sink
+from rdflib.plugins.parsers.ntriples import NTriplesParser, Sink, ParseError
 import sys
+from rdflib.util import from_n3
+from rdflib import BNode, Literal, URIRef, Variable,Graph
+import codecs
+
+class SkipParser(NTriplesParser):
+    def skipparse(self, f):
+        """Parse f as an N-Triples file."""
+        if not hasattr(f, 'read'):
+            raise ParseError("Item to parse must be a file-like object.")
+
+        # since N-Triples 1.1 files can and should be utf-8 encoded
+        f = codecs.getreader('utf-8')(f)
+
+        self.file = f
+        self.buffer = ''
+        while True:
+            self.line = self.readline()
+            if self.line is None:
+                break
+            try:
+                self.parseline()
+            except ParseError:
+                logger.warning(f"parse error: dropping {self.line}. Reason {sys.exc_info()[0]}")
+                continue
+                # raise ParseError("Invalid line: %r" % self.line)
+        return self.sink
 
 class StreamSink(Sink):
     """
@@ -239,14 +268,32 @@ class StreamSink(Sink):
     def triple(self, s, p, o):
         self.length += 1
 
-        ow=o.n3()
+        # drop incorrect triple
+        try:
+            a=f"{s.n3()} {p.n3()} {o.n3()}".encode('utf-8')
+        except:
+            self._logger.warning(f"print error. ({s},{p},{o}) Dropped.  Reason {sys.exc_info()[0]}")
+            return
+
+        #how to store objects ??
+        # if literal store starting with \"
+        # else store plain text (BNOde or URI)
+        if isinstance(o,Literal):
+            ow=o.n3()
+        else:
+            ow=str(o)
+        # try:
+        #     ow.encode('utf-8')
+        # except (UnicodeEncodeError):
+        #     ow=ow.encode('utf-8','backslashreplace').decode('utf-8')
+        #     self._logger.warning(f"corrected bad encoding for {ow} in {s} {p} {ow}. Reason {sys.exc_info()[0]}")
 
         # max size for a btree index cell in postgres
         # for experiments !! otherwise index md5 on object
         if sys.getsizeof(ow)<2730:
-            self.bucket.append((s, p, ow))
+            self.bucket.append((s, p, o))
         else:
-            self._logger.info("truncated object {}".format(o))
+            self._logger.warning("truncated object {}".format(o))
             # 2 bytes for an utf-8 ??
             self.bucket.append((s,p,ow[:1000]))
         self.to_commit +=1
@@ -274,9 +321,6 @@ def stream_postgres(config, graph_name, rdf_file, block_size, commit_threshold):
     """
         Insert RDF triples from file RDF_FILE into the RDF graph GRAPH_NAME, described in the configuration file CONFIG. The graph must use the PostgreSQL or PostgreSQL-MVCC backend.
     """
-    # install logger
-    coloredlogs.install(level='INFO', fmt='%(asctime)s - %(levelname)s %(message)s')
-    logger = logging.getLogger(__name__)
 
     # load graph from config file
     graph, kind = load_graph(config, graph_name, logger, backends=['postgres', 'postgres-mvcc'])
@@ -303,11 +347,11 @@ def stream_postgres(config, graph_name, rdf_file, block_size, commit_threshold):
 
     start = time()
     bucket= list()
-    n = NTriplesParser(StreamSink(bucket, block_size,insert_into_query,cursor,connection,commit_threshold,logger))
+    n = SkipParser(StreamSink(bucket, block_size,insert_into_query,cursor,connection,commit_threshold,logger))
     with open(rdf_file, "rb") as anons:
-        n.parse(anons)
+        n.skipparse(anons)
     try :
-        print("remaining bucket:"+str(bucket))
+        #print("remaining bucket:"+str(bucket))
         execute_values(cursor, insert_into_query, bucket, page_size=block_size)
     except:
         logger.error("Failed to insert:"+str(bucket))
@@ -318,11 +362,11 @@ def stream_postgres(config, graph_name, rdf_file, block_size, commit_threshold):
     logger.info("RDF triples ingestion successfully completed in {}s".format(end - start))
 
     # run an ANALYZE query to rebuild statistics
-    logger.info("Rebuilding table statistics...")
-    start = time()
-    cursor.execute("ANALYZE {}".format(table_name))
-    end = time()
-    logger.info("Table statistics successfully rebuilt in {}s".format(end - start))
+    # logger.info("Rebuilding table statistics...")
+    # start = time()
+    # cursor.execute("ANALYZE {}".format(table_name))
+    # end = time()
+    # logger.info("Table statistics successfully rebuilt in {}s".format(end - start))
 
     # commit and cleanup connection
     logger.info("Committing and cleaning up...")
@@ -330,3 +374,4 @@ def stream_postgres(config, graph_name, rdf_file, block_size, commit_threshold):
     cursor.close()
     connection.close()
     logger.info("RDF data from file '{}' successfully inserted into RDF graph '{}'".format(rdf_file, table_name))
+    logger.info(f"Remember to run ANALYZE on Postgres table: {table_name}")

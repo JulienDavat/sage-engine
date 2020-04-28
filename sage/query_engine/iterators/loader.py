@@ -10,6 +10,7 @@ from sage.query_engine.iterators.construct import ConstructIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
+from sage.query_engine.iterators.reduced import ReducedIterator
 from sage.query_engine.iterators.scan import ScanIterator
 from sage.query_engine.iterators.union import BagUnionIterator
 from sage.query_engine.protobuf.iterators_pb2 import (RootTree,
@@ -17,12 +18,17 @@ from sage.query_engine.protobuf.iterators_pb2 import (RootTree,
                                                       SavedFilterIterator,
                                                       SavedIndexJoinIterator,
                                                       SavedProjectionIterator,
+                                                      SavedReducedIterator,
                                                       SavedScanIterator,
                                                       SavedBindIterator,
                                                       SavedConstructIterator)
 from sage.query_engine.protobuf.utils import protoTriple_to_dict
 
-SavedProtobufPlan = Union[RootTree,SavedBagUnionIterator,SavedFilterIterator,SavedIndexJoinIterator,SavedProjectionIterator,SavedScanIterator,SavedBindIterator,SavedConstructIterator]
+##1
+## Don't forget to add your saved iterator here !!
+## If you add one ....
+###
+SavedProtobufPlan = Union[RootTree,SavedBagUnionIterator,SavedFilterIterator,SavedIndexJoinIterator,SavedProjectionIterator,SavedScanIterator,SavedBindIterator,SavedConstructIterator,SavedReducedIterator]
 
 
 def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator:
@@ -44,8 +50,10 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
     # load the plan based on the current node
     if type(saved_plan) is SavedFilterIterator:
         return load_filter(saved_plan, dataset)
-    if type(saved_plan) is SavedProjectionIterator:
+    elif type(saved_plan) is SavedProjectionIterator:
         return load_projection(saved_plan, dataset)
+    elif type(saved_plan) is SavedReducedIterator:
+        return load_reduced(saved_plan, dataset)
     elif type(saved_plan) is SavedScanIterator:
         return load_scan(saved_plan, dataset)
     elif type(saved_plan) is SavedIndexJoinIterator:
@@ -74,6 +82,21 @@ def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset) -> Pr
     source = load(getattr(saved_plan, sourceField), dataset)
     values = saved_plan.values if len(saved_plan.values) > 0 else None
     return ProjectionIterator(source, values)
+
+def load_reduced(saved_plan: SavedReducedIterator, dataset: Dataset) -> PreemptableIterator:
+    """Load a ReducedIterator from a protobuf serialization.
+
+    Args:
+      * saved_plan: Saved query execution plan.
+      * dataset: RDF dataset used to execute the plan.
+
+    Returns:
+      The pipeline of iterator used to continue query execution.
+    """
+    sourceField = saved_plan.WhichOneof('source')
+    source = load(getattr(saved_plan, sourceField), dataset)
+    return ReducedIterator(source)
+
 
 
 def load_filter(saved_plan: SavedFilterIterator, dataset: Dataset) -> PreemptableIterator:
@@ -147,7 +170,7 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
     triple = saved_plan.triple
     s, p, o, g = (triple.subject, triple.predicate, triple.object, triple.graph)
     iterator, card = dataset.get_graph(g).search(s, p, o, last_read=saved_plan.last_read)
-    return ScanIterator(iterator, protoTriple_to_dict(triple), saved_plan.cardinality)
+    return ScanIterator(iterator, protoTriple_to_dict(triple), saved_plan.cardinality,saved_plan.progress)
 
 
 def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> PreemptableIterator:

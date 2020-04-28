@@ -19,6 +19,7 @@ from sage.query_engine.iterators.projection import ProjectionIterator
 from sage.query_engine.iterators.union import BagUnionIterator
 from sage.query_engine.iterators.construct import ConstructIterator, convert_construct_template
 from sage.query_engine.iterators.bind import BindIterator
+from sage.query_engine.iterators.reduced import ReducedIterator
 from sage.query_engine.iterators.utils import EmptyIterator
 from sage.query_engine.optimizer.join_builder import build_left_join_tree
 from sage.query_engine.optimizer.join_builder import continue_left_join_tree
@@ -159,6 +160,12 @@ def parse_bind_expr(expr: dict) -> str:
             return f"REGEX({parse_bind_expr(expr.text)},\"{expr.pattern}\")"
         elif expr.name.startswith('Builtin_CONTAINS'):
             return f"(CONTAINS({parse_filter_expr(expr.arg1)},{parse_filter_expr(expr.arg2)}))"
+        elif expr.name.startswith('Function'):
+            if expr.expr is None:
+                return  f"<{expr.iri}>()"
+            else:
+                items=[parse_bind_expr(i) for i in expr.expr]
+                return f"<{expr.iri}>({','.join(items)})"
         elif expr.name.startswith('Builtin_'):
             return f"{expr.name[8:]}({parse_bind_expr(expr.arg)})"
     raise UnsupportedSPARQL(f"Unsupported SPARQL BIND expression: {expr.name}")
@@ -308,6 +315,9 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
             graphs = [format_term(graph_iri.default) for graph_iri in node.datasetClause]
         child=parse_query_alt(node.p, dataset, graphs, cardinalities, as_of=as_of)
         return ConstructIterator(child,convert_construct_template(node.template))
+    elif node.name == 'Reduced':
+        child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
+        return ReducedIterator(child)
     elif node.name == 'Project':
         query_vars = list(map(lambda t: '?' + str(t), node.PV))
         child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)

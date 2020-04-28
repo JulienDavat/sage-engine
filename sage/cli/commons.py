@@ -13,6 +13,23 @@ from sage.query_engine.optimizer.query_parser import parse_query
 from sage.database.core.yaml_config import load_config
 from sage.query_engine.sage_engine import SageEngine
 
+from sage.query_engine.iterators.loader import load
+from sage.query_engine.optimizer.query_parser import parse_query
+from sage.query_engine.sage_engine import SageEngine
+from sage.http_server.utils import decode_saved_plan, encode_saved_plan
+from sage.database.core.dataset import Dataset
+from sage.database.core.yaml_config import load_config
+
+from sage.query_engine.protobuf.iterators_pb2 import (RootTree,
+                                                      SavedBagUnionIterator,
+                                                      SavedFilterIterator,
+                                                      SavedIndexJoinIterator,
+                                                      SavedProjectionIterator,
+                                                      SavedReducedIterator,
+                                                      SavedScanIterator,
+                                                      SavedBindIterator,
+                                                      SavedConstructIterator)
+
 import click
 import requests
 from json import dumps
@@ -91,6 +108,16 @@ def sage_client(entrypoint, default_graph_uri, query, file, limit):
     logger.info("made {} calls".format(nbCalls))
     logger.info("got {} mappings".format(nbResults))
 
+
+def progress(saved_plan):
+    sourceField = saved_plan.WhichOneof('source')
+    if sourceField=="scan_source":
+        scan=getattr(saved_plan,sourceField)
+        return scan.progress,scan.cardinality
+    else:
+        return progress(getattr(saved_plan, sourceField))
+
+
 @click.command()
 @click.argument("config_file")
 @click.argument("default_graph_uri")
@@ -116,6 +143,9 @@ def sage_query(config_file, default_graph_uri, query, file, limit):
         with open(file) as query_file:
             query = query_file.read()
 
+    # dataset = load_config(config_file)
+    # if not dataset.has_graph(default_graph_uri):
+    #     print("Error: the config_file does not define your {default_graph_uri}.")
     client=TestClient(run_app(config_file))
 
     nbResults = 0
@@ -131,9 +161,19 @@ def sage_query(config_file, default_graph_uri, query, file, limit):
         nbResults += len(response['bindings'])
         hasNext = response['hasNext']
         next_link = response['next']
+
+        if next_link is not None:
+            saved_plan = next_link
+            plan = decode_saved_plan(saved_plan)
+            root = RootTree()
+            root.ParseFromString(plan)
+            prog,card=progress(root)
+            logger.info(f"{prog}/{card}:{prog/card*100}%")
+
         nbCalls += 1
         for bindings in response['bindings']:
-            print(str(bindings))
+            for k,v in bindings.items():
+                print(f"{v} ")
         count += 1
         if count >= limit:
             break
