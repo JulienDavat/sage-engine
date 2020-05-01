@@ -110,12 +110,20 @@ def sage_client(entrypoint, default_graph_uri, query, file, limit):
 
 
 def progress(saved_plan):
-    sourceField = saved_plan.WhichOneof('source')
-    if sourceField=="scan_source":
-        scan=getattr(saved_plan,sourceField)
-        return scan.progress,scan.cardinality
-    else:
-        return progress(getattr(saved_plan, sourceField))
+    try:
+        #print(f"...{type(saved_plan)}...")
+        if type(saved_plan) is SavedScanIterator:
+            return saved_plan.progress,saved_plan.cardinality
+        elif type(saved_plan) is SavedBagUnionIterator:
+            sourceField=saved_plan.WhichOneof('left')
+            return progress(getattr(saved_plan,sourceField))
+        else:
+            sourceField=saved_plan.WhichOneof('source')
+            return progress(getattr(saved_plan, sourceField))
+    except:
+        logger.warning(f"progress {type(saved_plan)} has no source")
+        #exit()
+        return 1,1
 
 
 @click.command()
@@ -162,18 +170,22 @@ def sage_query(config_file, default_graph_uri, query, file, limit):
         hasNext = response['hasNext']
         next_link = response['next']
 
+
+        nbCalls += 1
+        for bindings in response['bindings']:
+            print(bindings)
+#            for k,v in bindings.items():
+#                print(f"{v} ")
+
         if next_link is not None:
             saved_plan = next_link
             plan = decode_saved_plan(saved_plan)
             root = RootTree()
             root.ParseFromString(plan)
             prog,card=progress(root)
-            logger.info(f"{prog}/{card}:{prog/card*100}%")
+            logger.info(f"progression {prog}/{card}:{prog/card*100}%")
 
-        nbCalls += 1
-        for bindings in response['bindings']:
-            for k,v in bindings.items():
-                print(f"{v} ")
+
         count += 1
         if count >= limit:
             break

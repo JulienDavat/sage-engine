@@ -64,6 +64,13 @@ def esummary(s,p,o):
     else:
         return None
 
+## maybe useless
+## just use regular bind...
+def reify(s,p,o):
+    rs=s+p+o
+    return URIRef("http://"+hashlib.md5(rs.encode('utf-8')).hexdigest())
+
+
 
 register_custom_function(URIRef("hello"),myfunc,raw=True)
 register_custom_function(URIRef("summ"),summary,raw=True)

@@ -115,6 +115,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
         return (bindings, next_page, stats)
     except Exception as err:
         # abort all ongoing transactions, then forward the exception to the main loop
+        logging.error(f"sage execute_query error: {err}")
         if graph is not None:
             graph.abort()
         raise err
@@ -191,7 +192,7 @@ def run_app(config_file: str) -> FastAPI:
         except HTTPException as err:
             raise err
         except Exception as err:
-            logging.error(err)
+            logging.error(f"sage get error:{err}")
             raise HTTPException(status_code=500, detail=str(err))
 
 
@@ -208,7 +209,7 @@ def run_app(config_file: str) -> FastAPI:
             raise err
         except Exception as err:
             #traceback.print_stack()
-            logging.error(err)
+            logging.error(f"sage post error: {err}")
             raise HTTPException(status_code=500, detail=str(err))
 
     @app.get("/void/", description="Get the VoID description of the SaGe server")

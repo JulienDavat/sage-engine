@@ -33,12 +33,19 @@ logger = logging.getLogger(__name__)
 
 #    (results, saved, done, _) = await engine.execute(scan, 10e7)
 async def execute(engine,iterator,limit):
-    try:
-        (results, saved, done, _) = await engine.execute(iterator, 10e7)
-        for r in results:
-            print(str(r))
-    except StopAsyncIteration:
-        pass
+#    try:
+        while iterator.has_next():
+            value = await iterator.next()
+            print(value)
+#    except:
+#        print("error in debug/execute")
+
+    # try:
+    #     (results, saved, done, _) = await engine.execute(iterator, 10e7)
+    #     for r in results:
+    #         print(str(r))
+    # except StopAsyncIteration:
+    #     pass
 
 
 @click.command()

@@ -24,6 +24,9 @@ from sage.query_engine.protobuf.iterators_pb2 import (RootTree,
                                                       SavedConstructIterator)
 from sage.query_engine.protobuf.utils import protoTriple_to_dict
 
+import sys, traceback
+import logging
+
 ##1
 ## Don't forget to add your saved iterator here !!
 ## If you add one ....
@@ -42,30 +45,36 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
       The pipeline of iterator used to continue query execution.
     """
     # unpack the plan from the serialized protobuf message
-    if isinstance(saved_plan, bytes):
-        root = RootTree()
-        root.ParseFromString(saved_plan)
-        sourceField = root.WhichOneof('source')
-        saved_plan = getattr(root, sourceField)
-    # load the plan based on the current node
-    if type(saved_plan) is SavedFilterIterator:
-        return load_filter(saved_plan, dataset)
-    elif type(saved_plan) is SavedProjectionIterator:
-        return load_projection(saved_plan, dataset)
-    elif type(saved_plan) is SavedReducedIterator:
-        return load_reduced(saved_plan, dataset)
-    elif type(saved_plan) is SavedScanIterator:
-        return load_scan(saved_plan, dataset)
-    elif type(saved_plan) is SavedIndexJoinIterator:
-        return load_nlj(saved_plan, dataset)
-    elif type(saved_plan) is SavedBagUnionIterator:
-        return load_union(saved_plan, dataset)
-    elif type(saved_plan) is SavedBindIterator:
-        return load_bind(saved_plan, dataset)
-    elif type(saved_plan) is SavedConstructIterator:
-        return load_construct(saved_plan, dataset)
-    else:
-        raise Exception(f"Unknown iterator type '{type(saved_plan)}' when loading controls")
+    try:
+#        print(f"...{type(saved_plan)}...")
+        if isinstance(saved_plan, bytes):
+            root = RootTree()
+            root.ParseFromString(saved_plan)
+            sourceField = root.WhichOneof('source')
+            saved_plan = getattr(root, sourceField)
+        # load the plan based on the current node
+        if type(saved_plan) is SavedFilterIterator:
+            return load_filter(saved_plan, dataset)
+        elif type(saved_plan) is SavedProjectionIterator:
+            return load_projection(saved_plan, dataset)
+        elif type(saved_plan) is SavedReducedIterator:
+            return load_reduced(saved_plan, dataset)
+        elif type(saved_plan) is SavedScanIterator:
+            return load_scan(saved_plan, dataset)
+        elif type(saved_plan) is SavedIndexJoinIterator:
+            return load_nlj(saved_plan, dataset)
+        elif type(saved_plan) is SavedBagUnionIterator:
+            return load_union(saved_plan, dataset)
+        elif type(saved_plan) is SavedBindIterator:
+            return load_bind(saved_plan, dataset)
+        elif type(saved_plan) is SavedConstructIterator:
+            return load_construct(saved_plan, dataset)
+        else:
+            raise Exception(f"Unknown iterator type '{type(saved_plan)}' when loading controls")
+    except:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+        logging.error(f"load_plan:{sys.exc_info()[0]}")
 
 
 def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset) -> PreemptableIterator:
@@ -126,16 +135,20 @@ def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIte
     Returns:
       The pipeline of iterator used to continue query execution.
     """
-    sourceField = saved_plan.WhichOneof('source')
-    source = None
-    #print("sourcefield:"+str(sourceField))
-    if sourceField is not None:
-        source = load(getattr(saved_plan, sourceField), dataset)
+    try:
+        sourceField = saved_plan.WhichOneof('source')
+        source = None
+        #print("sourcefield:"+str(sourceField))
+        if sourceField is not None:
+            source = load(getattr(saved_plan, sourceField), dataset)
 
-    mu = None
-    if len(saved_plan.mu) > 0:
-        mu = saved_plan.mu
-    return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu)
+        mu = None
+        if len(saved_plan.mu) > 0:
+            mu = saved_plan.mu
+        return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu)
+    except:
+        logging.error(f"load_bind:{sys.exc_info()[0]}")
+
 
 def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> PreemptableIterator:
     """Load a ConstructIterator from a protobuf serialization.
@@ -167,10 +180,14 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
     Returns:
       The pipeline of iterator used to continue query execution.
     """
-    triple = saved_plan.triple
-    s, p, o, g = (triple.subject, triple.predicate, triple.object, triple.graph)
-    iterator, card = dataset.get_graph(g).search(s, p, o, last_read=saved_plan.last_read)
-    return ScanIterator(iterator, protoTriple_to_dict(triple), saved_plan.cardinality,saved_plan.progress)
+    try:
+        triple = saved_plan.triple
+        s, p, o, g = (triple.subject, triple.predicate, triple.object, triple.graph)
+        iterator, card = dataset.get_graph(g).search(s, p, o, last_read=saved_plan.last_read)
+        return ScanIterator(iterator, protoTriple_to_dict(triple), saved_plan.cardinality,saved_plan.progress)
+    except:
+        logging.error(f"load_scan:{sys.exc_info()[0]}")
+
 
 
 def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> PreemptableIterator:
@@ -183,18 +200,29 @@ def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> Preemptabl
     Returns:
       The pipeline of iterator used to continue query execution.
     """
-    currentBinding = None
-    sourceField = saved_plan.WhichOneof('source')
-    source = load(getattr(saved_plan, sourceField), dataset)
-    innerTriple = protoTriple_to_dict(saved_plan.inner)
-    if saved_plan.timestamp is not None:
-        as_of = datetime.fromisoformat(saved_plan.timestamp)
-    else:
-        as_of = None
-    if len(saved_plan.muc) > 0:
-        currentBinding = saved_plan.muc
-    graph = dataset.get_graph(innerTriple['graph'])
-    return IndexJoinIterator(source, innerTriple, graph, currentBinding=currentBinding, last_read=saved_plan.last_read, as_of=as_of)
+    try:
+        currentBinding = None
+        sourceField = saved_plan.WhichOneof('source')
+        source = load(getattr(saved_plan, sourceField), dataset)
+        innerTriple = protoTriple_to_dict(saved_plan.inner)
+        if saved_plan.timestamp is not None:
+            ### hmm, seems that  timestamp can be ''
+            ### maybe possible with bind ??
+            if saved_plan.timestamp=='':
+                as_of = None
+            else:
+                as_of = datetime.fromisoformat(saved_plan.timestamp)
+        else:
+            as_of = None
+        if len(saved_plan.muc) > 0:
+            currentBinding = saved_plan.muc
+        graph = dataset.get_graph(innerTriple['graph'])
+        return IndexJoinIterator(source, innerTriple, graph, currentBinding=currentBinding, last_read=saved_plan.last_read, as_of=as_of)
+    except:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_tb(exc_traceback, limit=10, file=sys.stdout)
+        logging.error(f"load_nlj:{sys.exc_info()[0]}")
+
 
 
 def load_union(saved_plan: SavedBagUnionIterator, dataset: Dataset) -> PreemptableIterator:
