@@ -15,10 +15,13 @@ from sage.query_engine.primitives import PreemptiveLoop
 from sage.query_engine.protobuf.iterators_pb2 import SavedFilterIterator
 from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 
+from rdflib.plugins.sparql.operators import register_custom_function
+
 import logging
 logger = logging.getLogger(__name__)
 import warnings
 import sys
+import re
 
 def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable, BNode]:
     """Convert a N3 term to a RDFLib Term.
@@ -64,6 +67,35 @@ def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable, BNode]:
     #     result=Literal(value.encode('utf-8','replace').decode('utf-8'))
     # return result
 
+def toString(e):
+    if (isinstance(e, URIRef)):
+        return f"<{str(e)}>"
+    else:
+        return str(e)
+
+def allDiff(e, ctx):
+    visited = {}
+    for i in range(len(e.expr)):
+        key = toString(e.expr[i])
+        if key in visited:
+            return False
+        visited[key] = True
+    return True
+
+def direct_allDiff(vars, bindings):
+    visited = {}
+    for i in range(len(vars)):
+        key = None
+        if vars[i].startswith('?'):
+            key = bindings[vars[i]]
+        else:
+            key = vars[i]
+        if key in visited:
+            return False
+        visited[key] = True
+    return True
+
+register_custom_function(URIRef("http://localhost:8080/allDiff"),allDiff,raw=True)
 
 class FilterIterator(PreemptableIterator):
     """A FilterIterator evaluates a FILTER clause in a pipeline of iterators.
@@ -80,10 +112,11 @@ class FilterIterator(PreemptableIterator):
         self._raw_expression = expression
         self._mu = mu
         # compile the expression using rdflib
-        compiled_expr = parseQuery(f"SELECT * WHERE {{?s ?p ?o . FILTER({expression})}}")
-        compiled_expr = translateQuery(compiled_expr)
-        self._prologue = compiled_expr.prologue
-        self._compiled_expression = compiled_expr.algebra.p.p.expr
+        if (not expression.startswith('<http://localhost:8080/allDiff>')):
+            compiled_expr = parseQuery(f"SELECT * WHERE {{?s ?p ?o . FILTER({expression})}}")
+            compiled_expr = translateQuery(compiled_expr)
+            self._prologue = compiled_expr.prologue
+            self._compiled_expression = compiled_expr.algebra.p.p.expr
 
     def __repr__(self) -> str:
         return f"<FilterIterator '{self._raw_expression}' on {self._source}>"
@@ -99,6 +132,16 @@ class FilterIterator(PreemptableIterator):
 
         Returns: The outcome of evaluating the SPARQL FILTER on the input set of solution mappings.
         """
+
+         ## For experiments on custom functions in order to improve FILTERs & FILTERs performances
+        if (self._raw_expression.startswith('<http://localhost:8080/allDiff>')):
+            m = re.search(r'\((.+?)\)', self._raw_expression)
+            if m:
+                vars = m.group(1).split(',')
+                return direct_allDiff(vars, bindings)
+            else:
+                return direct_allDiff([], bindings)
+
         d = {Variable(key[1:]): to_rdflib_term(value) for key, value in bindings.items()}
         b = Bindings(d=d)
         context = QueryContext(bindings=b)

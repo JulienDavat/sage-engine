@@ -208,6 +208,12 @@ def parse_filter_expr(expr: dict) -> str:
         elif expr.name.startswith('Builtin_'):
             #print("pouet:"+str(expr.arg))
             return f"{expr.name[8:]}({parse_filter_expr(expr.arg)})"
+        elif expr.name.startswith('Function'):
+            if expr.expr is None:
+                return  f"<{expr.iri}>()"
+            else:
+                items=[parse_bind_expr(i) for i in expr.expr]
+                return f"<{expr.iri}>({','.join(items)})"
         raise UnsupportedSPARQL(f"Unsupported SPARQL FILTER expression: {expr.name}")
 
 
