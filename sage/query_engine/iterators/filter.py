@@ -67,35 +67,22 @@ def to_rdflib_term(value: str) -> Union[Literal, URIRef, Variable, BNode]:
     #     result=Literal(value.encode('utf-8','replace').decode('utf-8'))
     # return result
 
-def toString(e):
-    if (isinstance(e, URIRef)):
-        return f"<{str(e)}>"
+def parseArgument(arg, bindings):
+    if arg.startswith('?'):
+        return bindings[arg]
+    elif arg.startswith('<') and arg.endswith('>'):
+        return arg[1:len(arg) - 1]
     else:
-        return str(e)
+        return arg
 
-def allDiff(e, ctx):
+def allDiff(args, bindings):
     visited = {}
-    for i in range(len(e.expr)):
-        key = toString(e.expr[i])
+    for i in range(len(args)):
+        key = parseArgument(args[i], bindings)
         if key in visited:
             return False
         visited[key] = True
     return True
-
-def direct_allDiff(vars, bindings):
-    visited = {}
-    for i in range(len(vars)):
-        key = None
-        if vars[i].startswith('?'):
-            key = bindings[vars[i]]
-        else:
-            key = vars[i]
-        if key in visited:
-            return False
-        visited[key] = True
-    return True
-
-register_custom_function(URIRef("http://localhost:8080/allDiff"),allDiff,raw=True)
 
 class FilterIterator(PreemptableIterator):
     """A FilterIterator evaluates a FILTER clause in a pipeline of iterators.
@@ -137,10 +124,21 @@ class FilterIterator(PreemptableIterator):
         if (self._raw_expression.startswith('<http://localhost:8080/allDiff>')):
             m = re.search(r'\((.+?)\)', self._raw_expression)
             if m:
-                vars = m.group(1).split(',')
-                return direct_allDiff(vars, bindings)
+                args = m.group(1).split(',')
+                return allDiff(args, bindings)
             else:
-                return direct_allDiff([], bindings)
+                return allDiff([], bindings)
+        elif (self._raw_expression.startswith('<http://localhost:8080/equals>')):
+            m = re.search(r'\((.+?)\)', self._raw_expression)
+            if m:
+                args = m.group(1).split(',')
+                if len(args) != 2:
+                    raise Exception(f'<http://localhost:8080/equals> function : expected 2 arguments but got {len(args)}')
+                left = parseArgument(args[0], bindings)
+                right = parseArgument(args[1], bindings)
+                return left == right
+            else:
+                raise Exception('<http://localhost:8080/equals> function : expected 2 arguments but got 0')
 
         d = {Variable(key[1:]): to_rdflib_term(value) for key, value in bindings.items()}
         b = Bindings(d=d)

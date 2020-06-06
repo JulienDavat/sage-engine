@@ -24,35 +24,21 @@ import codecs
 import hashlib
 import re
 
-def toString(e):
-    if (isinstance(e, URIRef)):
-        return f"<{str(e)}>"
+def parseArgument(arg, bindings):
+    if arg.startswith('?'):
+        return bindings[arg]
+    elif arg.startswith('<') and arg.endswith('>'):
+        return arg[1:len(arg) - 1]
     else:
-        return str(e)
+        return arg
 
-def imprint(e, ctx):
+def imprint(args, bindings):
     values = []
-    for i in range(len(e.expr)):
-        values.append(toString(e.expr[i]))
+    for i in range(len(args)):
+        values.append(parseArgument(args[i], bindings))
     if (len(values) == 0):
         values.append('md5')
-    return hashlib.sha224(''.join(values).encode('utf-8')).hexdigest()
-
-def direct_imprint(vars, bindings):
-    values = []
-    for i in range(len(vars)):
-        if vars[i].startswith('?'):
-            values.append(bindings[vars[i]])
-        else:
-            values.append(vars[i])
-    if (len(values) == 0):
-        values.append('md5')
-    return hashlib.sha224(''.join(values).encode('utf-8')).hexdigest()
-
-def echo(e, ctx):
-    if (len(e.expr) > 0):
-        return e.expr[0]
-    return 'UNBOUND'
+    return hashlib.md5(''.join(values).encode('utf-8')).hexdigest()
 
 def myfunc(expr,ctx):
     #print(str(expr))
@@ -106,9 +92,6 @@ def reify(s,p,o):
 
 register_custom_function(URIRef("hello"),myfunc,raw=True)
 register_custom_function(URIRef("summ"),summary,raw=True)
-register_custom_function(URIRef("http://localhost:8080/summ"),summary,raw=True)
-register_custom_function(URIRef("http://localhost:8080/imprint"),imprint,raw=True)
-register_custom_function(URIRef("http://localhost:8080/echo"),echo,raw=True)
 
 
 class BindIterator(PreemptableIterator):
@@ -120,13 +103,13 @@ class BindIterator(PreemptableIterator):
       * bindvar: the bind variable
     """
 
-    def __init__(self, source: PreemptableIterator, bindexpr: str, bindvar: str, mu: Optional[Dict[str, str]] = None):
+    def __init__(self, source: PreemptableIterator, bindexpr: str, bindvar: str, mu: Optional[Dict[str, str]] = None, delivered: Optional[bool] = False):
         super(BindIterator, self).__init__()
         self._source = source
         self._expr=bindexpr
         self._bindvar = bindvar
         self._mu = mu
-        self._delivered=False
+        self._delivered=delivered
         #print("bindexpr:"+bindexpr)
         #print("bindvar:"+bindexpr)
 
@@ -165,27 +148,21 @@ class BindIterator(PreemptableIterator):
         if (self._expr.startswith('<http://localhost:8080/imprint>')):
             m = re.search(r'\((.+?)\)', self._expr)
             if m:
-                vars = m.group(1).split(',')
-                self._result = direct_imprint(vars, bindings)
+                args = m.group(1).split(',')
+                self._result = imprint(args, bindings)
             else:
-                self._result = direct_imprint([], bindings)
+                self._result = imprint([], bindings)
             return self._result
         elif (self._expr.startswith('<http://localhost:8080/echo>')):
             m = re.search(r'\((.+?)\)', self._expr)
             if m:
-                vars = m.group(1).split(',')
-                if vars[0].startswith('?'):
-                    self._result = bindings[vars[0]]
-                else:
-                    self._result = vars[0]
+                args = m.group(1).split(',')
+                if (len(args) != 1):
+                    raise Exception(f'<http://localhost:8080/echo> function : expected 1 argument but got {len(args)}')
+                self._result = parseArgument(args[0], bindings)
+                return self._result
             else:
-                self._result = 'UNBOUND'
-
-            if self._result.startswith('<http') and self._result.endswith('>'):
-                self._result = URIRef(self._result[1:-1])
-            else:
-                self._result = Literal(self._result)
-            return self._result
+                raise Exception('<http://localhost:8080/echo> function : expected 1 argument but got 0')
 
         # print("bind_eval:"+str(bindings))
         ## For experiments on summaries
@@ -289,4 +266,5 @@ class BindIterator(PreemptableIterator):
         saved_bind.bindvar=self._bindvar
         if self._mu is not None:
             pyDict_to_protoDict(self._mu, saved_bind.mu)
+        saved_bind.delivered = self._delivered
         return saved_bind

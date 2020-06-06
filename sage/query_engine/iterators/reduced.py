@@ -5,6 +5,14 @@ from typing import Dict, List, Optional,Set
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.protobuf.iterators_pb2 import SavedReducedIterator
 
+import hashlib
+
+
+def hash_mappings(mu) -> str:
+    str_mu = ""
+    for k,v in mu.items():
+        str_mu += f"{k}:{v}"
+    return hashlib.md5(str_mu.encode('utf-8')).hexdigest()
 
 class ReducedIterator(PreemptableIterator):
     """A ReductedIterator evaluates a SPARQL reduction (REDUCED) in a pipeline of iterators.
@@ -13,14 +21,14 @@ class ReducedIterator(PreemptableIterator):
       * source: Previous iterator in the pipeline.
       * projection: Projection variables
     """
-    mappings=list()
 
     def __init__(self, source: PreemptableIterator, ):
         super(ReducedIterator, self).__init__()
         self._source = source
+        self._mappings=dict()
 
     def results(self) -> List:
-        return [dict(s) for s in set(frozenset(d.items()) for d in self.mappings)]
+        return [dict(s) for s in set(frozenset(d.items()) for d in self._mappings)]
 
     def __repr__(self) -> str:
         return f"<ReducedIterator FROM {self._source}>"
@@ -46,8 +54,11 @@ class ReducedIterator(PreemptableIterator):
         if not self.has_next():
             raise StopAsyncIteration()
         mu = await self._source.next()
-        if mu is not None:
-            self.mappings.append(mu)
+
+        key = hash_mappings(mu)
+        if mu is not None and not key in self._mappings:
+            self._mappings[key] = True
+            return mu
         return None
 
     def save(self) -> SavedReducedIterator:

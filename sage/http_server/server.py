@@ -87,7 +87,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
         quota = graph.quota / 1000
         max_results = graph.max_results
         bindings, saved_plan, is_done, abort_reason = await engine.execute(plan, quota, max_results)
-
+        
         # commit or abort (if necessary)
         if abort_reason is not None:
             graph.abort()
