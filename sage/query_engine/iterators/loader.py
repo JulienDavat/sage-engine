@@ -75,6 +75,7 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
         logging.error(f"load_plan:{sys.exc_info()[0]}")
+        raise
 
 
 def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset) -> PreemptableIterator:
@@ -135,19 +136,16 @@ def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIte
     Returns:
       The pipeline of iterator used to continue query execution.
     """
-    try:
-        sourceField = saved_plan.WhichOneof('source')
-        source = None
-        #print("sourcefield:"+str(sourceField))
-        if sourceField is not None:
-            source = load(getattr(saved_plan, sourceField), dataset)
+    sourceField = saved_plan.WhichOneof('source')
+    source = None
+    #print("sourcefield:"+str(sourceField))
+    if sourceField is not None:
+        source = load(getattr(saved_plan, sourceField), dataset)
 
-        mu = None
-        if len(saved_plan.mu) > 0:
-            mu = saved_plan.mu
-        return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu)
-    except:
-        logging.error(f"load_bind:{sys.exc_info()[0]}")
+    mu = None
+    if len(saved_plan.mu) > 0:
+        mu = saved_plan.mu
+    return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu)
 
 
 def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> PreemptableIterator:
@@ -180,13 +178,10 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
     Returns:
       The pipeline of iterator used to continue query execution.
     """
-    try:
-        triple = saved_plan.triple
-        s, p, o, g = (triple.subject, triple.predicate, triple.object, triple.graph)
-        iterator, card = dataset.get_graph(g).search(s, p, o, last_read=saved_plan.last_read)
-        return ScanIterator(iterator, protoTriple_to_dict(triple), saved_plan.cardinality,saved_plan.progress)
-    except:
-        logging.error(f"load_scan:{sys.exc_info()[0]}")
+    triple = saved_plan.triple
+    s, p, o, g = (triple.subject, triple.predicate, triple.object, triple.graph)
+    iterator, card = dataset.get_graph(g).search(s, p, o, last_read=saved_plan.last_read)
+    return ScanIterator(iterator, protoTriple_to_dict(triple), saved_plan.cardinality,saved_plan.progress)
 
 
 
@@ -221,6 +216,7 @@ def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> Preemptabl
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_tb(exc_traceback, limit=10, file=sys.stdout)
+        logging.error(f"load_nlj:source:{source}, inner:{innerTriple} cur:{currentBinding} last:{saved_plan.last_read}")
         logging.error(f"load_nlj:{sys.exc_info()[0]}")
 
 

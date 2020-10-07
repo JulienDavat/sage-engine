@@ -3,9 +3,9 @@
 
 POSTGRES_CREATE_TABLE = """
     CREATE TABLE {} (
-        subject text,
-        predicate text,
-        object text
+        subject text NOT NULL,
+        predicate text NOT NULL,
+        object text NOT NULL
     );
     """
 

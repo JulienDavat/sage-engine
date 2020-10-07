@@ -70,6 +70,10 @@ def get_resume_query(subj: str, pred: str, obj: str, last_read: Tuple[str, str, 
     query = f"SELECT * FROM {table_name} "
     params = None
     if kind == 'spo':
+        # i get the case with query S7 of LRB
+        # look to loop ->
+        #query += "WHERE subject = %s AND predicate = %s AND object = %s ORDER BY subject, predicate, object"
+        #params = (last_s, last_p, last_o)
         return None, None
     elif kind == '???':
 #        query += f"WHERE (subject, predicate, object) {symbol} (%s, %s, %s) ORDER BY subject, predicate, object"
@@ -95,6 +99,7 @@ def get_resume_query(subj: str, pred: str, obj: str, last_read: Tuple[str, str, 
         params = (last_o, last_s, last_p)
     else:
         raise Exception(f"Unkown pattern type: {kind}")
+
     return query, params
 
 

@@ -13,13 +13,16 @@ class ReducedIterator(PreemptableIterator):
       * source: Previous iterator in the pipeline.
       * projection: Projection variables
     """
-    mappings=list()
+    # mappings=list()
 
     def __init__(self, source: PreemptableIterator, ):
         super(ReducedIterator, self).__init__()
         self._source = source
+        self.mappings=list()
 
     def results(self) -> List:
+        #for m in self.mappings:
+        #    print(f"...{m}...")
         return [dict(s) for s in set(frozenset(d.items()) for d in self.mappings)]
 
     def __repr__(self) -> str:

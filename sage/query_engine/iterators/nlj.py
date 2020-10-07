@@ -51,12 +51,12 @@ class IndexJoinIterator(PreemptableIterator):
 
     def _initInnerLoop(self, triple: Dict[str, str], mappings: Optional[Dict[str, str]], last_read: Optional[str] = None) -> PreemptableIterator:
         """Create an iterator to evaluates an inner loop in the Index Loop join algorithm.
-        
+
         Args:
           * triple: Triple pattern to join with.
           * mappings: Input solution mappings for the join.
           * last_read: An offset ID used to resume processing of an inner loop.
-        
+
         Returns:
           An iterator used to evaluate the inner loop.
         """
@@ -70,7 +70,7 @@ class IndexJoinIterator(PreemptableIterator):
 
     async def _innerLoop(self) -> Optional[Dict[str, str]]:
         """Execute one set of the inner loop.
-        
+
         Returns: A set of solution mappings, or `None` if none was produced during this call.
         """
         mu = await self._currentIter.next()
@@ -81,7 +81,7 @@ class IndexJoinIterator(PreemptableIterator):
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 
-        This function may contains `non interruptible` clauses which must 
+        This function may contains `non interruptible` clauses which must
         be atomically evaluated before preemption occurs.
 
         Returns: A set of solution mappings, or `None` if none was produced during this call.

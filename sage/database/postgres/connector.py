@@ -13,6 +13,8 @@ from sage.database.postgres.queries import (get_delete_query, get_insert_query,
 from sage.database.postgres.transaction_manager import TransactionManager
 from sage.database.postgres.utils import id_to_predicate
 
+import logging
+
 
 def fetch_histograms(cursor, table_name: str, attribute_name: str) -> Tuple[int, int, Dict[str, float], int]:
     """Download PostgreSQL histograms from a given table and attribute.
@@ -68,7 +70,22 @@ class PostgresIterator(DBIterator):
         self._current_query = start_query
         self._fetch_size = fetch_size
         # resume query execution with a SQL query
+        #print(f" GO {self._current_query} : {start_params}")
+        #if self._current_query is None:
+        #    print("query is none")
+        #if start_params is None:
+        #    print("params is none")
+
+#        try:
         self._cursor.execute(self._current_query, start_params)
+#        except Exception as err:
+#            #print(f"Except {self._current_query} : {start_params}")
+#            exc_type, exc_value, exc_traceback = sys.exc_info()
+#            traceback.print_tb(exc_traceback, limit=10, file=sys.stdout)
+#            logging.error(f"Pg Iterator:{sys.exc_info()[0]}")
+            #raise err
+
+
         # always keep the current set of rows buffered inside the iterator
         self._last_reads = self._cursor.fetchmany(size=self._fetch_size)
 
@@ -287,8 +304,14 @@ class PostgresConnector(DatabaseConnector):
             # otherwise, create a SQL query to resume the index scan
             last_read = json.loads(last_read)
             t = (last_read["s"], last_read["p"], last_read["o"])
+            #print(f"tvalue:{t}")
             start_query, start_params = get_resume_query(subject, predicate, obj, t, self._table_name)
 
+        if start_query is None:
+            logging.error(f"resumed with a full bounded patten")
+            logging.error(f"start_query is None:s:{subject},p:{predicate},o:{obj}, table:{self._table_name}, last_read{last_read}")
+            # seems to trigger infinite loop
+            #return None,0
         # create the iterator to yield the matching RDF triples
         iterator = PostgresIterator(cursor, self._manager.get_connection(), start_query, start_params, pattern, fetch_size=self._fetch_size)
         card = self._estimate_cardinality(subject, predicate, obj) if iterator.has_next() else 0

@@ -64,6 +64,59 @@ def esummary(s,p,o):
     else:
         return None
 
+def ehibsumm(s,p,o):
+    if s.startswith("http"):
+        surl=urlparse(s)
+        ps=surl.scheme+"://"+surl.netloc+surl.path[:3]
+        if o.startswith("http"):
+            ourl=urlparse(str(o))
+            po="<"+ourl.scheme+"://"+ourl.netloc+ourl.path[:3]+">"
+        else:
+            po='"lit"'
+        return(f"<{ps}> <{p}> {po} .")
+    else:
+        return None
+
+def splitsumm(s,p,o):
+    if s.startswith("http"):
+        surl=urlparse(s)
+        ps=surl.scheme+"://"+surl.netloc+"/"+s[-1:]
+        if o.startswith("http"):
+            ourl=urlparse(str(o))
+            po="<"+ourl.scheme+"://"+ourl.netloc+"/"+o[-1:]+">"
+        else:
+            po='"'+o[:1]+'"'
+        return(f"<{ps}> <{p}> {po} .")
+    else:
+        return None
+
+def sufsumm(s,p,o):
+    if s.startswith("http"):
+        surl=urlparse(s)
+        ps=surl.scheme+"://"+surl.netloc+"/"+s[-1:]
+        if o.startswith("http"):
+            ourl=urlparse(str(o))
+            po="<"+ourl.scheme+"://"+ourl.netloc+"/"+o[-2:]+">"
+        else:
+            po='"lit"'
+        return(f"<{ps}> <{p}> {po} .")
+    else:
+        return None
+
+def voidsumm(s,p,o):
+    if s.startswith("http"):
+        surl=urlparse(s)
+        ps="http://dummy"
+        if o.startswith("http"):
+            po="<http://dummy>"
+        else:
+            po='"lit"'
+        return(f"<{ps}> <{p}> {po} .")
+    else:
+        return None
+
+
+
 ## maybe useless
 ## just use regular bind...
 def reify(s,p,o):
@@ -136,6 +189,19 @@ class BindIterator(PreemptableIterator):
         elif self._expr.startswith("<fsumm>"):
             self._result=esummary(bindings['?s'],bindings['?p'],bindings['?o'])
             return self._result
+        elif self._expr.startswith("<ehib>"):
+            self._result=ehibsumm(bindings['?s'],bindings['?p'],bindings['?o'])
+            return self._result
+        elif self._expr.startswith("<split>"):
+            self._result=splitsumm(bindings['?s'],bindings['?p'],bindings['?o'])
+            return self._result
+        elif self._expr.startswith("<suf>"):
+            self._result=sufsumm(bindings['?s'],bindings['?p'],bindings['?o'])
+            return self._result
+        elif self._expr.startswith("<void>"):
+            self._result=voidsumm(bindings['?s'],bindings['?p'],bindings['?o'])
+            return self._result
+
 
         context = None
         if bindings is None:

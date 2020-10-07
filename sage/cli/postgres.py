@@ -290,12 +290,14 @@ class StreamSink(Sink):
 
         # max size for a btree index cell in postgres
         # for experiments !! otherwise index md5 on object
-        if sys.getsizeof(ow)<2730:
-            self.bucket.append((s, p, o))
+        #ERROR:  index row size 2712 exceeds btree version 4 maximum 2704 for index "pos"
+        #Consider a function index of an MD5 hash of the value, or use full text indexing.
+        if sys.getsizeof(ow)<2000:
+            self.bucket.append((s, p, ow))
         else:
             self._logger.warning("truncated object {}".format(o))
             # 2 bytes for an utf-8 ??
-            self.bucket.append((s,p,ow[:1000]))
+            self.bucket.append((s,p,ow[:800]))
         self.to_commit +=1
         if len(self.bucket) >= self._bucket_size:
             try :
