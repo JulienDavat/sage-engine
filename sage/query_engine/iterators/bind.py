@@ -16,117 +16,12 @@ from sage.query_engine.iterators.utils import find_in_mappings, EmptyIterator
 from sage.query_engine.protobuf.iterators_pb2 import SavedBindIterator
 from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 from sage.query_engine.iterators.filter import to_rdflib_term
+import sage.query_engine.iterators.summary_functions as summary_functions
 
 from rdflib.plugins.sparql.operators import register_custom_function
 
 from urllib.parse import urlparse
 import codecs
-
-def myfunc(expr,ctx):
-    #print(str(expr))
-    return Literal(f"hello:{str(expr.expr[0])}")
-
-def rowid(expr,ctx):
-    print(str(ctx))
-    return URIRef("md5")
-
-class Dummy:
-    expr: None
-
-def summary(e,ctx):
-    s=e.expr[0]
-    p=e.expr[1]
-    o=e.expr[2]
-    ps=None
-    po=None
-    if isinstance(s,URIRef):
-        surl=urlparse(str(s))
-        ps = surl.scheme+"://"+surl.netloc
-        if isinstance(o,URIRef):
-            ourl=urlparse(str(o))
-            po=ourl.scheme+"://"+ourl.netloc
-            return f"<{ps}> <{p}> <{po}> ."
-        else:
-            return f"<{ps}> <{p}> \"lit\" ."
-    else:
-        return None
-
-def esummary(s,p,o):
-    if s.startswith("http"):
-        surl=urlparse(s)
-        ps=surl.scheme+"://"+surl.netloc
-        if o.startswith("http"):
-            ourl=urlparse(str(o))
-            po="<"+ourl.scheme+"://"+ourl.netloc+">"
-        else:
-            po='"lit"'
-        return(f"<{ps}> <{p}> {po} .")
-    else:
-        return None
-
-def ehibsumm(s,p,o):
-    if s.startswith("http"):
-        surl=urlparse(s)
-        ps=surl.scheme+"://"+surl.netloc+surl.path[:3]
-        if o.startswith("http"):
-            ourl=urlparse(str(o))
-            po="<"+ourl.scheme+"://"+ourl.netloc+ourl.path[:3]+">"
-        else:
-            po='"lit"'
-        return(f"<{ps}> <{p}> {po} .")
-    else:
-        return None
-
-def splitsumm(s,p,o):
-    if s.startswith("http"):
-        surl=urlparse(s)
-        ps=surl.scheme+"://"+surl.netloc+"/"+s[-1:]
-        if o.startswith("http"):
-            ourl=urlparse(str(o))
-            po="<"+ourl.scheme+"://"+ourl.netloc+"/"+o[-1:]+">"
-        else:
-            po='"'+o[:1]+'"'
-        return(f"<{ps}> <{p}> {po} .")
-    else:
-        return None
-
-def sufsumm(s,p,o):
-    if s.startswith("http"):
-        surl=urlparse(s)
-        ps=surl.scheme+"://"+surl.netloc+"/"+s[-1:]
-        if o.startswith("http"):
-            ourl=urlparse(str(o))
-            po="<"+ourl.scheme+"://"+ourl.netloc+"/"+o[-2:]+">"
-        else:
-            po='"lit"'
-        return(f"<{ps}> <{p}> {po} .")
-    else:
-        return None
-
-def voidsumm(s,p,o):
-    if s.startswith("http"):
-        surl=urlparse(s)
-        ps="http://dummy"
-        if o.startswith("http"):
-            po="<http://dummy>"
-        else:
-            po='"lit"'
-        return(f"<{ps}> <{p}> {po} .")
-    else:
-        return None
-
-
-
-## maybe useless
-## just use regular bind...
-def reify(s,p,o):
-    rs=s+p+o
-    return URIRef("http://"+hashlib.md5(rs.encode('utf-8')).hexdigest())
-
-
-
-register_custom_function(URIRef("hello"),myfunc,raw=True)
-register_custom_function(URIRef("summ"),summary,raw=True)
 
 class BindIterator(PreemptableIterator):
     """A BindIterator evaluates a BIND statement in a pipeline of iterators.
@@ -143,7 +38,7 @@ class BindIterator(PreemptableIterator):
         self._expr=bindexpr
         self._bindvar = bindvar
         self._mu = mu
-        self._delivered=False;
+        self._delivered=False
         #print("bindexpr:"+bindexpr)
         #print("bindvar:"+bindexpr)
 
@@ -175,33 +70,28 @@ class BindIterator(PreemptableIterator):
 
         Returns: The outcome of evaluating the SPARQL BIND on the input set of solution mappings.
         """
-#        print("bind_eval:"+str(bindings))
-        ## For experiments on summaries
-        if self._expr.startswith("<esumm>"):
-            #print("express summ")
-            s=URIRef(bindings['?s'])
-            p=URIRef(bindings['?p'])
-            o=Literal(bindings['?o'])
-            dummy=Dummy()
-            dummy.expr=[s,p,o]
-            self._result= summary(dummy,None)
-            return self._result
-        elif self._expr.startswith("<fsumm>"):
-            self._result=esummary(bindings['?s'],bindings['?p'],bindings['?o'])
-            return self._result
-        elif self._expr.startswith("<ehib>"):
-            self._result=ehibsumm(bindings['?s'],bindings['?p'],bindings['?o'])
-            return self._result
-        elif self._expr.startswith("<split>"):
-            self._result=splitsumm(bindings['?s'],bindings['?p'],bindings['?o'])
-            return self._result
-        elif self._expr.startswith("<suf>"):
-            self._result=sufsumm(bindings['?s'],bindings['?p'],bindings['?o'])
-            return self._result
-        elif self._expr.startswith("<void>"):
-            self._result=voidsumm(bindings['?s'],bindings['?p'],bindings['?o'])
-            return self._result
 
+        if self._expr.startswith("<psi_void>"):
+            self._result = summary_functions.psi_void((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_one>"):
+            self._result = summary_functions.psi_one((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_hib>"):
+            self._result = summary_functions.psi_hib((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_pref>"):
+            self._result = summary_functions.psi_pref_2((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_suf>"):
+            self._result = summary_functions.psi_suf_2((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_id>"):
+            self._result = summary_functions.psi_id((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_hash>"):
+            self._result = summary_functions.psi_hash_1K_1K((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
 
         context = None
         if bindings is None:

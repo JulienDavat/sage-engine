@@ -1,0 +1,95 @@
+# The name of the server
+name: SaGe Example Server
+# Server maintainer(s)
+maintainer: Chuck Norris
+# The public URL used to access the server
+public_url: http://server-url.com
+# Path to a markdown file whose content will be displayed on the server's webpage
+long_description: config_examples/description.md
+# Time quantum used by the server
+quota: 60000
+# (Optional) Maximum number of results fetched by HTTP request
+max_results: 2000000
+# (Optional) Query selected by default in the "Query" section
+public_url: http://localhost:8080
+default_query:
+  grapg_name: dbpedia
+  name: Select everything
+  value: |
+    SELECT * WHERE {
+      ?s ?p ?o.
+    }
+# RDF Graphs hosted by the server
+graphs:
+-
+  name: nyt
+  uri: http://example.org/datasets/nyt
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: lmdb
+  uri: http://example.org/datasets/lmdb
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: swdf
+  uri: http://example.org/datasets/swdf
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: chebi
+  uri: http://example.org/datasets/chebi
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: kegg
+  uri: http://example.org/datasets/kegg
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: geonames
+  uri: http://example.org/datasets/geonames
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: drugbank
+  uri: http://example.org/datasets/drugbank
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: dbpedia
+  uri: http://example.org/datasets/dbpedia
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
+-
+  name: jamendo
+  uri: http://example.org/datasets/jamendo
+  description: A dataset with serializable per quantum and isolated reads
+  backend: postgres
+  dbname: semcat
+  user: semcat
+  password: 'semcat'
