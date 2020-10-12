@@ -90,7 +90,10 @@ class BindIterator(PreemptableIterator):
             self._result = summary_functions.psi_id((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
         elif self._expr.startswith("<psi_hash>"):
-            self._result = summary_functions.psi_hash_1K_1K((bindings['?s'],bindings['?p'],bindings['?o']))
+            self._result = summary_functions.psi_hash_500_500((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_phash>"):
+            self._result = summary_functions.psi_phash_10_100_500((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
 
         context = None

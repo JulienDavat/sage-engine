@@ -53,7 +53,7 @@ def hashcode(s, m):
     return (((h + 0x80000000) & 0xFFFFFFFF) - 0x80000000) % m
 
 
-def uri_hashing(uri, modulo):
+def uri_hash_transformation(uri, modulo):
     url = urlparse(str(uri))
     scheme = "http" if url.scheme == '' else url.scheme
     netloc = url.netloc
@@ -61,6 +61,23 @@ def uri_hashing(uri, modulo):
         return f"{scheme}://{netloc}"
     path = hashcode(f"{url.path}{url.fragment}", modulo)
     return f"{scheme}://{netloc}/{path}"
+
+
+def uri_phash_transformation(uri, path_modulo, resource_modulo):
+    url = urlparse(str(uri))
+    scheme = "http" if url.scheme == '' else url.scheme
+    netloc = url.netloc
+    if url.path == '':
+        return f"{scheme}://{netloc}"
+    path = url.path.rsplit('/', 1)
+    resource = ''
+    if len(path[1]) == 0:
+        resource = hashcode(path[0], resource_modulo)
+        path = ''
+    else:
+        resource = hashcode(path[1], resource_modulo)
+        path = hashcode(path[0], path_modulo)
+    return f"{scheme}://{netloc}/{path}/{resource}"
 
 
 def uri_hib_transformation(uri):
@@ -76,7 +93,7 @@ def literal_simple_transformation(literal):
     return "http://literal"
 
 
-def literal_hashing(literal, modulo):
+def literal_hash_transformation(literal, modulo):
     value = hashcode(str(literal), modulo)
     return f"http://literal/{value}"
 
@@ -130,16 +147,31 @@ def psi_pref_2(triple):
 def psi_hash(triple, uri_modulo, literal_modulo):
     (s, p, o) = triple
     if s.startswith("http"):
-        s = uri_hashing(s, uri_modulo)
+        s = uri_hash_transformation(s, uri_modulo)
     if o.startswith("http"):
-        o = uri_hashing(o, uri_modulo) if not isRDFType(p) else o
+        o = uri_hash_transformation(o, uri_modulo) if not isRDFType(p) else o
     else:
-        o = literal_hashing(o, literal_modulo)
+        o = literal_hash_transformation(o, literal_modulo)
     return (s, p, o)
 
 
-def psi_hash_1K_1K(triple):
-    return psi_hash(triple, 1000, 1000)
+def psi_hash_500_500(triple):
+    return psi_hash(triple, 500, 500)
+
+
+def psi_phash(triple, path_modulo, resource_modulo, literal_modulo):
+    (s, p, o) = triple
+    if s.startswith("http"):
+        s = uri_phash_transformation(s, path_modulo, resource_modulo)
+    if o.startswith("http"):
+        o = uri_phash_transformation(o, path_modulo, resource_modulo) if not isRDFType(p) else o
+    else:
+        o = literal_hash_transformation(o, literal_modulo)
+    return (s, p, o)
+
+
+def psi_phash_10_100_500(triple):
+    return psi_phash(triple, 10, 100, 500)
 
 
 def psi_void(triple):
