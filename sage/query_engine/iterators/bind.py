@@ -80,20 +80,20 @@ class BindIterator(PreemptableIterator):
         elif self._expr.startswith("<psi_hib>"):
             self._result = summary_functions.psi_hib((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
-        elif self._expr.startswith("<psi_pref>"):
-            self._result = summary_functions.psi_pref_2((bindings['?s'],bindings['?p'],bindings['?o']))
+        elif self._expr.startswith("<psi_pref2>"):
+            self._result = summary_functions.psi_pref((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
-        elif self._expr.startswith("<psi_suf>"):
-            self._result = summary_functions.psi_suf_2((bindings['?s'],bindings['?p'],bindings['?o']))
+        elif self._expr.startswith("<psi_suf2>"):
+            self._result = summary_functions.psi_suf((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
         elif self._expr.startswith("<psi_id>"):
             self._result = summary_functions.psi_id((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
-        elif self._expr.startswith("<psi_hash>"):
-            self._result = summary_functions.psi_hash_500_500((bindings['?s'],bindings['?p'],bindings['?o']))
+        elif self._expr.startswith("<psi_hash500>"):
+            self._result = summary_functions.psi_hash((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
-        elif self._expr.startswith("<psi_phash>"):
-            self._result = summary_functions.psi_phash_10_100_500((bindings['?s'],bindings['?p'],bindings['?o']))
+        elif self._expr.startswith("<psi_po>"):
+            self._result = summary_functions.psi_po((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
 
         context = None
