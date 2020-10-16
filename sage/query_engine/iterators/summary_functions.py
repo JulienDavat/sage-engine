@@ -103,7 +103,7 @@ def literal_simple_transformation(literal):
 
 
 def literal_hash_transformation(literal, modulo):
-    value = utils.hashcode(literal, modulo)
+    value = hashcode(literal, modulo)
     return f"http://literal/{value}"
 
 
