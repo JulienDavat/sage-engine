@@ -18,12 +18,14 @@ class ReducedIterator(PreemptableIterator):
     def __init__(self, source: PreemptableIterator, ):
         super(ReducedIterator, self).__init__()
         self._source = source
-        self.mappings=list()
+        self._memory = dict()
+        self._mappings = list()
 
     def results(self) -> List:
         #for m in self.mappings:
         #    print(f"...{m}...")
-        return [dict(s) for s in set(frozenset(d.items()) for d in self.mappings)]
+        return self._mappings
+        # return [dict(s) for s in set(frozenset(d.items()) for d in self._mappings)]
 
     def __repr__(self) -> str:
         return f"<ReducedIterator FROM {self._source}>"
@@ -49,8 +51,13 @@ class ReducedIterator(PreemptableIterator):
         if not self.has_next():
             raise StopAsyncIteration()
         mu = await self._source.next()
+        # if mu is not None:
+        #     self._mappings.append(mu)
         if mu is not None:
-            self.mappings.append(mu)
+            key = str(mu)
+            if key not in self._memory:
+                self._memory[key] = True
+                self._mappings.append(mu)
         return None
 
     def save(self) -> SavedReducedIterator:
