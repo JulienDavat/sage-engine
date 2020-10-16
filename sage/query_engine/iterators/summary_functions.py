@@ -161,6 +161,22 @@ def psi_hib(triple):
     return(f"<{s}> <{p}> <{o}> .")
 
 
+def psi_hib_sa(triple):
+    (s, p, o) = triple
+    if s.startswith("http"):
+        s = uri_hib_transformation(s)  
+    return(f"<{p}> <http://sa> <{s}> .")
+
+
+def psi_hib_oa(triple):
+    (s, p, o) = triple
+    if o.startswith("http"):
+        o = uri_hib_transformation(o) if not isRDFType(p) else o
+    else:
+        o = literal_simple_transformation(o)
+    return(f"<{p}> <http://oa> <{o}> .")
+
+
 def psi_hash(triple, path_modulo=1, resource_modulo=500, literal_modulo=500):
     (s, p, o) = triple
     if s.startswith("http"):

@@ -80,6 +80,12 @@ class BindIterator(PreemptableIterator):
         elif self._expr.startswith("<psi_hib>"):
             self._result = summary_functions.psi_hib((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
+        elif self._expr.startswith("<psi_hib_sa>"):
+            self._result = summary_functions.psi_hib_sa((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
+        elif self._expr.startswith("<psi_hib_oa>"):
+            self._result = summary_functions.psi_hib_oa((bindings['?s'],bindings['?p'],bindings['?o']))
+            return self._result
         elif self._expr.startswith("<psi_pref2>"):
             self._result = summary_functions.psi_pref((bindings['?s'],bindings['?p'],bindings['?o']))
             return self._result
