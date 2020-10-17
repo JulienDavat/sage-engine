@@ -139,7 +139,7 @@ def psi_pref(triple, path_modulo=10, len_prefix=2):
 
 
 
-def psi_po(triple, path_modulo=10, len_prefix=6):
+def psi_po(triple, path_modulo=1, len_prefix=6):
     (s, p, o) = triple
     s = uri_simple_transformation(s)
     if o.startswith("http"):
