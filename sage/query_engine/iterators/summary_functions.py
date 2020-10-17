@@ -1,4 +1,3 @@
-from rdflib import Literal, URIRef
 from urllib.parse import urlparse
 
 import re
@@ -143,9 +142,9 @@ def psi_pref(triple, path_modulo=10, len_prefix=2):
 def psi_po(triple, path_modulo=10, len_prefix=6):
     (s, p, o) = triple
     s = uri_simple_transformation(s)
-    if isinstance(o, URIRef):
+    if o.startswith("http"):
         o = uri_prefix_transformation(o, path_modulo, len_prefix)
-    elif isinstance(o, Literal):
+    else:
         o = literal_prefix_transformation(o, len_prefix)
     return (s, p, o)
 
