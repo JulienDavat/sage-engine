@@ -13,17 +13,16 @@ class ReducedIterator(PreemptableIterator):
       * source: Previous iterator in the pipeline.
       * projection: Projection variables
     """
-    # mappings=list()
 
     def __init__(self, source: PreemptableIterator, ):
         super(ReducedIterator, self).__init__()
         self._source = source
-        self.mappings=list()
+        self._mappings=list()
 
     def results(self) -> List:
         #for m in self.mappings:
         #    print(f"...{m}...")
-        return [dict(s) for s in set(frozenset(d.items()) for d in self.mappings)]
+        return [dict(s) for s in set(frozenset(d.items()) for d in self._mappings)]
 
     def __repr__(self) -> str:
         return f"<ReducedIterator FROM {self._source}>"
@@ -50,7 +49,7 @@ class ReducedIterator(PreemptableIterator):
             raise StopAsyncIteration()
         mu = await self._source.next()
         if mu is not None:
-            self.mappings.append(mu)
+            self._mappings.append(mu)
         return None
 
     def save(self) -> SavedReducedIterator:

@@ -145,7 +145,7 @@ def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIte
     mu = None
     if len(saved_plan.mu) > 0:
         mu = saved_plan.mu
-    return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu)
+    return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu, delivered=saved_plan.delivered)
 
 
 def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> PreemptableIterator:
