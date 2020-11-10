@@ -66,13 +66,14 @@ def build_left_join_tree(bgp: List[Dict[str, str]], dataset: Dataset, default_gr
         triple["subject"] = new_pattern[0]
         triple["predicate"] = new_pattern[1]
         triple["object"] = new_pattern[2]
+        triple["graph"] = pattern['triple']['graph']
         # build a pipline with Index Scan + Equality filter
-        pipeline = ScanIterator(pattern['iterator'], triple, pattern['cardinality'])
+        pipeline = ScanIterator(triple, dataset, as_of=as_of)
         pipeline = FilterIterator(pipeline, eq_expr)
         # update query variables
         query_vars = query_vars | get_vars(triple)
     else:
-        pipeline = ScanIterator(pattern['iterator'], pattern['triple'], pattern['cardinality'])
+        pipeline = ScanIterator(pattern['triple'], dataset, as_of=as_of)
 
     # build the left linear tree of joins
     while len(triples) > 0:
@@ -83,7 +84,8 @@ def build_left_join_tree(bgp: List[Dict[str, str]], dataset: Dataset, default_gr
             query_vars = query_vars | get_vars(pattern['triple'])
             pos = 0
         graph_uri = pattern['triple']['graph']
-        pipeline = IndexJoinIterator(pipeline, pattern['triple'], dataset.get_graph(graph_uri), as_of=as_of)
+        scan = ScanIterator(pattern['triple'], dataset, as_of=as_of)
+        pipeline = IndexJoinIterator(pipeline, scan)
         triples.pop(pos)
     return pipeline, query_vars, cardinalities
 
@@ -121,7 +123,7 @@ def continue_left_join_tree(iterator: PreemptableIterator, query_vars : List[str
     # sort triples by ascending cardinality
     triples = sorted(triples, key=lambda v: v['cardinality'])
 
-    pipeline=iterator;
+    pipeline=iterator
 
     # build the left linear tree of joins
     while len(triples) > 0:
@@ -132,6 +134,7 @@ def continue_left_join_tree(iterator: PreemptableIterator, query_vars : List[str
             query_vars = query_vars | get_vars(pattern['triple'])
             pos = 0
         graph_uri = pattern['triple']['graph']
-        pipeline = IndexJoinIterator(pipeline, pattern['triple'], dataset.get_graph(graph_uri), as_of=as_of)
+        scan = ScanIterator(pattern['triple'], dataset, as_of=as_of)
+        pipeline = IndexJoinIterator(pipeline, scan)
         triples.pop(pos)
     return pipeline, query_vars, cardinalities

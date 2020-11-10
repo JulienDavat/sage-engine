@@ -10,10 +10,12 @@ message TriplePattern {
 }
 
 message SavedScanIterator {
-  TriplePattern triple = 1;
-  string last_read = 2;
+  TriplePattern pattern = 1;
+  map<string, string> mu = 2;
   int64 cardinality = 3;
   int64 progress = 4;
+  string last_read = 5;
+  string timestamp = 6;
 }
 
 message SavedReducedIterator {
@@ -35,16 +37,23 @@ message SavedProjectionIterator {
 
 
 message SavedIndexJoinIterator {
-  oneof source {
-    SavedScanIterator scan_source = 1;
-    SavedIndexJoinIterator join_source = 2;
-    SavedFilterIterator filter_source = 3;
-    SavedBindIterator bind_source = 4;
+  oneof left {
+    SavedScanIterator scan_left = 1;
+    SavedProjectionIterator proj_left = 2;
+    SavedBagUnionIterator union_left = 3;
+    SavedIndexJoinIterator join_left = 4;
+    SavedFilterIterator filter_left = 5;
+    SavedBindIterator bind_source_left = 6;
   }
-  TriplePattern inner = 5;
-  map<string, string> muc = 6;
-  string last_read = 7;
-  string timestamp = 8;
+  oneof right {
+    SavedScanIterator scan_right = 7;
+    SavedProjectionIterator proj_right = 8;
+    SavedBagUnionIterator union_right = 9;
+    SavedIndexJoinIterator join_right = 10;
+    SavedFilterIterator filter_right = 11;
+    SavedBindIterator bind_source_right = 12;
+  }
+  map<string, string> mu = 13;
 }
 
 message SavedBagUnionIterator {
@@ -89,6 +98,7 @@ message SavedBindIterator {
   string bindexpr = 6;
   string bindvar = 7;
   map<string, string> mu = 8;
+  bool delivered = 9;
 }
 
 message SavedConstructIterator {

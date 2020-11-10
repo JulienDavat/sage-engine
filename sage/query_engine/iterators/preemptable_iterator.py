@@ -12,6 +12,10 @@ class PreemptableIterator(ABC):
         """Get the name of the iterator, as used in the plan serialization protocol"""
         pass
 
+    def next_stage(self, binding: Optional[Dict[str, str]]):
+        """Used to set the scan iterators current binding in order to compute the nested loop joins"""
+        pass
+
     @abstractmethod
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.

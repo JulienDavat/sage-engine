@@ -178,10 +178,18 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
     Returns:
       The pipeline of iterator used to continue query execution.
     """
-    triple = saved_plan.triple
-    s, p, o, g = (triple.subject, triple.predicate, triple.object, triple.graph)
-    iterator, card = dataset.get_graph(g).search(s, p, o, last_read=saved_plan.last_read)
-    return ScanIterator(iterator, protoTriple_to_dict(triple), saved_plan.cardinality,saved_plan.progress)
+    pattern = protoTriple_to_dict(saved_plan.pattern)
+    if saved_plan.timestamp is not None:
+        if saved_plan.timestamp == '':
+            as_of = None
+        else:
+            as_of = datetime.fromisoformat(saved_plan.timestamp)
+    else:
+        as_of = None
+    current_binding = None
+    if len(saved_plan.mu) > 0:
+      current_binding = saved_plan.mu
+    return ScanIterator(pattern, dataset, current_binding=current_binding, cardinality=saved_plan.cardinality, progress=saved_plan.progress, last_read=saved_plan.last_read, as_of=as_of)
 
 
 
@@ -195,29 +203,14 @@ def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> Preemptabl
     Returns:
       The pipeline of iterator used to continue query execution.
     """
-    try:
-        currentBinding = None
-        sourceField = saved_plan.WhichOneof('source')
-        source = load(getattr(saved_plan, sourceField), dataset)
-        innerTriple = protoTriple_to_dict(saved_plan.inner)
-        if saved_plan.timestamp is not None:
-            ### hmm, seems that  timestamp can be ''
-            ### maybe possible with bind ??
-            if saved_plan.timestamp=='':
-                as_of = None
-            else:
-                as_of = datetime.fromisoformat(saved_plan.timestamp)
-        else:
-            as_of = None
-        if len(saved_plan.muc) > 0:
-            currentBinding = saved_plan.muc
-        graph = dataset.get_graph(innerTriple['graph'])
-        return IndexJoinIterator(source, innerTriple, graph, currentBinding=currentBinding, last_read=saved_plan.last_read, as_of=as_of)
-    except:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_tb(exc_traceback, limit=10, file=sys.stdout)
-        logging.error(f"load_nlj:source:{source}, inner:{innerTriple} cur:{currentBinding} last:{saved_plan.last_read}")
-        logging.error(f"load_nlj:{sys.exc_info()[0]}")
+    leftField = saved_plan.WhichOneof('left')
+    left = load(getattr(saved_plan, leftField), dataset)
+    rightField = saved_plan.WhichOneof('right')
+    right = load(getattr(saved_plan, rightField), dataset)
+    current_binding = None
+    if len(saved_plan.mu) > 0:
+        current_binding = saved_plan.mu
+    return IndexJoinIterator(left, right, current_binding=current_binding)
 
 
 
