@@ -58,9 +58,12 @@ class BindIterator(PreemptableIterator):
     def has_next(self) -> bool:
         """Return True if the iterator has more item to yield"""
         if self._source is None:
-            return not(self._delivered)
+            return not self._delivered
         else:
             return self._mu is not None or self._source.has_next()
+
+    def next_stage(self, binding: Dict[str, str]):
+        self._source.next_stage(binding)
 
     def _evaluate(self, bindings: Dict[str, str]) -> bool:
         """Evaluate the BIND expression with a set mappings.
@@ -77,7 +80,7 @@ class BindIterator(PreemptableIterator):
             b = Bindings(d=d)
             context = QueryContext(bindings=b)
         context.prologue = self._prologue
-        self._result=self._compiled_expression.eval(context)
+        self._result = self._compiled_expression.eval(context)
         return self._result
 
     async def next(self) -> Optional[Dict[str, str]]:
@@ -91,26 +94,44 @@ class BindIterator(PreemptableIterator):
         Throws: `StopAsyncIteration` if the iterator cannot produce more items.
         """
         if not self.has_next():
-            raise StopAsyncIteration()
-
-        if self._source is None:
-            mappings=dict()
-            mappings[self._bindvar]=str(self._evaluate(self._mu))
-            self._delivered=True
+            return None
+        elif self._source is None:
+            mappings = dict()
+            mappings[self._bindvar] = str(self._evaluate(self._mu))
+            self._delivered = True
             return mappings
-        else:
-            if self._mu is None:
+        with PreemptiveLoop() as loop:
+            while self._mu is None or not self._evaluate(self._mu):
                 self._mu = await self._source.next()
-            with PreemptiveLoop() as loop:
-                while not self._evaluate(self._mu):
-                    self._mu = await self._source.next()
-                    await loop.tick()
-            if not self.has_next():
-                raise StopAsyncIteration()
-            mu = self._mu
-            mu[self._bindvar]=str(self._result)
-            self._mu = None
-            return mu
+                if self._mu is None:
+                    return None
+                await loop.tick()
+        mu = self._mu
+        mu[self._bindvar] = str(self._result)
+        self._mu = None
+        return mu
+
+        # if not self.has_next():
+        #     raise StopAsyncIteration()
+
+        # if self._source is None:
+        #     mappings=dict()
+        #     mappings[self._bindvar]=str(self._evaluate(self._mu))
+        #     self._delivered=True
+        #     return mappings
+        # else:
+        #     if self._mu is None:
+        #         self._mu = await self._source.next()
+        #     with PreemptiveLoop() as loop:
+        #         while not self._evaluate(self._mu):
+        #             self._mu = await self._source.next()
+        #             await loop.tick()
+        #     if not self.has_next():
+        #         raise StopAsyncIteration()
+        #     mu = self._mu
+        #     mu[self._bindvar]=str(self._result)
+        #     self._mu = None
+        #     return mu
 
     def save(self) -> SavedBindIterator:
         """Save and serialize the iterator as a Protobuf message"""

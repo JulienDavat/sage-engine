@@ -50,7 +50,7 @@ class BagUnionIterator(PreemptableIterator):
         Throws: `StopAsyncIteration` if the iterator cannot produce more items.
         """
         if not self.has_next():
-            raise StopAsyncIteration()
+            return None
         elif self._left.has_next():
             return await self._left.next()
         else:

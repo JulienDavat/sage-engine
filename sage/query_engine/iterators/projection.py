@@ -30,6 +30,9 @@ class ProjectionIterator(PreemptableIterator):
         """Return True if the iterator has more item to yield"""
         return self._source.has_next()
 
+    def next_stage(self, binding: Dict[str, str]):
+        self._source.next_stage(binding)
+
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 
@@ -41,7 +44,7 @@ class ProjectionIterator(PreemptableIterator):
         Throws: `StopAsyncIteration` if the iterator cannot produce more items.
         """
         if not self.has_next():
-            raise StopAsyncIteration()
+            return None
         mappings = await self._source.next()
         if mappings is None:
             return None

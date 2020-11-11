@@ -9,7 +9,7 @@ from pyparsing import ParseException
 from rdflib.plugins.sparql.algebra import translateQuery, translateUpdate
 from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 from rdflib import BNode, Literal, URIRef, Variable
-
+from rdflib.paths import Path, SequencePath, AlternativePath, OneOrMore, ZeroOrMore, ZeroOrOne, InvPath, NegatedPath
 
 from sage.database.core.dataset import Dataset
 from sage.query_engine.exceptions import UnsupportedSPARQL
@@ -61,7 +61,7 @@ def localize_triples(triples: List[Dict[str, str]], graphs: List[str]) -> Iterab
             }
 
 
-def format_term(term: Union[BNode, Literal, URIRef, Variable]) -> str:
+def format_term(term: Union[BNode, Literal, URIRef, Variable, Path]) -> Union[str, Path]:
     """Convert a rdflib RDF Term into the format used by SaGe.
 
     Argument: The rdflib RDF Term to convert.
@@ -72,8 +72,10 @@ def format_term(term: Union[BNode, Literal, URIRef, Variable]) -> str:
         return str(term)
     elif type(term) is BNode:
         return '?v_' + str(term)
-    else:
+    elif type(term) is Literal or type(term) is Variable:
         return term.n3()
+    else: # It's a property path
+        return term
 
 
 def get_triples_from_graph(node: dict, current_graphs: List[str]) -> List[Dict[str, str]]:

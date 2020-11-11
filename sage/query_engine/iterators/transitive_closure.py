@@ -129,6 +129,8 @@ class TransitiveClosureIterator(PreemptableIterator):
 
         Throws: `StopAsyncIteration` if the iterator cannot produce more items.
         """
+        if not self.has_next():
+            return None
         self._current_depth = self.backtrack()
         if self._iterators[self._current_depth].has_next():
             current_binding = await self._iterators[self._current_depth].next()

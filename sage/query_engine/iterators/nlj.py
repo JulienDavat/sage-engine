@@ -53,10 +53,12 @@ class IndexJoinIterator(PreemptableIterator):
                 self._current_binding = await self._left.next()
                 if self._current_binding is None:
                     return None
-                self._right.next_stage(self._current_binding)                
+                self._right.next_stage(self._current_binding)     
                 await loop.tick()
         mu = await self._right.next()
-        return {**self._current_binding, **mu}
+        if mu is not None:
+            return {**self._current_binding, **mu} # no test of compatibility ?!
+        return None
 
     def save(self) -> SavedIndexJoinIterator:
         """Save and serialize the iterator as a Protobuf message"""

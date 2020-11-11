@@ -50,6 +50,9 @@ class ConstructIterator(PreemptableIterator):
         """Return True if the iterator has more item to yield"""
         return self._source.has_next()
 
+    def next_stage(self, binding: Dict[str, str]):
+        self._source.next_stage(binding)
+
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 

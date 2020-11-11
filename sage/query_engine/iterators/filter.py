@@ -92,6 +92,13 @@ class FilterIterator(PreemptableIterator):
         """Get the name of the iterator, as used in the plan serialization protocol"""
         return "filter"
 
+    def has_next(self) -> bool:
+        """Return True if the iterator has more item to yield"""
+        return self._mu is not None or self._source.has_next()
+
+    def next_stage(self, binding: Dict[str, str]):
+        self._source.next_stage(binding)
+
     def _evaluate(self, bindings: Dict[str, str]) -> bool:
         """Evaluate the FILTER expression with a set mappings.
 
@@ -116,22 +123,30 @@ class FilterIterator(PreemptableIterator):
         Throws: `StopAsyncIteration` if the iterator cannot produce more items.
         """
         if not self.has_next():
-            raise StopAsyncIteration()
-        if self._mu is None:
-            self._mu = await self._source.next()
+            return None
         with PreemptiveLoop() as loop:
-            while not self._evaluate(self._mu):
+            while self._mu is None or not self._evaluate(self._mu):
                 self._mu = await self._source.next()
+                if self._mu is None:
+                    return None
                 await loop.tick()
-        if not self.has_next():
-            raise StopAsyncIteration()
         mu = self._mu
         self._mu = None
         return mu
 
-    def has_next(self) -> bool:
-        """Return True if the iterator has more item to yield"""
-        return self._mu is not None or self._source.has_next()
+        # if not self.has_next():
+        #     raise StopAsyncIteration()
+        # if self._mu is None:
+        #     self._mu = await self._source.next()
+        # with PreemptiveLoop() as loop:
+        #     while not self._evaluate(self._mu):
+        #         self._mu = await self._source.next()
+        #         await loop.tick()
+        # if not self.has_next():
+        #     raise StopAsyncIteration()
+        # mu = self._mu
+        # self._mu = None
+        # return mu
 
     def save(self) -> SavedFilterIterator:
         """Save and serialize the iterator as a Protobuf message"""

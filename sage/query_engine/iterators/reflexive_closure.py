@@ -59,6 +59,9 @@ class ReflexiveClosureIterator(PreemptableIterator):
 
         Throws: `StopAsyncIteration` if the iterator cannot produce more items.
         """
+        if not self.has_next():
+            return None
+        # Compute the reflexe closure when either the subject or the object is a constant
         if not self._subject.startswith('?') and not self._obj.startswith('?'):
             self._done = True
             return {} if self._subject == self._obj else None
@@ -72,7 +75,7 @@ class ReflexiveClosureIterator(PreemptableIterator):
             if self._current_binding is not None and self._subject in self._current_binding:
                 return {} if self._obj == self._current_binding[self._subject] else None
             return {self._subject: self._obj}
-        
+        # Compute the reflexive closure when the subject and the object are unbound variables
         if self._current_binding is None or (self._subject not in self._current_binding and self._obj not in self._current_binding):
             if self._mu is None:
                 self._mu = await self._source.next()
@@ -84,7 +87,7 @@ class ReflexiveClosureIterator(PreemptableIterator):
                 self._visited[node] = None
                 return {self._subject: node, self._obj: node}
             return None
-        
+        # Compute the reflexive closure when either the subject or the object is bound
         if self._subject in self._current_binding and self._obj in self._current_binding:
             self._done = True
             return {} if self._current_binding[self._subject] == self._current_binding[self._obj] else None
