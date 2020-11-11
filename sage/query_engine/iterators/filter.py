@@ -105,26 +105,6 @@ class FilterIterator(PreemptableIterator):
         context.prologue = self._prologue
         return self._compiled_expression.eval(context)
 
-    def next_sync(self) -> Optional[Dict[str, str]]:
-        """ Only for internal test !!
-        """
-        if not self.has_next():
-            raise StopAsyncIteration()
-        if self._mu is None:
-            self._mu = self._source.next_sync()
-#        with PreemptiveLoop() as loop:
-#            while not self._evaluate(self._mu):
-#                self._mu = await self._source.next()
-#                await loop.tick()
-        while not self._evaluate(self._mu):
-            self._mu =  self._source.next_sync()
-        if not self.has_next():
-            raise StopAsyncIteration()
-        mu = self._mu
-        self._mu = None
-        return mu
-
-
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 

@@ -5,7 +5,7 @@ from typing import Dict, List, Set, Tuple
 
 def get_vars(triple: Dict[str, str]) -> Set[str]:
     """Get SPARQL variables in a triple pattern"""
-    return set([v for k, v in triple.items() if v.startswith('?')])
+    return set([v for k, v in triple.items() if type(v) is str and v.startswith('?')])
 
 
 def find_connected_pattern(variables: List[str], triples: List[Dict[str, str]]) -> Tuple[Dict[str, str],int, Set[str]]:

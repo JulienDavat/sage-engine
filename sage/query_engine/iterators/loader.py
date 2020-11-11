@@ -7,6 +7,8 @@ from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.construct import ConstructIterator
+from sage.query_engine.iterators.transitive_closure import TransitiveClosureIterator
+from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
@@ -16,6 +18,8 @@ from sage.query_engine.iterators.union import BagUnionIterator
 from sage.query_engine.protobuf.iterators_pb2 import (RootTree,
                                                       SavedBagUnionIterator,
                                                       SavedFilterIterator,
+                                                      SavedTransitiveClosureIterator,
+                                                      SavedReflexiveClosureIterator,
                                                       SavedIndexJoinIterator,
                                                       SavedProjectionIterator,
                                                       SavedReducedIterator,
@@ -69,6 +73,10 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
             return load_bind(saved_plan, dataset)
         elif type(saved_plan) is SavedConstructIterator:
             return load_construct(saved_plan, dataset)
+        elif type(saved_plan) is SavedTransitiveClosureIterator:
+            return load_transitive_closure(saved_plan, dataset)
+        elif type(saved_plan) is SavedReflexiveClosureIterator:
+            return load_reflexive_closure(saved_plan, dataset)
         else:
             raise Exception(f"Unknown iterator type '{type(saved_plan)}' when loading controls")
     except:
@@ -167,7 +175,6 @@ def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> Pree
     return ConstructIterator(source, template)
 
 
-
 def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIterator:
     """Load a ScanIterator from a protobuf serialization.
 
@@ -191,6 +198,61 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
       current_binding = saved_plan.mu
     return ScanIterator(pattern, dataset, current_binding=current_binding, cardinality=saved_plan.cardinality, progress=saved_plan.progress, last_read=saved_plan.last_read, as_of=as_of)
 
+
+def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:
+    """Load a TransitiveClosureIterator from a protobuf serialization
+    
+    Args:
+      * saved_plan: Saved query execution plan.
+      * dataset: RDF dataset used to execute the plan.
+
+    Returns:
+      The pipeline of iterator used to continue query execution.
+    """
+    subject = saved_plan.subject
+    obj = saved_plan.obj
+    zero = saved_plan.zero
+    var_prefix = saved_plan.var_prefix
+    current_depth = saved_plan.current_depth
+    min_depth = saved_plan.min_depth
+    max_depth = saved_plan.max_depth
+    complete = saved_plan.complete
+
+    iterators = []
+    for iterator in saved_plan.iterators:
+      it_field = iterator.WhichOneof('iterator')
+      iterators.append(load(getattr(iterator, it_field), dataset))
+
+    bindings = []
+    for binding in saved_plan.bindings:
+      bindings.append(getattr(binding, 'binding'))
+    bindings += [None] * ( (max_depth + 1) - len(bindings) )
+    
+    return TransitiveClosureIterator(subject, obj, zero, iterators, var_prefix, bindings, current_depth, min_depth, max_depth, complete)
+
+
+def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:
+    """Load a TransitiveClosureIterator from a protobuf serialization
+    
+    Args:
+      * saved_plan: Saved query execution plan.
+      * dataset: RDF dataset used to execute the plan.
+
+    Returns:
+      The pipeline of iterator used to continue query execution.
+    """
+    subject = saved_plan.subject
+    obj = saved_plan.obj
+    source = load(saved_plan.scan_source, dataset)
+    current_binding = None
+    if len(saved_plan.current_binding) > 0:
+        current_binding = saved_plan.current_binding
+    mu = None
+    if len(saved_plan.mu) > 0:
+        mu = saved_plan.mu
+    print(mu)
+    done = saved_plan.done 
+    return ReflexiveClosureIterator(subject, obj, source, mu, current_binding, done)
 
 
 def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> PreemptableIterator:

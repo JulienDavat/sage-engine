@@ -40,6 +40,11 @@ class IndexJoinIterator(PreemptableIterator):
         """Return True if the iterator has more item to yield"""
         return self._left.has_next() or (self._current_binding is not None and self._right.has_next())
 
+    def next_stage(self, binding: Dict[str, str]):
+        """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
+        self._current_binding = None
+        self._left.next_stage(binding)
+
     async def next(self) -> Optional[Dict[str, str]]:
         if not self.has_next():
             return None

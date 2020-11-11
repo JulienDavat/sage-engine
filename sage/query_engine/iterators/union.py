@@ -34,6 +34,11 @@ class BagUnionIterator(PreemptableIterator):
         """Return True if the iterator has more item to yield"""
         return self._left.has_next() or self._right.has_next()
 
+    def next_stage(self, binding: Dict[str, str]):
+        """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
+        self._left.next_stage(binding)
+        self._right.next_stage(binding)
+
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
 
@@ -77,6 +82,11 @@ class RandomBagUnionIterator(BagUnionIterator):
         super(BagUnionIterator, self).__init__()
         self._left = left
         self._right = right
+
+    def next_stage(self, binding: Dict[str, str]):
+        """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
+        self._left.next_stage(binding)
+        self._right.next_stage(binding)
 
     async def next(self) -> Optional[Dict[str, str]]:
         """Get the next item from the iterator, following the iterator protocol.
