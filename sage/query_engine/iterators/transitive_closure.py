@@ -62,9 +62,17 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._visited = dict()
         self._iterators[0].next_stage(binding)
 
-    def extract_last_node(self, current_binding) -> Optional[str]:
+    def extract_last_node(self, current_binding) -> str:
         variable = f'?{self._var_prefix}{self._current_depth}'
         return current_binding[variable]
+
+    def extract_first_node(self, current_binding) -> str:
+        if self._subject.startswith('?'):
+            if self._bindings[0] is None:
+                return current_binding[self._subject]
+            else:
+                return self._bindings[0][self._subject]
+        return self._subject
 
     def backtrack(self) -> int:
         i = self._current_depth
@@ -73,30 +81,22 @@ class TransitiveClosureIterator(PreemptableIterator):
             i = i - 1
         return i        
 
-    def reset_visited_nodes_if_necessary(self, previous_binding, current_binding):
-        if self._current_depth > 0:
-            return
-        if previous_binding is None:
+    def init_visited(self, current_binding):
+        first_node = self.extract_first_node(current_binding)
+        if first_node not in self._visited:
             if self._zero:
-                if self._subject.startswith('?'):
-                    first_node = current_binding[self._subject]
-                else:
-                    first_node = self._subject
-                self._visited = {first_node: None}
+                self._visited[first_node] = {first_node: None}
             else:
-                self._visited = {}
-        elif self._subject.startswith('?') and previous_binding[self._subject] != current_binding[self._subject]:
-            if self._zero:
-                first_node = current_binding[self._subject]
-                self._visited = {first_node: None}
-            else:
-                self._visited = {}
+                self._visited[first_node] = {}
 
     def visited(self, current_binding):
+        first_node = self.extract_first_node(current_binding)
         last_node = self.extract_last_node(current_binding)
-        if last_node in self._visited:
+        if first_node not in self._visited:
+            self.init_visited(self._current_depth)
+        if last_node in self._visited[first_node]:
             return True
-        self._visited[last_node] = None
+        self._visited[first_node][last_node] = None
         return False
 
     def cycle(self):
@@ -134,8 +134,11 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._current_depth = self.backtrack()
         if self._iterators[self._current_depth].has_next():
             current_binding = await self._iterators[self._current_depth].next()
-            self.reset_visited_nodes_if_necessary(self._bindings[0], current_binding)
+            if current_binding is None:
+                return None
             self._bindings[self._current_depth] = current_binding
+            if self._current_depth == 0:
+                self.init_visited(current_binding)
             if self.visited(current_binding) or self.cycle():
                 return None
             i = self.expand_current_path(current_binding)

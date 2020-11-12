@@ -22,6 +22,13 @@ import sys
 
 closure_max_depth = 15
 
+def create_equality_expr(variable, values):
+    if len(values) == 1:
+        return f'({variable} != <{values.pop()}>)'
+    else:
+        expr = f'({variable} != <{values.pop()}>)'
+        return f'({expr} && {create_equality_expr(variable, values)})'
+
 def parse_property_path(subject: str, path: Path, obj: str, graph: str, dataset: Dataset, forward: bool = True, inverse: bool = False, as_of: Optional[datetime] = None) -> PreemptableIterator:
     var_prefix = f'{subject[1:]}_' if subject.startswith('?') else ( f'{obj[1:]}_' if obj.startswith('?') else 'var_' )
     if type(path) is SequencePath:
@@ -77,7 +84,7 @@ def parse_property_path(subject: str, path: Path, obj: str, graph: str, dataset:
         print(path.path)
         global closure_max_depth
         zero = path.mod != OneOrMore
-        max_depth = 0 if path.mod == ZeroOrOne else closure_max_depth
+        max_depth = 1 if path.mod == ZeroOrOne else closure_max_depth
         it = parse_property_path(subject, path.path, f'?{var_prefix}{0}', graph, dataset, forward, inverse, as_of)
         iterators = [it]
         for i in range(1, max_depth + 1):
@@ -93,8 +100,15 @@ def parse_property_path(subject: str, path: Path, obj: str, graph: str, dataset:
     elif type(path) is NegatedPath:
         print('negated property set')
         print(path.args)
-        raise Exception('Negated property set not supported yet...')
-    elif type(path) is URIRef:
+        forward_properties = []
+        for arg in path.args:
+            if type(arg) is URIRef:
+                forward_properties.append(str(arg))
+            else:
+                raise Exception('Negated property sets with reverse properties are not supported yet...')
+        scan = parse_property_path(subject, f'?{var_prefix}{1}', obj, graph, dataset, forward, inverse, as_of)
+        return FilterIterator(scan, create_equality_expr(f'?{var_prefix}{1}', forward_properties))
+    elif type(path) is URIRef or type(path) is str:
         print('property')
         pattern = dict()
         pattern['subject'] = obj if inverse else subject 
@@ -117,8 +131,8 @@ def build_path_pattern_iterator(triple: Dict[str, str], query_vars: List[str], d
     elif not obj.startswith('?') or obj in query_vars:
         pipeline = parse_property_path(obj, path, subject, graph, dataset, False, True, as_of)
     else:
-        pipeline = parse_property_path(obj, path, subject, graph, dataset, False, True, as_of)
-        # pipeline = parse_property_path(subject, path, obj, graph, dataset, True, False, as_of)
+        # pipeline = parse_property_path(obj, path, subject, graph, dataset, False, True, as_of)
+        pipeline = parse_property_path(subject, path, obj, graph, dataset, True, False, as_of)
     return ProjectionIterator(pipeline, list(get_vars(triple)))
 
 
