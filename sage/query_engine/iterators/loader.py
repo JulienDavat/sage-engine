@@ -211,7 +211,6 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
     """
     subject = saved_plan.subject
     obj = saved_plan.obj
-    zero = saved_plan.zero
     var_prefix = saved_plan.var_prefix
     current_depth = saved_plan.current_depth
     min_depth = saved_plan.min_depth
@@ -228,7 +227,7 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
       bindings.append(getattr(binding, 'binding'))
     bindings += [None] * ( (max_depth + 1) - len(bindings) )
     
-    return TransitiveClosureIterator(subject, obj, zero, iterators, var_prefix, bindings, current_depth, min_depth, max_depth, complete)
+    return TransitiveClosureIterator(subject, obj, iterators, var_prefix, bindings, current_depth, min_depth, max_depth, complete)
 
 
 def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:
@@ -250,7 +249,6 @@ def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: 
     mu = None
     if len(saved_plan.mu) > 0:
         mu = saved_plan.mu
-    print(mu)
     done = saved_plan.done 
     return ReflexiveClosureIterator(subject, obj, source, mu, current_binding, done)
 

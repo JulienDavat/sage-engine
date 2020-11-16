@@ -23,6 +23,10 @@ class BagUnionIterator(PreemptableIterator):
         self._left = left
         self._right = right
 
+    def __len__(self) -> int:
+        """Get an approximation of the result's cardinality of the iterator"""
+        return self._left.__len__() + self._right.__len__()
+
     def __repr__(self):
         return f"<BagUnionIterator {self._left} UNION {self._right}>"
 

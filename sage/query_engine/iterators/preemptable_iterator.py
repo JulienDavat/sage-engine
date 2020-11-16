@@ -7,6 +7,10 @@ from typing import Any, Dict, Optional
 class PreemptableIterator(ABC):
     """An abstract class for a preemptable iterator"""
 
+    def __len__(self) -> int:
+        """Get an approximation of the result's cardinality of the iterator"""
+        return 0
+
     @abstractmethod
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""

@@ -24,6 +24,10 @@ class ReducedIterator(PreemptableIterator):
         #    print(f"...{m}...")
         return [dict(s) for s in set(frozenset(d.items()) for d in self._mappings)]
 
+    def __len__() -> int:
+        """Get an approximation of the result's cardinality of the iterator"""
+        return self._source.__len__()
+
     def __repr__(self) -> str:
         return f"<ReducedIterator FROM {self._source}>"
 

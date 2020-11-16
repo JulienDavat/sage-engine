@@ -2,7 +2,7 @@
 # Author: Thomas MINIER - MIT License 2017-2020
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union, Set
 
 import pyparsing
 from pyparsing import ParseException
@@ -21,13 +21,14 @@ from sage.query_engine.iterators.construct import ConstructIterator, convert_con
 from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.reduced import ReducedIterator
 from sage.query_engine.iterators.utils import EmptyIterator
-from sage.query_engine.optimizer.join_builder import build_left_join_tree
-from sage.query_engine.optimizer.join_builder import continue_left_join_tree
+from sage.query_engine.iterators.nlj import IndexJoinIterator
+from sage.query_engine.optimizer.join_builder import build_left_join_tree, parse_bgp_with_property_path
 from sage.query_engine.update.delete import DeleteOperator
 from sage.query_engine.update.if_exists import IfExistsOperator
 from sage.query_engine.update.insert import InsertOperator
 from sage.query_engine.update.serializable import SerializableUpdate
 from sage.query_engine.update.update_sequence import UpdateSequenceOperator
+from sage.query_engine.optimizer.utils import get_vars
 
 # enable Packrat optimization for the rdflib SPARQL parser
 pyparsing.ParserElement.enablePackrat()
@@ -208,7 +209,7 @@ def parse_filter_expr(expr: dict) -> str:
         elif expr.name.startswith('Builtin_CONTAINS'):
             return f"(CONTAINS({parse_filter_expr(expr.arg1)},{parse_filter_expr(expr.arg2)}))"
         elif expr.name.startswith('Builtin_'):
-            #print("pouet:"+str(expr.arg))
+            # print("pouet:"+str(expr.arg))
             return f"{expr.name[8:]}({parse_filter_expr(expr.arg)})"
         raise UnsupportedSPARQL(f"Unsupported SPARQL FILTER expression: {expr.name}")
 
@@ -291,7 +292,7 @@ def parse_query_node(node: dict, dataset: Dataset, current_graphs: List[str], ca
     else:
         raise UnsupportedSPARQL(f"Unsupported SPARQL feature: {node.name}")
 
-def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], cardinalities: dict, as_of: Optional[datetime] = None) -> PreemptableIterator:
+def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], cardinalities: dict, query_vars: Optional[List[str]] = None, as_of: Optional[datetime] = None) -> PreemptableIterator:
     """Recursively parse node in the query logical plan to build a preemptable physical query execution plan.
 
     Args:
@@ -310,54 +311,57 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         graphs = current_graphs
         if node.datasetClause is not None:
             graphs = [format_term(graph_iri.default) for graph_iri in node.datasetClause]
-        return parse_query_alt(node.p, dataset, graphs, cardinalities, as_of=as_of)
+        return parse_query_alt(node.p, dataset, graphs, cardinalities, query_vars=query_vars, as_of=as_of)
     elif node.name == 'ConstructQuery':
         graphs = current_graphs
         if node.datasetClause is not None:
             graphs = [format_term(graph_iri.default) for graph_iri in node.datasetClause]
-        child=parse_query_alt(node.p, dataset, graphs, cardinalities, as_of=as_of)
+        child=parse_query_alt(node.p, dataset, graphs, cardinalities, query_vars=query_vars, as_of=as_of)
         return ConstructIterator(child,convert_construct_template(node.template))
     elif node.name == 'Reduced':
-        child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
+        child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
         return ReducedIterator(child)
     elif node.name == 'Project':
-        query_vars = list(map(lambda t: '?' + str(t), node.PV))
-        child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
-        return ProjectionIterator(child, query_vars)
+        projected_vars = list(map(lambda t: '?' + str(t), node.PV))
+        variables = []
+        child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=variables, as_of=as_of)
+        print(variables)
+        return ProjectionIterator(child, projected_vars)
     elif node.name == 'BGP':
-        # bgp_vars = node._vars
         triples = list(localize_triples(node.triples, current_graphs))
-        iterator, query_vars, c = build_left_join_tree(triples, dataset, current_graphs, as_of=as_of)
+        if query_vars is not None:
+            variables = set()
+            for triple in triples:
+                variables = variables | get_vars(triple)
+            query_vars += list(variables)
+        iterator, bgp_cardinalities = parse_bgp_with_property_path(triples, set(), dataset, current_graphs, as_of=as_of)
         # track cardinalities of every triple pattern
-        cardinalities += c
+        for cardinality in bgp_cardinalities:
+            if type(cardinality['triple']['predicate']) is str:
+                if not cardinality['triple']['subject'].startswith('?') or cardinality['triple']['subject'] in query_vars:
+                    if not cardinality['triple']['object'].startswith('?') or cardinality['triple']['object'] in query_vars:
+                        cardinalities += [cardinality]
         return iterator
     elif node.name == 'Union':
-        left = parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
-        right = parse_query_alt(node.p2, dataset, current_graphs, cardinalities, as_of=as_of)
+        left = parse_query_alt(node.p1, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
+        right = parse_query_alt(node.p2, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
         return BagUnionIterator(left, right)
     elif node.name == 'Filter':
         expression = parse_filter_expr(node.expr)
-        iterator = parse_query_alt(node.p, dataset, current_graphs, cardinalities, as_of=as_of)
+        iterator = parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
         return FilterIterator(iterator, expression)
     elif node.name == 'Extend':
-        bgp_iterator=parse_query_alt(node.p,dataset,current_graphs,cardinalities,as_of=as_of)
+        bgp_iterator=parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
         expression = parse_bind_expr(node.expr)
-        #print("expression:"+str(expression))
+        # print("expression:"+str(expression))
         if isinstance(bgp_iterator,EmptyIterator):
             return BindIterator(None,expression,'?'+node.var)
         else:
             return BindIterator(bgp_iterator,expression,'?'+node.var)
     elif node.name == 'Join':
-        left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, as_of=as_of)
-        if node.p2.name=='BGP':
-            triples=list(localize_triples(node.p2.triples, current_graphs))
-            variables=set(map(lambda t: t.n3(), node.p1._vars))
-            #print("Join P1 _vars"+str(variables))
-            iterator, query_vars, c=continue_left_join_tree(left,variables,triples,dataset,current_graphs)
-            cardinalities += c
-            return iterator
-        else:
-            raise UnsupportedSPARQL(f"Join Unsupported SPARQL feature: {node.p2.name}")
+        left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
+        right=parse_query_alt(node.p2, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
+        return IndexJoinIterator(left, right)
     else:
         raise UnsupportedSPARQL(f"Unsupported SPARQL feature: {node.name}")
 

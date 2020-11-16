@@ -85,6 +85,10 @@ class FilterIterator(PreemptableIterator):
         self._prologue = compiled_expr.prologue
         self._compiled_expression = compiled_expr.algebra.p.p.expr
 
+    def __len__(self) -> int:
+        """Get an approximation of the result's cardinality of the iterator"""
+        return self._source.__len__()
+
     def __repr__(self) -> str:
         return f"<FilterIterator '{self._raw_expression}' on {self._source}>"
 

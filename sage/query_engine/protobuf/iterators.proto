@@ -57,14 +57,13 @@ message SavedTransitiveClosureIterator {
 
   string subject = 1;
   string obj = 2;
-  bool zero = 3;
-  repeated PreemptableIterator iterators = 4;
-  string var_prefix = 5;
-  repeated Bindings bindings = 6;
-  int64 current_depth = 7;
-  int64 min_depth = 8;
-  int64 max_depth = 9;
-  bool complete = 10;
+  repeated PreemptableIterator iterators = 3;
+  string var_prefix = 4;
+  repeated Bindings bindings = 5;
+  int64 current_depth = 6;
+  int64 min_depth = 7;
+  int64 max_depth = 8;
+  bool complete = 9;
 }
 
 message SavedReflexiveClosureIterator {

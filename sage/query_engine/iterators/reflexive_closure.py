@@ -14,8 +14,14 @@ class ReflexiveClosureIterator(PreemptableIterator):
     It can be used as the starting iterator in a pipeline of iterators.
 
     Args:
-      * subject: The path pattern subject.
-      * obj: The path pattern object.
+      * subject: The node from which all paths must start. A variable at the subject position means 
+        that the reflexive closure is evaluated from all the nodes.
+      * obj: The node to which all paths must end. A variable at the object position means that all
+        the paths are part of the final result.
+      * source: A ScanIterator used to retrieve all graph nodes if it's necessary
+      * current_binding: The current state of the subject and the object given by the other operators.
+      * mu: The next value to return before to read the next mapping of the source.
+      * done: True if the reflexive closure has been fully evaluated, False otherwise.
     """
 
     def __init__(self, subject: str, obj: str, source: ScanIterator, mu: Dict[str, str] = None, current_binding: Dict[str, str] = None, done: bool = False):
@@ -29,10 +35,14 @@ class ReflexiveClosureIterator(PreemptableIterator):
         self._visited = dict()
 
     def __len__(self) -> int:
-        return 0
+        """Get an approximation of the result's cardinality of the iterator"""
+        if not self._subject.startswith('?') or not self._obj.startswith('?'):
+            return 1
+        else:
+            return self._source.__len__()
 
     def __repr__(self) -> str:
-        return f"<ScanIterator ({self._triple['subject']} {self._triple['predicate']} {self._triple['object']})>"
+        return f"<ReflexiveClosureIterator>"
 
     def serialized_name(self):
         """Get the name of the iterator, as used in the plan serialization protocol"""
