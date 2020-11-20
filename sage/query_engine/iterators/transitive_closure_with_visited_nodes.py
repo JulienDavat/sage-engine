@@ -40,7 +40,16 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._max_depth = max_depth
         self._complete = complete
         self._visited = dict()
-        self._border = dict()
+        # Initialized the list of visited node with the current path
+        if bindings is not None and bindings[0] is not None:
+            first_node = self.first_node()
+            if min_depth == 0:
+                self._visited[first_node] = {first_node: None}
+            else:
+                self._visited[first_node] = {}
+            for i in range(0, current_depth):
+                node = self.path_node(i)
+                self._visited[first_node][node] = None
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
@@ -70,6 +79,13 @@ class TransitiveClosureIterator(PreemptableIterator):
             return self._bindings[0][self._subject]
         else:
             return self._subject
+
+    def path_node(self, position: int) -> str:
+        if position <= self._current_depth:
+            variable = f'?{self._var_prefix}{position}'
+            return self._bindings[position][variable]
+        else:
+            return self.last_node()
 
     def last_node(self) -> str:
         """Return the last node of the current path"""
@@ -101,23 +117,7 @@ class TransitiveClosureIterator(PreemptableIterator):
                 self._visited[first_node] = {}
         if last_node in self._visited[first_node]:
             return True
-        if self._current_depth < self._max_depth - 1:
-            self._visited[first_node][last_node] = None
-        return False
-
-    def frontiersnode(self):
-        """
-        Check if the last node of the current path is a frontier's node and mark it as a frontier's node if it's the case
-        Return True if the last node is a frontier's node, False otherwise
-        """
-        first_node = self.first_node()
-        last_node = self.last_node()
-        if first_node not in self._border:
-            self._border[first_node] = {}
-        if last_node in self._border[first_node]:
-            return True
-        if self._current_depth == self._max_depth - 1:
-            self._border[first_node][last_node] = None
+        self._visited[first_node][last_node] = None
         return False
 
     def cycle(self):
@@ -125,7 +125,11 @@ class TransitiveClosureIterator(PreemptableIterator):
         Check if the current path contains a cycle
         Return True if the current path contains a cycle, False otherwise
         """
-        path_nodes = {}
+        if self._min_depth == 0:
+            first_node = self.first_node()
+            path_nodes = {first_node: None}
+        else:
+            path_nodes = {}
         for i in range (0, self._current_depth + 1):
             node = self._bindings[i][f'?{self._var_prefix}{i}']
             if node in path_nodes:
@@ -146,6 +150,8 @@ class TransitiveClosureIterator(PreemptableIterator):
         elif i == self._max_depth - 1 and self._complete:
             self._iterators[i + 1].next_stage(last_binding)
             self._complete = not self._iterators[i + 1].has_next()
+            # if not self._complete:
+            #     raise Exception('>>> Too small max depth limit !')
         return i
 
     def is_solution(self) -> bool:
@@ -177,8 +183,13 @@ class TransitiveClosureIterator(PreemptableIterator):
 
             if self.visited() or self.cycle():
                 return None
+            
+            path = self._subject
+            for i in range(0, self._current_depth + 1):
+                path += ' -> ' + self.path_node(i)
+            print(path)
 
-            if self.is_solution() and not self.frontiersnode():
+            if self.is_solution():
                 solution_mapping = {}
                 if self._subject.startswith('?'):
                     solution_mapping[self._subject] = self._bindings[0][self._subject]
@@ -205,11 +216,9 @@ class TransitiveClosureIterator(PreemptableIterator):
         saved_transitive.iterators.extend(saved_iterators)
         saved_transitive.var_prefix = self._var_prefix
         saved_bindings = []
-        for binding in self._bindings:
-            if binding is None:
-                break
+        for i in range(0, self._current_depth):
             saved_binding = SavedTransitiveClosureIterator.Bindings()
-            pyDict_to_protoDict(binding, saved_binding.binding)
+            pyDict_to_protoDict(self._bindings[i], saved_binding.binding)
             saved_bindings.append(saved_binding)
         saved_transitive.bindings.extend(saved_bindings)
         saved_transitive.current_depth = self._current_depth

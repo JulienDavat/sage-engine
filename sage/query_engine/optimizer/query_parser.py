@@ -292,6 +292,11 @@ def parse_query_node(node: dict, dataset: Dataset, current_graphs: List[str], ca
     else:
         raise UnsupportedSPARQL(f"Unsupported SPARQL feature: {node.name}")
 
+def compute_imprint(source: PreemptableIterator, variables: List[str]):
+    bindexpr = f"<imprint>({','.join(variables)})"
+    bindvar = "?imprint"
+    return BindIterator(source, bindexpr, bindvar)
+
 def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], cardinalities: dict, query_vars: Optional[List[str]] = None, as_of: Optional[datetime] = None) -> PreemptableIterator:
     """Recursively parse node in the query logical plan to build a preemptable physical query execution plan.
 
@@ -325,8 +330,9 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         projected_vars = list(map(lambda t: '?' + str(t), node.PV))
         variables = []
         child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=variables, as_of=as_of)
-        print(variables)
-        return ProjectionIterator(child, projected_vars)
+        source = compute_imprint(child, [])
+        projected_vars.append('?imprint')
+        return ProjectionIterator(source, projected_vars)
     elif node.name == 'BGP':
         triples = list(localize_triples(node.triples, current_graphs))
         if query_vars is not None:

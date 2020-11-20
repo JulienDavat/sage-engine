@@ -7,8 +7,7 @@ from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.union import BagUnionIterator
-from sage.query_engine.iterators.projection import ProjectionIterator
-from sage.query_engine.iterators.transitive_closure import TransitiveClosureIterator
+from sage.query_engine.iterators.transitive_closure_with_visited_nodes import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.scan import ScanIterator
@@ -163,7 +162,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
     if type(path) is MulPath:
         unique_prefix = time.time_ns()
         min_depth = 1 if path.mod == OneOrMore else 0
-        max_depth = 1 if path.mod == ZeroOrOne else 20
+        max_depth = 1 if path.mod == ZeroOrOne else 50
         iterators = []
         if forward:
             iterator, _ = parse_bgp_with_property_path([{
@@ -196,7 +195,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
                     'predicate': path.path,
                     'object': f'?star_{unique_prefix}_{depth - 1}',
                     'graph': path_pattern['graph']
-                }], set([f'?star_{unique_prefix}_{depth}']), dataset, default_graph, as_of)
+                }], set([f'?star_{unique_prefix}_{depth - 1}']), dataset, default_graph, as_of)
                 iterators.append(iterator)
             transitive_closure = TransitiveClosureIterator(path_pattern['object'], path_pattern['subject'], iterators, f'star_{unique_prefix}_', min_depth=min_depth, max_depth=max_depth)
         if min_depth == 0:
