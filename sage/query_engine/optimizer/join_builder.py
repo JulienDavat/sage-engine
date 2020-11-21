@@ -7,7 +7,8 @@ from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.union import BagUnionIterator
-from sage.query_engine.iterators.transitive_closure_with_visited_nodes import TransitiveClosureIterator
+from sage.query_engine.iterators.bind import BindIterator
+from sage.query_engine.iterators.transitive_closure_with_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.scan import ScanIterator
@@ -162,7 +163,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
     if type(path) is MulPath:
         unique_prefix = time.time_ns()
         min_depth = 1 if path.mod == OneOrMore else 0
-        max_depth = 1 if path.mod == ZeroOrOne else 50
+        max_depth = 1 if path.mod == ZeroOrOne else 10
         iterators = []
         if forward:
             iterator, _ = parse_bgp_with_property_path([{
@@ -209,13 +210,21 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
         raise Exception(f'PropertyPaths: {type(path)} is not a closure expression !')
 
 
+def bind_bgp_id(source: PreemptableIterator) -> PreemptableIterator:
+    unique_id = time.time_ns()
+    bindexpr = f'STR({unique_id})'
+    bindvar = f'?bgp_{unique_id}'
+    return BindIterator(source, bindexpr, bindvar)
+
+
 def parse_bgp_with_property_path(triples: List[Dict[str, str]], query_vars: Set[str], dataset: Dataset, default_graph: str, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[Dict[str, str]]]:
     for i in range(0, len(triples)):
         triple = triples[i]
         if (isinstance(triple['predicate'], Path) or type(triple['predicate']) is URIRef) and (not type(triple['predicate']) is MulPath) and (not type(triple['predicate']) is NegatedPath):
             triples.pop(i)
             return rewrite_bgp_with_property_path(triple, triples, query_vars, dataset, default_graph, as_of)
-    return build_left_join_tree(triples, query_vars, dataset, default_graph, as_of)
+    iterator, cardinalities = build_left_join_tree(triples, query_vars, dataset, default_graph, as_of)
+    return bind_bgp_id(iterator), cardinalities
 
 
 def build_left_join_tree(bgp: List[Dict[str, str]], query_vars: Set[str], dataset: Dataset, default_graph: str, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[Dict[str, str]]]:

@@ -46,7 +46,7 @@ message SavedTransitiveClosureIterator {
       SavedBagUnionIterator union_iterator = 3;
       SavedIndexJoinIterator join_iterator = 4;
       SavedFilterIterator filter_iterator = 5;
-      SavedBindIterator bind_source_iterator = 6;
+      SavedBindIterator bind_iterator = 6;
       SavedTransitiveClosureIterator transitive_iterator = 7;
     }
   }
@@ -82,7 +82,7 @@ message SavedIndexJoinIterator {
     SavedBagUnionIterator union_left = 3;
     SavedIndexJoinIterator join_left = 4;
     SavedFilterIterator filter_left = 5;
-    SavedBindIterator bind_source_left = 6;
+    SavedBindIterator bind_left = 6;
     SavedTransitiveClosureIterator transitive_closure_left = 7;
   }
   oneof right {
@@ -91,7 +91,7 @@ message SavedIndexJoinIterator {
     SavedBagUnionIterator union_right = 10;
     SavedIndexJoinIterator join_right = 11;
     SavedFilterIterator filter_right = 12;
-    SavedBindIterator bind_source_right = 13;
+    SavedBindIterator bind_right = 13;
     SavedTransitiveClosureIterator transitive_closure_right = 14;
   }
   map<string, string> mu = 15;
@@ -104,7 +104,7 @@ message SavedBagUnionIterator {
     SavedBagUnionIterator union_left = 3;
     SavedIndexJoinIterator join_left = 4;
     SavedFilterIterator filter_left = 5;
-    SavedBindIterator bind_source_left = 6;
+    SavedBindIterator bind_left = 6;
     SavedTransitiveClosureIterator transitive_closure_left = 7;
     SavedReflexiveClosureIterator reflexive_closure_left = 8;
   }
@@ -114,7 +114,7 @@ message SavedBagUnionIterator {
     SavedBagUnionIterator union_right = 11;
     SavedIndexJoinIterator join_right = 12;
     SavedFilterIterator filter_right = 13;
-    SavedBindIterator bind_source_right = 14;
+    SavedBindIterator bind_right = 14;
     SavedTransitiveClosureIterator transitive_closure_right = 15;
     SavedReflexiveClosureIterator reflexive_closure_right = 16;
   }

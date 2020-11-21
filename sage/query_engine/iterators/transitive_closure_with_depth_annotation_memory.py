@@ -151,8 +151,6 @@ class TransitiveClosureIterator(PreemptableIterator):
         elif i == self._max_depth - 1 and self._complete:
             self._iterators[i + 1].next_stage(last_binding)
             self._complete = not self._iterators[i + 1].has_next()
-            if not self._complete:
-                raise Exception('>>> Too small max depth limit !')
         return i
 
     def is_solution(self) -> bool:

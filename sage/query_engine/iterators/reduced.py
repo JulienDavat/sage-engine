@@ -14,7 +14,7 @@ class ReducedIterator(PreemptableIterator):
       * projection: Projection variables
     """
 
-    def __init__(self, source: PreemptableIterator, ):
+    def __init__(self, source: PreemptableIterator):
         super(ReducedIterator, self).__init__()
         self._source = source
         self._mappings=list()

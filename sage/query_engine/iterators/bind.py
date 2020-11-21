@@ -20,7 +20,23 @@ from sage.query_engine.iterators.filter import to_rdflib_term
 from rdflib.plugins.sparql.operators import register_custom_function
 
 from urllib.parse import urlparse
-import codecs
+import codecs, hashlib, re
+
+def parseArgument(arg: str, bindings: Dict[str, str]):
+    if arg.startswith('?') and arg in bindings:
+        return bindings[arg]
+    elif arg.startswith('<') and arg.endswith('>'):
+        return arg[1:len(arg) - 1]
+    else:
+        return arg
+
+def imprint(args: List[str], bindings: Dict[str, str]):
+    values = []
+    for i in range(len(args)):
+        values.append(parseArgument(args[i], bindings))
+    if len(values) == 0:
+        values.append('md5')
+    return hashlib.md5(''.join(values).encode('utf-8')).hexdigest()
 
 class BindIterator(PreemptableIterator):
     """A BindIterator evaluates a BIND statement in a pipeline of iterators.
@@ -38,8 +54,6 @@ class BindIterator(PreemptableIterator):
         self._bindvar = bindvar
         self._mu = mu
         self._delivered=delivered
-        #print("bindexpr:"+bindexpr)
-        #print("bindvar:"+bindexpr)
 
         compiled_expr = parseQuery(f"SELECT * WHERE {{?s ?p ?o . BIND({bindexpr} as {bindvar})}}")
         compiled_expr = translateQuery(compiled_expr)
@@ -76,6 +90,16 @@ class BindIterator(PreemptableIterator):
 
         Returns: The outcome of evaluating the SPARQL BIND on the input set of solution mappings.
         """
+
+        if self._expr.startswith('<imprint>'):
+            match = re.search(r'\((.+?)\)', self._expr)
+            if match:
+                args = match.group(1).split(',')
+                self._result = imprint(args, bindings)
+            else:
+                self._result = imprint(list(bindings.keys()), bindings)
+            return self._result
+
         context = None
         if bindings is None:
             context=QueryContext(Bindings())

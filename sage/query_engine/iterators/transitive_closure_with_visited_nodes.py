@@ -150,8 +150,6 @@ class TransitiveClosureIterator(PreemptableIterator):
         elif i == self._max_depth - 1 and self._complete:
             self._iterators[i + 1].next_stage(last_binding)
             self._complete = not self._iterators[i + 1].has_next()
-            # if not self._complete:
-            #     raise Exception('>>> Too small max depth limit !')
         return i
 
     def is_solution(self) -> bool:
@@ -184,10 +182,10 @@ class TransitiveClosureIterator(PreemptableIterator):
             if self.visited() or self.cycle():
                 return None
             
-            path = self._subject
-            for i in range(0, self._current_depth + 1):
-                path += ' -> ' + self.path_node(i)
-            print(path)
+            # path = self._subject
+            # for i in range(0, self._current_depth + 1):
+            #     path += ' -> ' + self.path_node(i)
+            # print(path)
 
             if self.is_solution():
                 solution_mapping = {}

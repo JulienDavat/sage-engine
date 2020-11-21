@@ -7,7 +7,7 @@ from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.construct import ConstructIterator
-from sage.query_engine.iterators.transitive_closure_with_visited_nodes import TransitiveClosureIterator
+from sage.query_engine.iterators.transitive_closure_with_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
