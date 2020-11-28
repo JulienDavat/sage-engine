@@ -8,7 +8,7 @@ from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.union import BagUnionIterator
 from sage.query_engine.iterators.bind import BindIterator
-from sage.query_engine.iterators.transitive_closure_with_depth_annotation_memory import TransitiveClosureIterator
+from sage.query_engine.iterators.transitive_closure.advanced_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.scan import ScanIterator
@@ -27,7 +27,7 @@ def create_equality_expr(variable, values):
         return f'({expr} && {create_equality_expr(variable, values)})'
     
 
-def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[Dict[str, str]], query_vars: Set[str], dataset: Dataset, default_graph: str, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[Dict[str, str]]]:
+def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[Dict[str, str]], query_vars: Set[str], dataset: Dataset, default_graph: str, bind_id: bool, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[Dict[str, str]]]:
     path = path_pattern['predicate']
     if type(path) is SequencePath:
         sequence_triples = []
@@ -54,7 +54,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
             'graph': path_pattern['graph']
         })
         # print(sequence_triples + triples)
-        return parse_bgp_with_property_path(sequence_triples + triples, query_vars, dataset, default_graph, as_of)
+        return parse_bgp_with_property_path(sequence_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
     elif type(path) is InvPath:
         if type(path.arg) is InvPath:
             inverse_triples = [{
@@ -64,7 +64,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
                 'graph': path_pattern['graph']
             }]
             # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, as_of)
+            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
         elif type(path.arg) is SequencePath or type(path.arg) is AlternativePath:
             for i in range(0, len(path.arg.args)):
                 path.arg.args[i] = InvPath(path.arg.args[i])
@@ -75,7 +75,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
                 'graph': path_pattern['graph']
             }]
             # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, as_of)
+            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
         elif type(path.arg) is MulPath:
             path.arg.path = InvPath(path.arg.path)
             inverse_triples = [{
@@ -85,7 +85,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
                 'graph': path_pattern['graph']
             }]
             # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, as_of)
+            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
         elif type(path.arg) is URIRef or type(path.arg) is NegatedPath:
             inverse_triples = [{
                 'subject': path_pattern['object'], 
@@ -94,7 +94,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
                 'graph': path_pattern['graph']
             }]
             # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, as_of)
+            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
         else:
             raise Exception(f'InvPath: unexpected child type: {type(path.arg)}')
     elif type(path) is URIRef:
@@ -105,7 +105,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
             'graph': path_pattern['graph']
         }]
         # print(basic_triples + triples)
-        return parse_bgp_with_property_path(basic_triples + triples, query_vars, dataset, default_graph, as_of)
+        return parse_bgp_with_property_path(basic_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
     elif type(path) is AlternativePath:
         cardinalities = []
         left_triples = [{
@@ -114,7 +114,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
             'object': path_pattern['object'],
             'graph': path_pattern['graph']
         }]
-        pipeline, bgp_cardinalities = parse_bgp_with_property_path(left_triples + triples, query_vars, dataset, default_graph, as_of)
+        pipeline, bgp_cardinalities = parse_bgp_with_property_path(left_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
         cardinalities += bgp_cardinalities
         for i in range(1, len(path.args)):
             right_triples = [{
@@ -123,7 +123,7 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
                 'object': path_pattern['object'],
                 'graph': path_pattern['graph']
             }]
-            iterator, bgp_cardinalities = parse_bgp_with_property_path(right_triples + triples, query_vars, dataset, default_graph, as_of)
+            iterator, bgp_cardinalities = parse_bgp_with_property_path(right_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
             cardinalities += bgp_cardinalities
             pipeline = BagUnionIterator(pipeline, iterator)
         return pipeline, cardinalities
@@ -163,7 +163,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
     if type(path) is MulPath:
         unique_prefix = time.time_ns()
         min_depth = 1 if path.mod == OneOrMore else 0
-        max_depth = 1 if path.mod == ZeroOrOne else 10
+        max_depth = 1 if path.mod == ZeroOrOne else 20
         iterators = []
         if forward:
             iterator, _ = parse_bgp_with_property_path([{
@@ -171,7 +171,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
                 'predicate': path.path,
                 'object': f'?star_{unique_prefix}_{0}',
                 'graph': path_pattern['graph']
-            }], query_vars, dataset, default_graph, as_of)
+            }], query_vars, dataset, default_graph, False, as_of)
             iterators.append(iterator)
             for depth in range(1, max_depth + 1):
                 iterator, _ = parse_bgp_with_property_path([{
@@ -179,7 +179,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
                     'predicate': path.path,
                     'object': f'?star_{unique_prefix}_{depth}',
                     'graph': path_pattern['graph']
-                }], set([f'?star_{unique_prefix}_{depth - 1}']), dataset, default_graph, as_of)
+                }], set([f'?star_{unique_prefix}_{depth - 1}']), dataset, default_graph, False, as_of)
                 iterators.append(iterator)
             transitive_closure = TransitiveClosureIterator(path_pattern['subject'], path_pattern['object'], iterators, f'star_{unique_prefix}_', min_depth=min_depth, max_depth=max_depth)
         else:
@@ -188,7 +188,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
                 'predicate': path.path,
                 'object': path_pattern['object'],
                 'graph': path_pattern['graph']
-            }], query_vars, dataset, default_graph, as_of)
+            }], query_vars, dataset, default_graph, False, as_of)
             iterators.append(iterator)
             for depth in range(1, max_depth + 1):
                 iterator, _ = parse_bgp_with_property_path([{
@@ -196,7 +196,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
                     'predicate': path.path,
                     'object': f'?star_{unique_prefix}_{depth - 1}',
                     'graph': path_pattern['graph']
-                }], set([f'?star_{unique_prefix}_{depth - 1}']), dataset, default_graph, as_of)
+                }], set([f'?star_{unique_prefix}_{depth - 1}']), dataset, default_graph, False, as_of)
                 iterators.append(iterator)
             transitive_closure = TransitiveClosureIterator(path_pattern['object'], path_pattern['subject'], iterators, f'star_{unique_prefix}_', min_depth=min_depth, max_depth=max_depth)
         if min_depth == 0:
@@ -217,14 +217,17 @@ def bind_bgp_id(source: PreemptableIterator) -> PreemptableIterator:
     return BindIterator(source, bindexpr, bindvar)
 
 
-def parse_bgp_with_property_path(triples: List[Dict[str, str]], query_vars: Set[str], dataset: Dataset, default_graph: str, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[Dict[str, str]]]:
+def parse_bgp_with_property_path(triples: List[Dict[str, str]], query_vars: Set[str], dataset: Dataset, default_graph: str, bind_id: bool, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[Dict[str, str]]]:
     for i in range(0, len(triples)):
         triple = triples[i]
         if (isinstance(triple['predicate'], Path) or type(triple['predicate']) is URIRef) and (not type(triple['predicate']) is MulPath) and (not type(triple['predicate']) is NegatedPath):
             triples.pop(i)
-            return rewrite_bgp_with_property_path(triple, triples, query_vars, dataset, default_graph, as_of)
+            return rewrite_bgp_with_property_path(triple, triples, query_vars, dataset, default_graph, bind_id, as_of)
     iterator, cardinalities = build_left_join_tree(triples, query_vars, dataset, default_graph, as_of)
-    return bind_bgp_id(iterator), cardinalities
+    if bind_id:
+        return bind_bgp_id(iterator), cardinalities
+    else:
+        return iterator, cardinalities
 
 
 def build_left_join_tree(bgp: List[Dict[str, str]], query_vars: Set[str], dataset: Dataset, default_graph: str, as_of: Optional[datetime] = None) -> Tuple[PreemptableIterator, List[Dict[str, str]]]:

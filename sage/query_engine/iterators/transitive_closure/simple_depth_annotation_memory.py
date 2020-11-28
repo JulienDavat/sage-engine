@@ -30,6 +30,7 @@ class TransitiveClosureIterator(PreemptableIterator):
 
     def __init__(self, subject: str, obj: str, iterators: List[PreemptableIterator], var_prefix: str, bindings: List[Dict[str, str]] = None, current_depth: int = 0, min_depth: int = 1, max_depth: int = 10, complete: bool = True):
         super(TransitiveClosureIterator, self).__init__()
+        print('DepthAnnotationMemory')
         self._subject = subject
         self._obj = obj
         self._iterators = iterators
@@ -39,13 +40,27 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._min_depth = min_depth
         self._max_depth = max_depth
         self._complete = complete
+        self._visited = dict()
+        # Initialized the list of visited node with the current path
+        if bindings is not None and bindings[0] is not None:
+            source = self.get_source()
+            if min_depth == 0:
+                self._visited[source] = {source: 0}
+            else:
+                self._visited[source] = {}
+            for i in range(current_depth):
+                node = self.get_node(bindings[i], i)
+                self._visited[source][node] = i
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
-        return (self._iterators[0].__len__() + self._iterators[self._max_depth].__len__()) / 2
+        if not self._subject.startswith('?') or not self._obj.startswith('?'):
+            return 1
+        else: 
+            return (self._iterators[0].__len__() + self._iterators[self._max_depth].__len__()) / 2
 
     def __repr__(self) -> str:
-        return f"<TransitiveClosureIterator [{self._min_depth}:{self._max_depth}] ({self._iterators})>"
+        return f"<TransitiveClosureIterator:DepthAnnotationMemory [{self._min_depth}:{self._max_depth}] ({self._iterators})>"
 
     def serialized_name(self):
         """Get the name of the iterator, as used in the plan serialization protocol"""
@@ -59,106 +74,65 @@ class TransitiveClosureIterator(PreemptableIterator):
         """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
         self._bindings = [None] * (self._max_depth + 1)
         self._current_depth = 0
+        self._visited = dict()
         self._iterators[0].next_stage(binding)
 
-    def first_node(self) -> str:
+    def must_explore(self, source, node, depth):
+        if source not in self._visited:
+            return True
+        elif node not in self._visited[source]:
+            return True
+        else:
+            return depth < self._visited[source][node]
+
+    def annotate_depth(self, source, node, depth):
+        if source not in self._visited:
+            if self._min_depth == 0:
+                self._visited[source] = {source: 0}
+            else:
+                self._visited[source] = {}
+        self._visited[source][node] = depth
+
+    def get_source(self) -> str:
         """Return the first node of the current path"""
         if self._subject.startswith('?'):
             return self._bindings[0][self._subject]
         else:
             return self._subject
 
-    def last_node(self) -> str:
-        """Return the last node of the current path"""
-        variable = f'?{self._var_prefix}{self._current_depth}'
-        return self._bindings[self._current_depth][variable]
-
-    def backtrack(self) -> int:
-        """
-        Find the closest parent of the last node whose at least one child has not been explored
-        Return the depth of the parent
-        """
-        i = self._current_depth
-        while i > 0 and not self._iterators[i].has_next():
-            self._bindings[i] = None
-            i = i - 1
-        return i        
-
-    def cycle(self):
-        """
-        Check if the current path contains a cycle
-        Return True if the current path contains a cycle, False otherwise
-        """
-        if self._min_depth == 0:
-            first_node = self.first_node()
-            path_nodes = {first_node: None}
-        else:
-            path_nodes = {}
-        for i in range (0, self._current_depth + 1):
-            node = self._bindings[i][f'?{self._var_prefix}{i}']
-            if node in path_nodes:
-                return True
-            path_nodes[node] = None
-        return False
-
-    def expand_current_path(self) -> int:
-        """
-        Try to expand the current path
-        Return the depth of the extended path
-        """
-        i = self._current_depth
-        last_binding = self._bindings[i]
-        if i < self._max_depth - 1:
-            self._iterators[i + 1].next_stage(last_binding)
-            return i + 1
-        elif i == self._max_depth - 1 and self._complete:
-            self._iterators[i + 1].next_stage(last_binding)
-            self._complete = not self._iterators[i + 1].has_next()
-            if not self._complete:
-                raise Exception('>>> Too small max depth limit !')
-        return i
-
-    def is_solution(self) -> bool:
-        """
-        Check if the last node of the current path is part of the final result
-        Return True if the last node is a solution, False otherwise
-        """
-        last_node = self.last_node()
-        return self._obj.startswith('?') or self._obj == last_node
+    def get_node(self, binding, position):
+        variable = f'?{self._var_prefix}{position}'
+        return binding[variable]
 
     async def next(self) -> Optional[Dict[str, str]]:
-        """Get the next item from the iterator, following the iterator protocol.
-
-        This function may contains `non interruptible` clauses which must
-        be atomically evaluated before preemption occurs.
-
-        Returns: A set of solution mappings, or `None` if none was produced during this call.
-
-        Throws: `StopAsyncIteration` if the iterator cannot produce more items.
-        """
-        if not self.has_next():
-            return None
-        self._current_depth = self.backtrack()
-        if self._iterators[self._current_depth].has_next():
-            current_binding = await self._iterators[self._current_depth].next()
-            if current_binding is None:
+        if self.has_next():
+            depth = self._current_depth
+            if self._iterators[depth].has_next():
+                current_binding = await self._iterators[depth].next()
+                if current_binding is None:
+                    return None
+                self._bindings[depth] = current_binding
+                source = self.get_source()
+                node = self.get_node(current_binding, depth)
+                if not self.must_explore(source, node, depth):
+                    return None
+                self.annotate_depth(source, node, depth)
+                self._iterators[depth + 1].next_stage(current_binding)
+                if depth == self._max_depth - 1:
+                    self._complete = self._complete and not self._iterators[depth + 1].has_next()
+                else:
+                    self._current_depth = depth + 1
+                
+                if self._obj.startswith('?') or self._obj == node:
+                    solution_mapping = {}
+                    if self._subject.startswith('?'):
+                        solution_mapping[self._subject] = self._bindings[0][self._subject]
+                    if self._obj.startswith('?'):
+                        solution_mapping[self._obj] = node
+                    return solution_mapping
                 return None
-            self._bindings[self._current_depth] = current_binding
-
-            if self.cycle():
-                return None
-
-            if self.is_solution():
-                solution_mapping = {}
-                if self._subject.startswith('?'):
-                    solution_mapping[self._subject] = self._bindings[0][self._subject]
-                if self._obj.startswith('?'):
-                    solution_mapping[self._obj] = self.last_node()
             else:
-                solution_mapping = None
-
-            self._current_depth = self.expand_current_path()
-            return solution_mapping
+                self._current_depth = depth - 1
         return None
 
     def save(self) -> SavedTransitiveClosureIterator:

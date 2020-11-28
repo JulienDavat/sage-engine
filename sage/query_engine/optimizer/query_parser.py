@@ -331,6 +331,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         projected_vars = list(map(lambda t: '?' + str(t), node.PV))
         variables = []
         child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=variables, as_of=as_of)
+        # return child
         iterator = bind_imprint(child, [])
         projected_vars.append('?imprint')
         return ProjectionIterator(iterator, projected_vars)
@@ -341,7 +342,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
             for triple in triples:
                 variables = variables | get_vars(triple)
             query_vars += list(variables)
-        iterator, bgp_cardinalities = parse_bgp_with_property_path(triples, set(), dataset, current_graphs, as_of=as_of)
+        iterator, bgp_cardinalities = parse_bgp_with_property_path(triples, set(), dataset, current_graphs, True, as_of=as_of)
         # track cardinalities of every triple pattern
         for cardinality in bgp_cardinalities:
             if type(cardinality['triple']['predicate']) is str:
