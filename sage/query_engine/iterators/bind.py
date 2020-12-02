@@ -33,7 +33,9 @@ def parseArgument(arg: str, bindings: Dict[str, str]):
 def imprint(args: List[str], bindings: Dict[str, str]):
     values = []
     for i in range(len(args)):
-        values.append(parseArgument(args[i], bindings))
+        arg = args[i]
+        if arg.startswith('?') and arg in bindings:
+            values.append(bindings[arg])
     if len(values) == 0:
         values.append('md5')
     return hashlib.md5(''.join(values).encode('utf-8')).hexdigest()

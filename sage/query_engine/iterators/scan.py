@@ -60,7 +60,7 @@ class ScanIterator(PreemptableIterator):
         return self._cardinality
 
     def __repr__(self) -> str:
-        return f"<ScanIterator ({self._pattern['subject']} {self._pattern['predicate']} {self._pattern['object']})>"
+        return f"<ScanIterator ({self._pattern['subject']} {self._pattern['predicate']} {self._pattern['object']}) -> {self._cardinality}>"
 
     def serialized_name(self):
         """Get the name of the iterator, as used in the plan serialization protocol"""

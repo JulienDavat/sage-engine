@@ -1,5 +1,6 @@
 # transitive_closure.py
 # Author: Julien AIMONIER-DAVAT - MIT License 2017-2020
+import time
 from typing import Dict, List, Optional, Tuple
 
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
@@ -28,13 +29,15 @@ class TransitiveClosureIterator(PreemptableIterator):
         expression, True otherwise.
     """
 
-    def __init__(self, subject: str, obj: str, iterators: List[PreemptableIterator], var_prefix: str, bindings: List[Dict[str, str]] = None, current_depth: int = 0, min_depth: int = 1, max_depth: int = 10, complete: bool = True):
+    def __init__(self, subject: str, obj: str, iterators: List[PreemptableIterator], var_prefix: str, mu: Optional[Dict[str, str]] = None, bindings: List[Dict[str, str]] = None, current_depth: int = 0, min_depth: int = 1, max_depth: int = 10, complete: bool = True, id: Optional[int] = None):
         super(TransitiveClosureIterator, self).__init__()
         print('AdvancedDepthAnnotationMemory')
+        self._id = time.time_ns() if id is None else id
         self._subject = subject
         self._obj = obj
         self._iterators = iterators
         self._var_prefix = var_prefix
+        self._mu = mu
         self._bindings = bindings if bindings is not None else [None] * (max_depth + 1)
         self._current_depth = current_depth
         self._min_depth = min_depth
@@ -78,6 +81,7 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._current_depth = 0
         self._visited = dict()
         self._iterators[0].next_stage(binding)
+        self._mu = binding
 
     def must_explore(self, source, node, depth):
         if source not in self._visited:
@@ -88,7 +92,7 @@ class TransitiveClosureIterator(PreemptableIterator):
             (node_depth, node_threshold) = self._visited[source][node]
             return depth < node_depth
 
-    def annotate_depth(self, source, node, depth):
+    def update_depth(self, source, node, depth):
         if source not in self._visited:
             if self._min_depth == 0:
                 self._visited[source] = {source: (0,0)}
@@ -96,11 +100,11 @@ class TransitiveClosureIterator(PreemptableIterator):
                 self._visited[source] = {}
         self._visited[source][node] = (depth,0)
 
-    def annotate_depth_with_threshold(self, source, node):
+    def update_depth_with_threshold(self, source, node):
         (node_depth, node_threshold) = self._visited[source][node]
         self._visited[source][node] = (node_threshold, node_threshold)
 
-    def annotate_threshold(self, source, node, threshold):
+    def update_threshold(self, source, node, threshold):
         (node_depth, node_threshold) = self._visited[source][node]
         self._visited[source][node] = (node_depth, threshold)
 
@@ -114,11 +118,11 @@ class TransitiveClosureIterator(PreemptableIterator):
             source = self.get_source()
             node = self.get_node(self._bindings[depth], depth)
             if depth == self._max_depth - 1:
-                self.annotate_threshold(source, node, depth)
+                self.update_threshold(source, node, depth)
             if depth > 0:
                 parent = self.get_node(self._bindings[depth - 1], depth - 1)
                 self.propagate_threshold(source, node, parent)
-            self.annotate_depth_with_threshold(source, node)
+            self.update_depth_with_threshold(source, node)
 
     def get_source(self) -> str:
         """Return the first node of the current path"""
@@ -130,6 +134,13 @@ class TransitiveClosureIterator(PreemptableIterator):
     def get_node(self, binding, position):
         variable = f'?{self._var_prefix}{position}'
         return binding[variable]
+
+    def is_solution(self, node: str) -> bool:
+        if self._obj.startswith('?'):
+            if self._mu is not None and self._obj in self._mu:
+                return self._mu[self._obj] == node
+            return True
+        return self._obj == node
 
     async def next(self) -> Optional[Dict[str, str]]:
         if self.has_next():
@@ -144,18 +155,19 @@ class TransitiveClosureIterator(PreemptableIterator):
                 node = self.get_node(current_binding, depth)
                 if not self.must_explore(source, node, depth):
                     return None
-                self.annotate_depth(source, node, depth)
+                self.update_depth(source, node, depth)
                 self._iterators[depth + 1].next_stage(current_binding)
                 if depth == self._max_depth - 1:
                     self._complete = self._complete and not self._iterators[depth + 1].has_next()
                 else:
                     self._current_depth = depth + 1
-                if self._obj.startswith('?') or self._obj == node:
+                if self.is_solution(node):
                     solution_mapping = {}
                     if self._subject.startswith('?'):
                         solution_mapping[self._subject] = self._bindings[0][self._subject]
                     if self._obj.startswith('?'):
                         solution_mapping[self._obj] = node
+                    solution_mapping[f'_depth{self._id}'] = str(depth)
                     return solution_mapping
                 return None
             else:
@@ -177,6 +189,8 @@ class TransitiveClosureIterator(PreemptableIterator):
             saved_iterators.append(saved_it)
         saved_transitive.iterators.extend(saved_iterators)
         saved_transitive.var_prefix = self._var_prefix
+        if self._mu is not None:
+            pyDict_to_protoDict(self._mu, saved_transitive.mu)
         saved_bindings = []        
         for i in range(self._current_depth):
             saved_binding = SavedTransitiveClosureIterator.Bindings()
@@ -192,4 +206,5 @@ class TransitiveClosureIterator(PreemptableIterator):
         saved_transitive.min_depth = self._min_depth
         saved_transitive.max_depth = self._max_depth
         saved_transitive.complete = self._complete
+        saved_transitive.id = self._id
         return saved_transitive

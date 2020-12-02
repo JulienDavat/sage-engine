@@ -7,7 +7,7 @@ from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.construct import ConstructIterator
-from sage.query_engine.iterators.transitive_closure.advanced_depth_annotation_memory import TransitiveClosureIterator
+from sage.query_engine.iterators.transitive_closure.simple_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
@@ -216,18 +216,23 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
     min_depth = saved_plan.min_depth
     max_depth = saved_plan.max_depth
     complete = saved_plan.complete
+    id = saved_plan.id
 
     iterators = []
     for iterator in saved_plan.iterators:
       it_field = iterator.WhichOneof('iterator')
       iterators.append(load(getattr(iterator, it_field), dataset))
 
+    mu = None
+    if len(saved_plan.mu) > 0:
+      mu = saved_plan.mu
+
     bindings = []
     for binding in saved_plan.bindings:
       bindings.append(getattr(binding, 'binding'))
     bindings += [None] * ( (max_depth + 1) - len(bindings) )
     
-    return TransitiveClosureIterator(subject, obj, iterators, var_prefix, bindings, current_depth, min_depth, max_depth, complete)
+    return TransitiveClosureIterator(subject, obj, iterators, var_prefix, mu, bindings, current_depth, min_depth, max_depth, complete, id)
 
 
 def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:

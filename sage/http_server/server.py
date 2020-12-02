@@ -116,6 +116,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
     except Exception as err:
         # abort all ongoing transactions, then forward the exception to the main loop
         logging.error(f"sage execute_query error: {err}")
+        traceback.print_exc()
         if graph is not None:
             graph.abort()
         raise err

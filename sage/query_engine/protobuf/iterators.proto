@@ -64,6 +64,8 @@ message SavedTransitiveClosureIterator {
   int64 min_depth = 7;
   int64 max_depth = 8;
   bool complete = 9;
+  int64 id = 10;
+  map<string, string> mu = 11;
 }
 
 message SavedReflexiveClosureIterator {

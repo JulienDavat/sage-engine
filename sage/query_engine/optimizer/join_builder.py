@@ -8,7 +8,7 @@ from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.union import BagUnionIterator
 from sage.query_engine.iterators.bind import BindIterator
-from sage.query_engine.iterators.transitive_closure.advanced_depth_annotation_memory import TransitiveClosureIterator
+from sage.query_engine.iterators.transitive_closure.simple_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.scan import ScanIterator
@@ -56,47 +56,14 @@ def rewrite_bgp_with_property_path(path_pattern: Dict[str, str], triples: List[D
         # print(sequence_triples + triples)
         return parse_bgp_with_property_path(sequence_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
     elif type(path) is InvPath:
-        if type(path.arg) is InvPath:
-            inverse_triples = [{
-                'subject': path_pattern['subject'], 
-                'predicate': path.arg.arg, 
-                'object': path_pattern['object'],
-                'graph': path_pattern['graph']
-            }]
-            # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
-        elif type(path.arg) is SequencePath or type(path.arg) is AlternativePath:
-            for i in range(0, len(path.arg.args)):
-                path.arg.args[i] = InvPath(path.arg.args[i])
-            inverse_triples = [{
-                'subject': path_pattern['subject'], 
-                'predicate': path.arg, 
-                'object': path_pattern['object'],
-                'graph': path_pattern['graph']
-            }]
-            # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
-        elif type(path.arg) is MulPath:
-            path.arg.path = InvPath(path.arg.path)
-            inverse_triples = [{
-                'subject': path_pattern['subject'], 
-                'predicate': path.arg, 
-                'object': path_pattern['object'],
-                'graph': path_pattern['graph']
-            }]
-            # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
-        elif type(path.arg) is URIRef or type(path.arg) is NegatedPath:
-            inverse_triples = [{
-                'subject': path_pattern['object'], 
-                'predicate': path.arg, 
-                'object': path_pattern['subject'],
-                'graph': path_pattern['graph']
-            }]
-            # print(inverse_triples + triples)
-            return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
-        else:
-            raise Exception(f'InvPath: unexpected child type: {type(path.arg)}')
+        inverse_triples = [{
+            'subject': path_pattern['object'], 
+            'predicate': path.arg, 
+            'object': path_pattern['subject'],
+            'graph': path_pattern['graph']
+        }]
+        # print(inverse_triples + triples)
+        return parse_bgp_with_property_path(inverse_triples + triples, query_vars, dataset, default_graph, bind_id, as_of)
     elif type(path) is URIRef:
         basic_triples = [{
             'subject': path_pattern['subject'], 

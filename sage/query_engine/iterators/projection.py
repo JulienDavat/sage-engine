@@ -54,7 +54,7 @@ class ProjectionIterator(PreemptableIterator):
             return None
         elif self._projection is None:
             return mappings
-        return {k: v for k, v in mappings.items() if k in self._projection}
+        return {k: v for k, v in mappings.items() if (k in self._projection or k.startswith('_depth'))}
 
     def save(self) -> SavedProjectionIterator:
         """Save and serialize the iterator as a Protobuf message"""
