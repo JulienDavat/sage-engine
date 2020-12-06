@@ -115,6 +115,13 @@ class TransitiveClosureIterator(PreemptableIterator):
             return True
         return self._obj == node
 
+    def print_path(self):
+        if self._bindings[0] is not None:
+            path = self.get_source()
+            for i in range(self._current_depth):
+                path = path + ' -> ' + self.get_node(self._bindings[i], i)
+            print(path)
+
     async def next(self) -> Optional[Dict[str, str]]:
         if self.has_next():
             depth = self._current_depth

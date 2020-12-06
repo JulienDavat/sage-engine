@@ -118,7 +118,7 @@ class TransitiveClosureIterator(PreemptableIterator):
 
     def update_depth_with_threshold(self, source, node):
         (node_depth, node_threshold) = self._visited[source][node]
-        self._visited[source][node] = (node_threshold, node_threshold)
+        self._visited[source][node] = (min(node_depth, node_threshold), node_threshold)
 
     def update_threshold(self, source, node, threshold):
         (node_depth, node_threshold) = self._visited[source][node]
@@ -167,6 +167,7 @@ class TransitiveClosureIterator(PreemptableIterator):
                 source = self.get_source()
                 node = self.get_node(depth)
                 if not self.must_explore(source, node, depth):
+                    self._bindings[depth] = None
                     return None
                 self.update_depth(source, node, depth)
                 if len(self._stack) < self._max_depth:
