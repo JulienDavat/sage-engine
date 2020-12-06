@@ -8,7 +8,7 @@ from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.union import BagUnionIterator
 from sage.query_engine.iterators.bind import BindIterator
-from sage.query_engine.iterators.transitive_closure.simple_depth_annotation_memory import TransitiveClosureIterator
+from sage.query_engine.iterators.dls.v1.advanced_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.scan import ScanIterator
@@ -128,30 +128,48 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
     else:
         forward = True
     if type(path) is MulPath:
-        unique_prefix = time.time_ns()
+        star_id = time.time_ns()
         min_depth = 1 if path.mod == OneOrMore else 0
         max_depth = 1 if path.mod == ZeroOrOne else 20
         iterators = []
+
+        # if forward:
+        #     iterator, _ = parse_bgp_with_property_path([{
+        #         'subject': '?source',
+        #         'predicate': path.path,
+        #         'object': f'?node',
+        #         'graph': path_pattern['graph']
+        #     }], set([f'?source']), dataset, default_graph, False, as_of)
+        #     transitive_closure = TransitiveClosureIterator(star_id, path_pattern['subject'], iterator, path_pattern['object'], dataset, min_depth=min_depth, max_depth=max_depth)
+        # else:
+        #     iterator, _ = parse_bgp_with_property_path([{
+        #         'subject': '?node',
+        #         'predicate': path.path,
+        #         'object': f'?source',
+        #         'graph': path_pattern['graph']
+        #     }], set([f'?source']), dataset, default_graph, False, as_of)
+        #     transitive_closure = TransitiveClosureIterator(star_id, path_pattern['object'], iterator, path_pattern['subject'], dataset, min_depth=min_depth, max_depth=max_depth)
+        
         if forward:
             iterator, _ = parse_bgp_with_property_path([{
                 'subject': path_pattern['subject'],
                 'predicate': path.path,
-                'object': f'?star_{unique_prefix}_{0}',
+                'object': f'?star_{star_id}_{0}',
                 'graph': path_pattern['graph']
             }], query_vars, dataset, default_graph, False, as_of)
             iterators.append(iterator)
             for depth in range(1, max_depth + 1):
                 iterator, _ = parse_bgp_with_property_path([{
-                    'subject': f'?star_{unique_prefix}_{depth - 1}',
+                    'subject': f'?star_{star_id}_{depth - 1}',
                     'predicate': path.path,
-                    'object': f'?star_{unique_prefix}_{depth}',
+                    'object': f'?star_{star_id}_{depth}',
                     'graph': path_pattern['graph']
-                }], set([f'?star_{unique_prefix}_{depth - 1}']), dataset, default_graph, False, as_of)
+                }], set([f'?star_{star_id}_{depth - 1}']), dataset, default_graph, False, as_of)
                 iterators.append(iterator)
-            transitive_closure = TransitiveClosureIterator(path_pattern['subject'], path_pattern['object'], iterators, f'star_{unique_prefix}_', min_depth=min_depth, max_depth=max_depth)
+            transitive_closure = TransitiveClosureIterator(path_pattern['subject'], path_pattern['object'], iterators, f'star_{star_id}_', min_depth=min_depth, max_depth=max_depth)
         else:
             iterator, _ = parse_bgp_with_property_path([{
-                'subject': f'?star_{unique_prefix}_{0}',
+                'subject': f'?star_{star_id}_{0}',
                 'predicate': path.path,
                 'object': path_pattern['object'],
                 'graph': path_pattern['graph']
@@ -159,13 +177,14 @@ def parse_closure_expression(path_pattern: Dict[str, str], query_vars: Set[str],
             iterators.append(iterator)
             for depth in range(1, max_depth + 1):
                 iterator, _ = parse_bgp_with_property_path([{
-                    'subject': f'?star_{unique_prefix}_{depth}',
+                    'subject': f'?star_{star_id}_{depth}',
                     'predicate': path.path,
-                    'object': f'?star_{unique_prefix}_{depth - 1}',
+                    'object': f'?star_{star_id}_{depth - 1}',
                     'graph': path_pattern['graph']
-                }], set([f'?star_{unique_prefix}_{depth - 1}']), dataset, default_graph, False, as_of)
+                }], set([f'?star_{star_id}_{depth - 1}']), dataset, default_graph, False, as_of)
                 iterators.append(iterator)
-            transitive_closure = TransitiveClosureIterator(path_pattern['object'], path_pattern['subject'], iterators, f'star_{unique_prefix}_', min_depth=min_depth, max_depth=max_depth)
+            transitive_closure = TransitiveClosureIterator(path_pattern['object'], path_pattern['subject'], iterators, f'star_{star_id}_', min_depth=min_depth, max_depth=max_depth)
+        
         if min_depth == 0:
             spo_pattern = {'subject': '?s', 'predicate': '?p', 'object': '?o', 'graph': path_pattern['graph']}
             spo_scan = ScanIterator(spo_pattern, dataset, as_of=as_of)
