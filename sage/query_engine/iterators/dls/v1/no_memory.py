@@ -69,15 +69,11 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._iterators[0].next_stage(binding)
         self._mu = binding
 
-    def must_explore(self, source, node):
-        nodes = {node: None}
-        if self._min_depth == 0:
-            nodes[source] = None
-        for i in range (self._current_depth):
-            node = self._bindings[i][f'?{self._var_prefix}{i}']
-            if node in nodes:
+    def must_explore(self, node):
+        for depth in range (self._current_depth):
+            previous = self.get_node(depth)
+            if node == previous:
                 return False
-            nodes[node] = None
         return True
 
     def get_source(self) -> str:
@@ -87,9 +83,9 @@ class TransitiveClosureIterator(PreemptableIterator):
         else:
             return self._subject
 
-    def get_node(self, binding, position):
-        variable = f'?{self._var_prefix}{position}'
-        return binding[variable]
+    def get_node(self, depth):
+        variable = f'?{self._var_prefix}{depth}'
+        return self._bindings[depth][variable]
 
     def is_solution(self, node: str) -> bool:
         if self._obj.startswith('?'):
@@ -101,20 +97,21 @@ class TransitiveClosureIterator(PreemptableIterator):
     async def next(self) -> Optional[Dict[str, str]]:
         if self.has_next():
             depth = self._current_depth
+            self._bindings[depth] = None
             if self._iterators[depth].has_next():
                 current_binding = await self._iterators[depth].next()
-                source = self.get_source()
-                node = self.get_node(current_binding, depth)
                 if current_binding is None:
                     return None
-                elif not self.must_explore(source, node):
+                self._bindings[depth] = current_binding
+                node = self.get_node(depth)
+                if not self.must_explore(node):
+                    self._bindings[depth] = None
                     return None
                 self._iterators[depth + 1].next_stage(current_binding)
                 if depth == self._max_depth - 1:
                     self._complete = self._complete and not self._iterators[depth + 1].has_next()
                 else:
                     self._current_depth = depth + 1
-                self._bindings[depth] = current_binding
                 if self.is_solution(node):
                     solution_mapping = {}
                     if self._subject.startswith('?'):

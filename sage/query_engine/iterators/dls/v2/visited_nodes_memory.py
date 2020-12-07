@@ -58,15 +58,11 @@ class TransitiveClosureIterator(PreemptableIterator):
         # Initialization of the visited nodes dictionnary
         if bindings is not None and bindings[0] is not None:
             source = self.get_source()
-            if min_depth == 0:
-                self._visited[source] = {source: None}
-            else:
-                self._visited[source] = {}
-            index = 0
-            while index < len(bindings) and bindings[index] is not None:
-                node = bindings[index]['?node']
-                self._visited[source][node] = None
-                index += 1
+            depth = 0
+            while depth < len(bindings) and bindings[depth] is not None:
+                node = self.get_node(depth)
+                self.mark_as_visited(node)
+                depth += 1
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
@@ -99,17 +95,16 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._stack = [self._path.save()]
         self._visited = dict()
 
-    def must_explore(self, source, node):
+    def must_explore(self, node):
+        source = self.get_source()
         if source not in self._visited:
             return True
         return node not in self._visited[source]
 
-    def mark_as_visited(self, source, node):
+    def mark_as_visited(self, node):
+        source = self.get_source()
         if source not in self._visited:
-            if self._min_depth == 0:
-                self._visited[source] = {source: None}
-            else:
-                self._visited[source] = {}
+            self._visited[source] = {}
         self._visited[source][node] = None
 
     def get_source(self) -> str:
@@ -132,11 +127,11 @@ class TransitiveClosureIterator(PreemptableIterator):
                 self._stack.append(iterator.save())
                 if current_binding is None:
                     return None
-                source = self.get_source()
                 node = current_binding['?node']
-                if not self.must_explore(source, node):
+                if not self.must_explore(node):
+                    self._bindings[depth] = None
                     return None
-                self.mark_as_visited(source, node)
+                self.mark_as_visited(node)
                 if len(self._stack) < self._max_depth:
                     self._path.next_stage({'?source': node})
                     self._stack.append(self._path.save())

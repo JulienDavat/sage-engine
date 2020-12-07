@@ -86,13 +86,11 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._stack = [self._path.save()]
 
     def must_explore(self, node):
-        source = self._source if self._source is not None else self._bindings[0]['?source']
-        nodes = {source: None} if self._min_depth == 0 else {}
-        index = 0
-        while index < (len(self._bindings) - 1) and self._bindings[index + 1] is not None:
-            nodes[self._bindings[index]['?node']] = None
-            index += 1
-        return not (node in nodes)
+        for depth in range (len(self._stack) - 1):
+            previous = self.get_node(depth)
+            if node == previous:
+                return False
+        return True
 
     def get_source(self) -> str:
         if self._source is not None:
@@ -119,6 +117,7 @@ class TransitiveClosureIterator(PreemptableIterator):
                     return None
                 node = current_binding['?node']
                 if not self.must_explore(node):
+                    self._bindings[depth] = None
                     return None
                 if len(self._stack) < self._max_depth:
                     self._path.next_stage({'?source': node})

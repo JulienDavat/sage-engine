@@ -45,15 +45,10 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._complete = complete
         self._visited = dict()
         # Initialized the list of visited node with the current path
-        if bindings is not None and bindings[0] is not None:
-            source = self.get_source()
-            if min_depth == 0:
-                self._visited[source] = {source: 0}
-            else:
-                self._visited[source] = {}
-            for i in range(current_depth):
-                node = self.get_node(bindings[i], i)
-                self._visited[source][node] = i
+        if self._bindings is not None and self._bindings[0] is not None:
+            for depth in range(self._current_depth):
+                node = self.get_node(depth)
+                self.update_depth(node, depth)
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
@@ -81,7 +76,8 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._iterators[0].next_stage(binding)
         self._mu = binding
 
-    def must_explore(self, source, node, depth):
+    def must_explore(self, node, depth):
+        source = self.get_source()
         if source not in self._visited:
             return True
         elif node not in self._visited[source]:
@@ -89,12 +85,10 @@ class TransitiveClosureIterator(PreemptableIterator):
         else:
             return depth < self._visited[source][node]
 
-    def update_depth(self, source, node, depth):
+    def update_depth(self, node, depth):
+        source = self.get_source()
         if source not in self._visited:
-            if self._min_depth == 0:
-                self._visited[source] = {source: 0}
-            else:
-                self._visited[source] = {}
+            self._visited[source] = {}
         self._visited[source][node] = depth
 
     def get_source(self) -> str:
@@ -104,9 +98,9 @@ class TransitiveClosureIterator(PreemptableIterator):
         else:
             return self._subject
 
-    def get_node(self, binding, position):
-        variable = f'?{self._var_prefix}{position}'
-        return binding[variable]
+    def get_node(self, depth):
+        variable = f'?{self._var_prefix}{depth}'
+        return self._bindings[depth][variable]
 
     def is_solution(self, node: str) -> bool:
         if self._obj.startswith('?'):
@@ -118,23 +112,24 @@ class TransitiveClosureIterator(PreemptableIterator):
     def print_path(self):
         if self._bindings[0] is not None:
             path = self.get_source()
-            for i in range(self._current_depth):
-                path = path + ' -> ' + self.get_node(self._bindings[i], i)
+            for depth in range(self._current_depth):
+                path = path + ' -> ' + self.get_node(depth)
             print(path)
 
     async def next(self) -> Optional[Dict[str, str]]:
         if self.has_next():
             depth = self._current_depth
+            self._bindings[depth] = None
             if self._iterators[depth].has_next():
                 current_binding = await self._iterators[depth].next()
                 if current_binding is None:
                     return None
                 self._bindings[depth] = current_binding
-                source = self.get_source()
-                node = self.get_node(current_binding, depth)
-                if not self.must_explore(source, node, depth):
+                node = self.get_node(depth)
+                if not self.must_explore(node, depth):
+                    self._bindings[depth] = None
                     return None
-                self.update_depth(source, node, depth)
+                self.update_depth(node, depth)
                 self._iterators[depth + 1].next_stage(current_binding)
                 if depth == self._max_depth - 1:
                     self._complete = self._complete and not self._iterators[depth + 1].has_next()

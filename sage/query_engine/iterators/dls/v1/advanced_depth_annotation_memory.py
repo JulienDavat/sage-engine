@@ -43,19 +43,14 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._min_depth = min_depth
         self._max_depth = max_depth
         self._complete = complete
-        self._visited = dict()
+        self._thresholds = dict()
+        self._current_thresholds = dict()
         # Initialized the list of visited node with the current path
-        if bindings is not None and bindings[0] is not None:
-            source = self.get_source()
-            if min_depth == 0:
-                self._visited[source] = {source: (0,0)}
-            else:
-                self._visited[source] = {}
-            for i in range(current_depth):
-                node = self.get_node(bindings[i], i)
-                node_depth = int(bindings[i]['?depth'])
-                node_threshold = int(bindings[i]['?threshold'])
-                self._visited[source][node] = (node_depth, node_threshold)
+        if self._bindings is not None and self._bindings[0] is not None:
+            for depth in range(self._current_depth):
+                node = self.get_node(depth)
+                self.update_threshold(node, depth)
+                self.update_current_threshold(node, depth)
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
@@ -79,50 +74,26 @@ class TransitiveClosureIterator(PreemptableIterator):
         """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
         self._bindings = [None] * (self._max_depth + 1)
         self._current_depth = 0
-        self._visited = dict()
+        self._thresholds = dict()
+        self._current_thresholds = dict()
         self._iterators[0].next_stage(binding)
         self._mu = binding
 
-    def must_explore(self, source, node, depth):
-        if source not in self._visited:
+    def must_explore(self, node, depth):
+        source = self.get_source()
+        if source not in self._thresholds:
             return True
-        elif node not in self._visited[source]:
+        elif node not in self._thresholds[source]:
             return True
         else:
-            (node_depth, node_threshold) = self._visited[source][node]
-            return depth < node_depth
+            return self._thresholds[source][node] > depth
 
-    def update_depth(self, source, node, depth):
-        if source not in self._visited:
-            if self._min_depth == 0:
-                self._visited[source] = {source: (0,0)}
-            else:
-                self._visited[source] = {}
-        self._visited[source][node] = (depth,0)
-
-    def update_depth_with_threshold(self, source, node):
-        (node_depth, node_threshold) = self._visited[source][node]
-        self._visited[source][node] = (min(node_depth, node_threshold), node_threshold)
-
-    def update_threshold(self, source, node, threshold):
-        (node_depth, node_threshold) = self._visited[source][node]
-        self._visited[source][node] = (node_depth, threshold)
-
-    def propagate_threshold(self, source, node, parent):
-        (node_depth, node_threshold) = self._visited[source][node]
-        (parent_depth, parent_threshold) = self._visited[source][parent]
-        self._visited[source][parent] = (parent_depth, max(parent_threshold, max(node_threshold - 1, 0)))
-
-    def propagate_depth_annotation(self, depth):
-        if self._bindings[depth] is not None:
-            source = self.get_source()
-            node = self.get_node(self._bindings[depth], depth)
-            if depth == self._max_depth - 1:
-                self.update_threshold(source, node, depth)
-            if depth > 0:
-                parent = self.get_node(self._bindings[depth - 1], depth - 1)
-                self.propagate_threshold(source, node, parent)
-            self.update_depth_with_threshold(source, node)
+    def create_cycle(self, node):
+        for depth in range (self._current_depth):
+            previous = self.get_node(depth)
+            if node == previous:
+                return True
+        return False
 
     def get_source(self) -> str:
         """Return the first node of the current path"""
@@ -131,9 +102,9 @@ class TransitiveClosureIterator(PreemptableIterator):
         else:
             return self._bindings[0][self._subject]
 
-    def get_node(self, binding, position):
-        variable = f'?{self._var_prefix}{position}'
-        return binding[variable]
+    def get_node(self, depth):
+        variable = f'?{self._var_prefix}{depth}'
+        return self._bindings[depth][variable]
 
     def is_solution(self, node: str) -> bool:
         if self._obj.startswith('?'):
@@ -145,30 +116,65 @@ class TransitiveClosureIterator(PreemptableIterator):
     def print_path(self):
         if self._bindings[0] is not None:
             path = self.get_source()
-            for i in range(self._current_depth):
-                path = path + ' -> ' + self.get_node(self._bindings[i], i)
+            for depth in range(self._current_depth):
+                path = path + ' -> ' + self.get_node(depth)
             print(path)
+
+    def update_threshold(self, node, threshold):
+        source = self.get_source()
+        if source not in self._thresholds:
+            self._thresholds[source] = {}
+        self._thresholds[source][node] = threshold
+
+    def update_current_threshold(self, node, threshold):
+        source = self.get_source()
+        if source not in self._current_thresholds:
+            self._current_thresholds[source] = {}
+        self._current_thresholds[source][node] = threshold
 
     async def next(self) -> Optional[Dict[str, str]]:
         if self.has_next():
+            # print('thresholds')
+            # print(self._thresholds)
+            # print('current thresholds')
+            # print(self._current_thresholds)
+            # self.print_path()
             depth = self._current_depth
+            if self._bindings[depth] is not None:
+                source = self.get_source()
+                node = self.get_node(depth)
+                node_threshold = self._current_thresholds[source][node]
+                self._thresholds[source][node] = node_threshold
+                if depth > 0:
+                    parent = self.get_node(depth - 1)
+                    parent_threshold = self._current_thresholds[source][parent] 
+                    parent_threshold = max(parent_threshold, max(node_threshold - 1, 0))
+                    self._current_thresholds[source][parent] = parent_threshold
+            self._bindings[depth] = None
             if self._iterators[depth].has_next():
                 current_binding = await self._iterators[depth].next()
                 if current_binding is None:
-                    self._bindings[depth] = None
                     return None
-                self.propagate_depth_annotation(depth)
                 self._bindings[depth] = current_binding
                 source = self.get_source()
-                node = self.get_node(current_binding, depth)
-                if not self.must_explore(source, node, depth):
+                node = self.get_node(depth)
+                # print('>>>>>>>>>>>>>>>>> ' + node)
+                if not self.must_explore(node, depth):
+                    node_threshold = self._thresholds[source][node]
+                    if depth > 0 and not self.create_cycle(node):
+                        parent = self.get_node(depth - 1)
+                        parent_threshold = self._current_thresholds[source][parent] 
+                        parent_threshold = max(parent_threshold, max(node_threshold - 1, 0))
+                        self._current_thresholds[source][parent] = parent_threshold
                     self._bindings[depth] = None
                     return None
-                self.update_depth(source, node, depth)
+                self.update_threshold(node, depth)
                 self._iterators[depth + 1].next_stage(current_binding)
                 if depth == self._max_depth - 1:
+                    self.update_current_threshold(node, depth)
                     self._complete = self._complete and not self._iterators[depth + 1].has_next()
                 else:
+                    self.update_current_threshold(node, 0)
                     self._current_depth = depth + 1
                 if self.is_solution(node):
                     solution_mapping = {}
@@ -180,9 +186,7 @@ class TransitiveClosureIterator(PreemptableIterator):
                     return solution_mapping
                 return None
             else:
-                self.propagate_depth_annotation(depth)
                 self._current_depth = depth - 1
-                self._bindings[depth] = None
         return None
 
     def save(self) -> SavedTransitiveClosureIterator:
@@ -203,11 +207,6 @@ class TransitiveClosureIterator(PreemptableIterator):
         saved_bindings = []        
         for i in range(self._current_depth):
             saved_binding = SavedTransitiveClosureIterator.Bindings()
-            source = self.get_source()
-            node = self.get_node(self._bindings[i], i)
-            (depth, threshold) = self._visited[source][node]
-            self._bindings[i]['?depth'] = str(depth)
-            self._bindings[i]['?threshold'] = str(threshold)
             pyDict_to_protoDict(self._bindings[i], saved_binding.binding)
             saved_bindings.append(saved_binding)
         saved_transitive.bindings.extend(saved_bindings)
