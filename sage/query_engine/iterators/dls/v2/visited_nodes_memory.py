@@ -140,7 +140,7 @@ class TransitiveClosureIterator(PreemptableIterator):
                 if self.is_solution(node):
                     solution_mapping = {}
                     if self._subject.startswith('?'):
-                        solution_mapping[self._subject] = self._source
+                        solution_mapping[self._subject] = self.get_source()
                     if self._obj.startswith('?'):
                         solution_mapping[self._obj] = node
                     solution_mapping[f'_depth{self._id}'] = str(depth)
