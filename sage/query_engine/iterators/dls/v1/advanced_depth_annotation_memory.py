@@ -126,6 +126,12 @@ class TransitiveClosureIterator(PreemptableIterator):
             self._thresholds[source] = {}
         self._thresholds[source][node] = threshold
 
+    def visited_at_higher_depth(self, node):
+        source = self.get_source()
+        if source not in self._thresholds:
+            return False
+        return node in self._thresholds[source]
+
     def update_current_threshold(self, node, threshold):
         source = self.get_source()
         if source not in self._current_thresholds:
@@ -168,6 +174,7 @@ class TransitiveClosureIterator(PreemptableIterator):
                         self._current_thresholds[source][parent] = parent_threshold
                     self._bindings[depth] = None
                     return None
+                already_visited = self.visited_at_higher_depth(node)
                 self.update_threshold(node, depth)
                 self._iterators[depth + 1].next_stage(current_binding)
                 if depth == self._max_depth - 1:
@@ -176,7 +183,7 @@ class TransitiveClosureIterator(PreemptableIterator):
                 else:
                     self.update_current_threshold(node, 0)
                     self._current_depth = depth + 1
-                if self.is_solution(node):
+                if self.is_solution(node) and not already_visited:
                     solution_mapping = {}
                     if self._subject.startswith('?'):
                         solution_mapping[self._subject] = self._bindings[0][self._subject]
