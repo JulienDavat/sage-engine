@@ -1,6 +1,6 @@
 # filter.py
 # Author: Thomas MINIER - MIT License 2017-2020
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, List
 
 from rdflib import Literal, URIRef, Variable, BNode
 from rdflib.plugins.sparql.algebra import translateQuery
@@ -91,6 +91,9 @@ class FilterIterator(PreemptableIterator):
 
     def __repr__(self) -> str:
         return f"<FilterIterator '{self._raw_expression}' on {self._source}>"
+
+    def __piggyback__(self) -> List[Dict[str, str]]:
+        return self._source.__piggyback__()
 
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""

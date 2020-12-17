@@ -1,7 +1,7 @@
 # nlj.py
 # Author: Thomas MINIER, Julien AIMONIER-DAVAT - MIT License 2017-2020
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from sage.database.core.graph import Graph
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
@@ -36,6 +36,12 @@ class IndexJoinIterator(PreemptableIterator):
     def __repr__(self) -> str:
         return f"<IndexJoinIterator ({self._left} JOIN {self._right})>"
 
+    def __piggyback__(self) -> List[Dict[str, str]]:
+        buffer = []
+        buffer.extend(self._left.__piggyback__())
+        buffer.extend(self._right.__piggyback__())
+        return buffer
+
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""
         return "join"
@@ -50,6 +56,7 @@ class IndexJoinIterator(PreemptableIterator):
         self._left.next_stage(binding)
 
     async def next(self) -> Optional[Dict[str, str]]:
+        
         if not self.has_next():
             return None
         with PreemptiveLoop() as loop:
@@ -61,6 +68,7 @@ class IndexJoinIterator(PreemptableIterator):
                 await loop.tick()
         mu = await self._right.next()
         if mu is not None:
+         
             return {**self._current_binding, **mu} # no test of compatibility ?!
         return None
 

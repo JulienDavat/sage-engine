@@ -1,7 +1,7 @@
 # preemptable_iterator.py
 # Author: Thomas MINIER - MIT License 2017-2020
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 
 class PreemptableIterator(ABC):
@@ -10,6 +10,9 @@ class PreemptableIterator(ABC):
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
         return 0
+
+    def __piggyback__(self) -> List[Dict[str, str]]:
+        return []
 
     @abstractmethod
     def serialized_name(self) -> str:

@@ -7,6 +7,7 @@ from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.construct import ConstructIterator
+from sage.query_engine.iterators.dls.piggyback import PiggyBackIterator
 from sage.query_engine.iterators.dls.v1.advanced_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
@@ -19,6 +20,7 @@ from sage.query_engine.protobuf.iterators_pb2 import (RootTree,
                                                       SavedBagUnionIterator,
                                                       SavedFilterIterator,
                                                       SavedDLS,
+                                                      SavedPiggyBackIterator,
                                                       SavedTransitiveClosureIterator,
                                                       SavedReflexiveClosureIterator,
                                                       SavedIndexJoinIterator,
@@ -80,6 +82,8 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
             return load_reflexive_closure(saved_plan, dataset)
         elif type(saved_plan) is SavedDLS:
             return load_dls(saved_plan, dataset)
+        elif type(saved_plan) is SavedPiggyBackIterator:
+            return load_piggyback(saved_plan, dataset)
         else:
             raise Exception(f"Unknown iterator type '{type(saved_plan)}' when loading controls")
     except:
@@ -202,6 +206,26 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
     return ScanIterator(pattern, dataset, current_binding=current_binding, cardinality=saved_plan.cardinality, progress=saved_plan.progress, last_read=saved_plan.last_read, as_of=as_of)
 
 
+def load_piggyback(saved_plan: SavedPiggyBackIterator, dataset: Dataset) -> PreemptableIterator:
+    """Load a TransitiveClosureIterator from a protobuf serialization
+    
+    Args:
+      * saved_plan: Saved query execution plan.
+      * dataset: RDF dataset used to execute the plan.
+
+    Returns:
+      The pipeline of iterator used to continue query execution.
+    """
+    sourceField = saved_plan.WhichOneof('source')
+    source = load(getattr(saved_plan, sourceField), dataset)
+    current_binding = None
+    if len(saved_plan.current_binding) > 0:
+      current_binding = saved_plan.current_binding
+    mu = None
+    if len(saved_plan.mu) > 0:
+      mu = saved_plan.mu
+    return PiggyBackIterator(source, current_binding=current_binding, mu=mu)
+
 def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:
     """Load a TransitiveClosureIterator from a protobuf serialization
     
@@ -248,7 +272,9 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
       The pipeline of iterator used to continue query execution.
     """
     subject = saved_plan.subject
+    path = saved_plan.path
     obj = saved_plan.obj
+    forward = saved_plan.forward
     var_prefix = saved_plan.var_prefix
     current_depth = saved_plan.current_depth
     min_depth = saved_plan.min_depth
@@ -270,7 +296,7 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
       bindings.append(getattr(binding, 'binding'))
     bindings += [None] * ( (max_depth + 1) - len(bindings) )
     
-    return TransitiveClosureIterator(subject, obj, iterators, var_prefix, mu, bindings, current_depth, min_depth, max_depth, complete, id)
+    return TransitiveClosureIterator(subject, path, obj, forward, iterators, var_prefix, mu, bindings, current_depth, min_depth, max_depth, complete, id)
 
 
 def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:

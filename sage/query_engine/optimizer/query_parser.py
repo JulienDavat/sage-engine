@@ -23,7 +23,7 @@ from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.reduced import ReducedIterator
 from sage.query_engine.iterators.utils import EmptyIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
-from sage.query_engine.optimizer.join_builder import build_left_join_tree, parse_bgp_with_property_path
+from sage.query_engine.optimizer.join_builder import build_left_join_tree
 from sage.query_engine.update.delete import DeleteOperator
 from sage.query_engine.update.if_exists import IfExistsOperator
 from sage.query_engine.update.insert import InsertOperator
@@ -298,7 +298,7 @@ def bind_imprint(source: PreemptableIterator, variables: List[str]):
     bindvar = "?imprint"
     return BindIterator(source, bindexpr, bindvar)
 
-def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], cardinalities: dict, query_vars: Optional[List[str]] = None, as_of: Optional[datetime] = None) -> PreemptableIterator:
+def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], cardinalities: dict, query_vars: Optional[Set[str]] = None, as_of: Optional[datetime] = None) -> PreemptableIterator:
     """Recursively parse node in the query logical plan to build a preemptable physical query execution plan.
 
     Args:
@@ -329,7 +329,7 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         return ReducedIterator(child)
     elif node.name == 'Project':
         projected_vars = list(map(lambda t: '?' + str(t), node.PV))
-        variables = []
+        variables = set()
         child = parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=variables, as_of=as_of)
         # return child
         iterator = bind_imprint(child, [])
@@ -337,18 +337,10 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
         return ProjectionIterator(iterator, projected_vars)
     elif node.name == 'BGP':
         triples = list(localize_triples(node.triples, current_graphs))
-        if query_vars is not None:
-            variables = set()
-            for triple in triples:
-                variables = variables | get_vars(triple)
-            query_vars += list(variables)
-        iterator, bgp_cardinalities = parse_bgp_with_property_path(triples, set(), dataset, current_graphs, True, as_of=as_of)
-        # track cardinalities of every triple pattern
-        for cardinality in bgp_cardinalities:
-            if type(cardinality['triple']['predicate']) is str:
-                if not cardinality['triple']['subject'].startswith('?') or cardinality['triple']['subject'] in query_vars:
-                    if not cardinality['triple']['object'].startswith('?') or cardinality['triple']['object'] in query_vars:
-                        cardinalities += [cardinality]
+        iterator, bgp_cardinalities, bgp_variables = build_left_join_tree(triples, query_vars, dataset, current_graphs, as_of=as_of)
+        # cardinalities += bgp_cardinalities
+        for variable in list(bgp_variables):
+            query_vars.add(variable)
         return iterator
     elif node.name == 'Union':
         left = parse_query_alt(node.p1, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)

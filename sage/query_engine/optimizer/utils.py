@@ -10,7 +10,7 @@ def get_vars(triple: Dict[str, str]) -> Set[str]:
     """Get SPARQL variables in a triple pattern"""
     return set([v for k, v in triple.items() if is_variable(v)])
 
-def find_connected_pattern(variables: List[str], triples: List[Dict[str, Union[str, Path]]]) -> Tuple[Dict[str, Union[str, Path]], int, Set[str]]:
+def find_connected_pattern(variables: Set[str], triples: List[Dict[str, Union[str, Path]]]) -> Tuple[Dict[str, Union[str, Path]], int, Set[str]]:
     """Find the first pattern in a set of triples pattern connected to a set of variables"""
     pos = 0
     #print("fcp:"+str(variables))

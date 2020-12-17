@@ -29,12 +29,14 @@ class TransitiveClosureIterator(PreemptableIterator):
         expression, True otherwise.
     """
 
-    def __init__(self, subject: str, obj: str, iterators: List[PreemptableIterator], var_prefix: str, mu: Optional[Dict[str, str]] = None, bindings: List[Dict[str, str]] = None, current_depth: int = 0, min_depth: int = 1, max_depth: int = 10, complete: bool = True, id: Optional[int] = None):
+    def __init__(self, subject: str, path: str, obj: str, forward: bool, iterators: List[PreemptableIterator], var_prefix: str, mu: Optional[Dict[str, str]] = None, bindings: List[Dict[str, str]] = None, current_depth: int = 0, min_depth: int = 1, max_depth: int = 10, complete: bool = True, id: Optional[int] = None):
         super(TransitiveClosureIterator, self).__init__()
         print('NoMemory')
         self._id = time.time_ns() if id is None else id
         self._subject = subject
+        self._path = path
         self._obj = obj
+        self._forward = forward
         self._iterators = iterators
         self._var_prefix = var_prefix
         self._mu = mu
@@ -43,13 +45,14 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._min_depth = min_depth
         self._max_depth = max_depth
         self._complete = complete
+        self._reached = dict()
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
         if not self._subject.startswith('?') or not self._obj.startswith('?'):
             return 1
         else: 
-            return (self._iterators[0].__len__() + self._iterators[self._max_depth].__len__()) / 2
+            return self._iterators[0].__len__() * ( 1 + ((self._max_depth * 10) / 100))
 
     def __repr__(self) -> str:
         return f"<TransitiveClosureIterator:NoMemory [{self._min_depth}:{self._max_depth}] ({self._iterators})>"
@@ -66,10 +69,23 @@ class TransitiveClosureIterator(PreemptableIterator):
         """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
         self._bindings = [None] * (self._max_depth + 1)
         self._current_depth = 0
+        self._reached = dict()
         self._iterators[0].next_stage(binding)
         self._mu = binding
 
+    def goal_has_been_reached(self):
+        source = self.get_source()
+        if source not in self._reached:
+            return False
+        return True
+
+    def goal_reached(self):
+        source = self.get_source()
+        self._reached[source] = None
+
     def must_explore(self, node):
+        if self.goal_has_been_reached():
+            return False
         for depth in range (self._current_depth):
             previous = self.get_node(depth)
             if node == previous:
@@ -92,7 +108,22 @@ class TransitiveClosureIterator(PreemptableIterator):
             if self._mu is not None and self._obj in self._mu:
                 return self._mu[self._obj] == node
             return True
-        return self._obj == node
+        elif self._obj == node:
+            self.goal_reached()
+            return True
+        else:
+            return False
+
+    def build_solution(self, node: str) -> Dict[str, str]:
+        solution = {}
+        if self._subject.startswith('?'):
+            solution[self._subject] = self._bindings[0][self._subject]
+        if self._obj.startswith('?'):
+            solution[self._obj] = node
+        if self._mu is not None:
+            return {**self._mu, **solution}
+        else:
+            return solution
 
     async def next(self) -> Optional[Dict[str, str]]:
         if self.has_next():
@@ -101,35 +132,30 @@ class TransitiveClosureIterator(PreemptableIterator):
             if self._iterators[depth].has_next():
                 current_binding = await self._iterators[depth].next()
                 if current_binding is None:
-                    return None
+                    return None, False, 0
                 self._bindings[depth] = current_binding
                 node = self.get_node(depth)
                 if not self.must_explore(node):
                     self._bindings[depth] = None
-                    return None
+                    return None, False, 0
                 self._iterators[depth + 1].next_stage(current_binding)
                 if depth == self._max_depth - 1:
                     self._complete = self._complete and not self._iterators[depth + 1].has_next()
                 else:
                     self._current_depth = depth + 1
-                if self.is_solution(node):
-                    solution_mapping = {}
-                    if self._subject.startswith('?'):
-                        solution_mapping[self._subject] = self._bindings[0][self._subject]
-                    if self._obj.startswith('?'):
-                        solution_mapping[self._obj] = node
-                    solution_mapping[f'_depth{self._id}'] = str(depth)
-                    return solution_mapping
-                return None
+                solution = self.build_solution(node)
+                return solution, self.is_solution(node), depth
             else:
                 self._current_depth = depth - 1
-        return None
+        return None, False, 0
 
     def save(self) -> SavedTransitiveClosureIterator:
         """Save and serialize the iterator as a Protobuf message"""
         saved_transitive = SavedTransitiveClosureIterator()
         saved_transitive.subject = self._subject
+        saved_transitive.path = self._path
         saved_transitive.obj = self._obj
+        saved_transitive.forward = self._forward
         saved_iterators = []
         for it in self._iterators:
             saved_it = SavedTransitiveClosureIterator.PreemptableIterator()

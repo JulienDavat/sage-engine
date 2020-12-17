@@ -71,6 +71,11 @@ class BindIterator(PreemptableIterator):
     def __repr__(self) -> str:
         return f"<BindIterator BIND {self._expr} AS {self._bindvar} FROM {self._source}>"
 
+    def __piggyback__(self) -> List[Dict[str, str]]:
+        if self._source is None:
+            return []
+        return self._source.__piggyback__()
+
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""
         return "bind"

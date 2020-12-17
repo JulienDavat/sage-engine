@@ -1,6 +1,6 @@
 # union.py
 # Author: Thomas MINIER - MIT License 2017-2020
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from random import random
 
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
@@ -29,6 +29,12 @@ class BagUnionIterator(PreemptableIterator):
 
     def __repr__(self):
         return f"<BagUnionIterator {self._left} UNION {self._right}>"
+
+    def __piggyback__(self) -> List[Dict[str, str]]:
+        buffer = []
+        buffer.extend(self._left.__piggyback__())
+        buffer.extend(self._right.__piggyback__())
+        return buffer
 
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""

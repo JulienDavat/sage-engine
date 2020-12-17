@@ -64,6 +64,7 @@ class SageEngine(object):
         Throws: Any exception raised during query execution.
         """
         results: List[Dict[str, str]] = list()
+        controls: List[Dict[str, str]] = list()
         queue = Queue()
         loop = get_event_loop()
         query_done = False
@@ -92,9 +93,12 @@ class SageEngine(object):
             else:
                 while not queue.empty():
                     results.append(queue.get_nowait())
+            
+            controls = plan.__piggyback__()
+
         # save the plan if query execution is not done yet and no abort has occurred
         if (not query_done) and abort_reason is None:
             root = RootTree()
             source_field = plan.serialized_name() + '_source'
             getattr(root, source_field).CopyFrom(plan.save())
-        return (results, root, query_done, abort_reason)
+        return (results, controls, root, query_done, abort_reason)

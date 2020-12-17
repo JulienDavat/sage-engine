@@ -86,7 +86,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
         engine = SageEngine()
         quota = graph.quota / 1000
         max_results = graph.max_results
-        bindings, saved_plan, is_done, abort_reason = await engine.execute(plan, quota, max_results)
+        bindings, controls, saved_plan, is_done, abort_reason = await engine.execute(plan, quota, max_results)
 
         # commit or abort (if necessary)
         if abort_reason is not None:
@@ -112,7 +112,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
         exportTime = (time() - start) * 1000
         stats = {"cardinalities": cardinalities, "import": loading_time, "export": exportTime}
 
-        return (bindings, next_page, stats)
+        return (bindings, controls, next_page, stats)
     except Exception as err:
         # abort all ongoing transactions, then forward the exception to the main loop
         logging.error(f"sage execute_query error: {err}")
@@ -121,7 +121,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
             graph.abort()
         raise err
 
-def create_response(mimetypes: List[str], bindings: List[Dict[str, str]], next_page: Optional[str], stats: dict, skol_url: str) -> Response:
+def create_response(mimetypes: List[str], bindings: List[Dict[str, str]], controls: List[Dict[str, str]], next_page: Optional[str], stats: dict, skol_url: str) -> Response:
     """Create an HTTP response for the results of SPARQL query execution.
 
     Args:
@@ -135,7 +135,7 @@ def create_response(mimetypes: List[str], bindings: List[Dict[str, str]], next_p
       An HTTP response built from the input mimetypes and the SPARQL query results.
     """
     if "application/json" in mimetypes:
-        iterator = responses.raw_json_streaming(bindings, next_page, stats, skol_url)
+        iterator = responses.raw_json_streaming(bindings, controls, next_page, stats, skol_url)
         return StreamingResponse(iterator, media_type="application/json")
     elif "application/sparql-results+json" in mimetypes:
         iterator = responses.w3c_json_streaming(bindings, next_page, stats, skol_url)
@@ -146,7 +146,8 @@ def create_response(mimetypes: List[str], bindings: List[Dict[str, str]], next_p
     return JSONResponse({
         "bindings": bindings,
         "next": next_page,
-        "stats": stats
+        "stats": stats,
+        "controls": controls
     })
 
 def run_app(config_file: str) -> FastAPI:
@@ -203,9 +204,9 @@ def run_app(config_file: str) -> FastAPI:
         try:
             mimetypes = request.headers['accept'].split(",")
             default_graph_uri = item.defaultGraph if item.defaultGraph is not None else dataset.default_graph
-            bindings, next_page, stats = await execute_query(item.query, default_graph_uri, item.next, dataset)
+            bindings, controls, next_page, stats = await execute_query(item.query, default_graph_uri, item.next, dataset)
             server_url = urlunparse(request.url.components[0:3] + (None, None, None))
-            return create_response(mimetypes, bindings, next_page, stats, server_url)
+            return create_response(mimetypes, bindings, controls, next_page, stats, server_url)
         except HTTPException as err:
             raise err
         except Exception as err:

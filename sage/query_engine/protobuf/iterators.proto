@@ -35,7 +35,23 @@ message SavedProjectionIterator {
     SavedProjectionIterator proj_source = 7;
     SavedTransitiveClosureIterator transitive_closure_source = 8;
     SavedDLS dls_source = 9;
+    SavedPiggyBackIterator piggyback_source = 10;
   }
+}
+
+message SavedPiggyBackIterator {
+  map<string, string> mu = 1;
+  oneof source {
+    SavedScanIterator scan_source = 2;
+    SavedIndexJoinIterator join_source = 3;
+    SavedBagUnionIterator union_source = 4;
+    SavedFilterIterator filter_source = 5;
+    SavedBindIterator bind_source = 6;
+    SavedProjectionIterator proj_source = 7;
+    SavedTransitiveClosureIterator transitive_closure_source = 8;
+    SavedDLS dls_source = 9;
+  }
+  map<string, string> current_binding = 10;
 }
 
 message SavedTransitiveClosureIterator {
@@ -67,6 +83,8 @@ message SavedTransitiveClosureIterator {
   bool complete = 9;
   int64 id = 10;
   map<string, string> mu = 11;
+  bool forward = 12;
+  string path = 13;
 }
 
 message SavedDLS {
@@ -118,18 +136,20 @@ message SavedIndexJoinIterator {
     SavedBindIterator bind_left = 6;
     SavedTransitiveClosureIterator transitive_closure_left = 7;
     SavedDLS dls_left = 8;
+    SavedPiggyBackIterator piggyback_left = 9;
   }
   oneof right {
-    SavedScanIterator scan_right = 9;
-    SavedProjectionIterator proj_right = 10;
-    SavedBagUnionIterator union_right = 11;
-    SavedIndexJoinIterator join_right = 12;
-    SavedFilterIterator filter_right = 13;
-    SavedBindIterator bind_right = 14;
-    SavedTransitiveClosureIterator transitive_closure_right = 15;
-    SavedDLS dls_right = 16;
+    SavedScanIterator scan_right = 10;
+    SavedProjectionIterator proj_right = 11;
+    SavedBagUnionIterator union_right = 12;
+    SavedIndexJoinIterator join_right = 13;
+    SavedFilterIterator filter_right = 14;
+    SavedBindIterator bind_right = 15;
+    SavedTransitiveClosureIterator transitive_closure_right = 16;
+    SavedDLS dls_right = 17;
+    SavedPiggyBackIterator piggyback_right = 18;
   }
-  map<string, string> mu = 17;
+  map<string, string> mu = 19;
 }
 
 message SavedBagUnionIterator {
@@ -143,17 +163,19 @@ message SavedBagUnionIterator {
     SavedTransitiveClosureIterator transitive_closure_left = 7;
     SavedReflexiveClosureIterator reflexive_closure_left = 8;
     SavedDLS dls_left = 9;
+    SavedPiggyBackIterator piggyback_left = 10;
   }
   oneof right {
-    SavedScanIterator scan_right = 10;
-    SavedProjectionIterator proj_right = 11;
-    SavedBagUnionIterator union_right = 12;
-    SavedIndexJoinIterator join_right = 13;
-    SavedFilterIterator filter_right = 14;
-    SavedBindIterator bind_right = 15;
-    SavedTransitiveClosureIterator transitive_closure_right = 16;
-    SavedReflexiveClosureIterator reflexive_closure_right = 17;
-    SavedDLS dls_right = 18;
+    SavedScanIterator scan_right = 11;
+    SavedProjectionIterator proj_right = 12;
+    SavedBagUnionIterator union_right = 13;
+    SavedIndexJoinIterator join_right = 14;
+    SavedFilterIterator filter_right = 15;
+    SavedBindIterator bind_right = 16;
+    SavedTransitiveClosureIterator transitive_closure_right = 17;
+    SavedReflexiveClosureIterator reflexive_closure_right = 18;
+    SavedDLS dls_right = 19;
+    SavedPiggyBackIterator piggyback_right = 20;
   }
 }
 
@@ -182,11 +204,12 @@ message SavedBindIterator {
     SavedBindIterator bind_source = 6;
     SavedTransitiveClosureIterator transitive_closure_source = 7;
     SavedDLS dls_source = 8;
+    SavedPiggyBackIterator piggyback_source = 9;
   }
-  string bindexpr = 9;
-  string bindvar = 10;
-  map<string, string> mu = 11;
-  bool delivered = 12;
+  string bindexpr = 10;
+  string bindvar = 11;
+  map<string, string> mu = 12;
+  bool delivered = 13;
 }
 
 message SavedConstructIterator {

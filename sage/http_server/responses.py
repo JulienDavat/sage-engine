@@ -159,7 +159,7 @@ def w3c_json_streaming(bindings: Iterable[Dict[str, str]], next_link: Optional[s
     yield "]}}"
 
 
-def raw_json_streaming(bindings: Iterable[Dict[str, str]], next_link: Optional[str], stats: dict, skol_url: str) -> Iterable[str]:
+def raw_json_streaming(bindings: Iterable[Dict[str, str]], controls: List[Dict[str, str]], next_link: Optional[str], stats: dict, skol_url: str) -> Iterable[str]:
     """Yield a page of SaGe results in a non-standard JSON format, so it can be sent in an HTTP response.
     
     Args:
@@ -180,7 +180,8 @@ def raw_json_streaming(bindings: Iterable[Dict[str, str]], next_link: Optional[s
         yield f"\"next\":\"{next_link}\","
     else:
         yield "\"next\":null,"
-    yield "\"stats\":" + dumps(stats, separators=(',', ':')) + "}"
+    yield "\"stats\":" + dumps(stats, separators=(',', ':')) + ","
+    yield "\"controls\":" + dumps(controls, separators=(',', ':')) + "}"
 
 
 def bindings_to_w3c_xml(bindings: Iterable[Dict[str, str]], skol_url: str) -> ElementTree.Element:
