@@ -119,11 +119,12 @@ class TransitiveClosureIterator(PreemptableIterator):
         return self._bindings[depth][variable]
 
     def is_solution(self, node: str) -> bool:
-        if self._obj.startswith('?'):
-            if self._mu is not None and self._obj in self._mu:
-                return self._mu[self._obj] == node
+        goal = self._obj
+        if goal.startswith('?') and self._mu is not None and goal in self._mu:
+            goal = self._mu[goal]
+        if goal.startswith('?'):
             return True
-        elif self._obj == node:
+        elif node == goal:
             self.goal_reached()
             return True
         else:
