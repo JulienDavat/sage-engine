@@ -181,7 +181,6 @@ def parse_filter_expr(expr: dict) -> str:
 
     Returns: The SPARQL FILTER expression in string format.
     """
-#    if False:
     if not hasattr(expr, 'name'):
         if type(expr) is BNode:
             return f"?v_{expr}"
@@ -353,11 +352,12 @@ def parse_query_alt(node: dict, dataset: Dataset, current_graphs: List[str], car
     elif node.name == 'Extend':
         bgp_iterator=parse_query_alt(node.p, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
         expression = parse_bind_expr(node.expr)
+        query_vars.add(f'?{node.var}')
         # print("expression:"+str(expression))
         if isinstance(bgp_iterator,EmptyIterator):
-            return BindIterator(None,expression,'?'+node.var)
+            return BindIterator(None, expression,f'?{node.var}')
         else:
-            return BindIterator(bgp_iterator,expression,'?'+node.var)
+            return BindIterator(bgp_iterator, expression, f'?{node.var}')
     elif node.name == 'Join':
         left=parse_query_alt(node.p1, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)
         right=parse_query_alt(node.p2, dataset, current_graphs, cardinalities, query_vars=query_vars, as_of=as_of)

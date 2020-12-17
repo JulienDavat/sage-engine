@@ -119,7 +119,7 @@ def parse_closure_expression(path_pattern: Dict[str, str], forward: bool, datase
     print(path)
     star_id = time.time_ns()
     min_depth = 1 if path.mod == OneOrMore else 0
-    max_depth = 1 if path.mod == ZeroOrOne else 5
+    max_depth = 1 if path.mod == ZeroOrOne else 20
     iterators = []
 
     # if forward:
@@ -235,7 +235,12 @@ def build_left_join_tree(bgp: List[Dict[str, str]], query_vars: Set[str], datase
         triple['graph'] = graph_uri
         if dataset.has_graph(graph_uri):
             if isinstance(triple['predicate'], Path):
-                iterator = parse_property_path(triple, True, dataset, default_graph, as_of=as_of)
+                if not triple['subject'].startswith('?'):
+                    iterator = parse_property_path(triple, True, dataset, default_graph, as_of=as_of)
+                elif not triple['object'].startswith('?'):
+                    iterator = parse_property_path(triple, False, dataset, default_graph, as_of=as_of)
+                else:
+                    iterator = parse_property_path(triple, True, dataset, default_graph, as_of=as_of)
             else:
                 iterator = ScanIterator(triple, dataset, as_of=as_of)
         else:

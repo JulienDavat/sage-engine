@@ -57,8 +57,8 @@ class TransitiveClosureIterator(PreemptableIterator):
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
-        if not self._subject.startswith('?') or not self._obj.startswith('?'):
-            return 1
+        if not self._subject.startswith('?'):
+            return self._iterators[0].__len__()
         else: 
             return self._iterators[0].__len__() * 1000
 
@@ -94,8 +94,6 @@ class TransitiveClosureIterator(PreemptableIterator):
         self._reached[source] = None
 
     def must_explore(self, node, depth):
-        if self.goal_has_been_reached():
-            return False
         source = self.get_source()
         if source not in self._thresholds:
             return True
@@ -184,6 +182,9 @@ class TransitiveClosureIterator(PreemptableIterator):
                 self._bindings[depth] = current_binding
                 source = self.get_source()
                 node = self.get_node(depth)
+                if self.goal_has_been_reached():
+                    self._bindings[depth] = None
+                    return None, False, 0
                 if not self.must_explore(node, depth):
                     node_threshold = self._thresholds[source][node]
                     if depth > 0 and not self.create_cycle(node):
