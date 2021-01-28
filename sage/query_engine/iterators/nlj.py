@@ -29,18 +29,8 @@ class IndexJoinIterator(PreemptableIterator):
         self._right = right
         self._current_binding = current_binding
 
-    def __len__(self) -> int:
-        """Get an approximation of the result's cardinality of the iterator"""
-        return (self._left.__len__() + self._right.__len__()) / 2
-
     def __repr__(self) -> str:
         return f"<IndexJoinIterator ({self._left} JOIN {self._right})>"
-
-    def __piggyback__(self) -> List[Dict[str, str]]:
-        buffer = []
-        buffer.extend(self._left.__piggyback__())
-        buffer.extend(self._right.__piggyback__())
-        return buffer
 
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""

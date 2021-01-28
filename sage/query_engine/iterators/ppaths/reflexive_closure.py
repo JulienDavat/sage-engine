@@ -14,9 +14,9 @@ class ReflexiveClosureIterator(PreemptableIterator):
     It can be used as the starting iterator in a pipeline of iterators.
 
     Args:
-      * subject: The node from which all paths must start. A variable at the subject position means 
+      * source: The node from which all paths must start. A variable at the source position means 
         that the reflexive closure is evaluated from all the nodes.
-      * obj: The node to which all paths must end. A variable at the object position means that all
+      * destination: The node to which all paths must end. A variable at the destination position means that all
         the paths are part of the final result.
       * source: A ScanIterator used to retrieve all graph nodes if it's necessary
       * current_binding: The current state of the subject and the object given by the other operators.
@@ -24,11 +24,11 @@ class ReflexiveClosureIterator(PreemptableIterator):
       * done: True if the reflexive closure has been fully evaluated, False otherwise.
     """
 
-    def __init__(self, subject: str, obj: str, source: ScanIterator, mu: Dict[str, str] = None, current_binding: Dict[str, str] = None, done: bool = False):
+    def __init__(self, source: str, destination: str, child: ScanIterator, mu: Dict[str, str] = None, current_binding: Dict[str, str] = None, done: bool = False):
         super(ReflexiveClosureIterator, self).__init__()
-        self._subject = subject
-        self._obj = obj
         self._source = source
+        self._destination = destination
+        self._child = child
         self._current_binding = current_binding
         self._mu = mu
         self._done = done
@@ -36,10 +36,10 @@ class ReflexiveClosureIterator(PreemptableIterator):
 
     def __len__(self) -> int:
         """Get an approximation of the result's cardinality of the iterator"""
-        if not self._subject.startswith('?') or not self._obj.startswith('?'):
+        if not self._source.startswith('?') or not self._destination.startswith('?'):
             return 1
         else:
-            return self._source.__len__()
+            return self._child.__len__()
 
     def __repr__(self) -> str:
         return f"<ReflexiveClosureIterator>"
@@ -50,7 +50,7 @@ class ReflexiveClosureIterator(PreemptableIterator):
 
     def has_next(self) -> bool:
         """Return True if the iterator has more item to yield"""
-        return not self._done and ( self._source.has_next() or self._mu is not None) 
+        return not self._done and ( self._child.has_next() or self._mu is not None) 
 
     def next_stage(self, binding: Dict[str, str]):
         """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
@@ -72,53 +72,53 @@ class ReflexiveClosureIterator(PreemptableIterator):
         if not self.has_next():
             return None
         # Compute the reflexe closure when either the subject or the object is a constant
-        if not self._subject.startswith('?') and not self._obj.startswith('?'):
+        if not self._source.startswith('?') and not self._destination.startswith('?'):
             self._done = True
-            return {} if self._subject == self._obj else None
-        elif not self._subject.startswith('?') and self._obj.startswith('?'):
+            return {} if self._source == self._destination else None
+        elif not self._source.startswith('?') and self._destination.startswith('?'):
             self._done = True
-            if self._current_binding is not None and self._obj in self._current_binding:
-                return {} if self._subject == self._current_binding[self._obj] else None
-            return {self._obj: self._subject}
-        elif self._subject.startswith('?') and not self._obj.startswith('?'):
+            if self._current_binding is not None and self._destination in self._current_binding:
+                return {} if self._source == self._current_binding[self._destination] else None
+            return {self._destination: self._source}
+        elif self._source.startswith('?') and not self._destination.startswith('?'):
             self._done = True
-            if self._current_binding is not None and self._subject in self._current_binding:
-                return {} if self._obj == self._current_binding[self._subject] else None
-            return {self._subject: self._obj}
+            if self._current_binding is not None and self._source in self._current_binding:
+                return {} if self._destination == self._current_binding[self._source] else None
+            return {self._source: self._destination}
         # Compute the reflexive closure when the subject and the object are unbound variables
-        if self._current_binding is None or (self._subject not in self._current_binding and self._obj not in self._current_binding):
+        if self._current_binding is None or (self._source not in self._current_binding and self._destination not in self._current_binding):
             if self._mu is None:
-                self._mu = await self._source.next()
+                self._mu = await self._child.next()
                 node = self._mu['?s']
             else:
                 node = self._mu['?o']
                 self._mu = None
             if node not in self._visited:
                 self._visited[node] = None
-                return {self._subject: node, self._obj: node}
+                return {self._source: node, self._destination: node}
             return None
         # Compute the reflexive closure when either the subject or the object is bound
-        if self._subject in self._current_binding and self._obj in self._current_binding:
+        if self._source in self._current_binding and self._destination in self._current_binding:
             self._done = True
-            return {} if self._current_binding[self._subject] == self._current_binding[self._obj] else None
-        elif self._subject in self._current_binding and self._obj not in self._current_binding:
+            return {} if self._current_binding[self._source] == self._current_binding[self._destination] else None
+        elif self._source in self._current_binding and self._destination not in self._current_binding:
             self._done = True
-            node = self._current_binding[self._subject]
-            return {self._subject: node, self._obj: node}
-        elif self._subject not in self._current_binding and self._obj in self._current_binding:
+            node = self._current_binding[self._source]
+            return {self._source: node, self._destination: node}
+        elif self._source not in self._current_binding and self._destination in self._current_binding:
             self._done = True
-            node = self._current_binding[self._obj]
-            return {self._subject: node, self._obj: node}
+            node = self._current_binding[self._destination]
+            return {self._source: node, self._destination: node}
 
         return None
 
     def save(self) -> SavedReflexiveClosureIterator:
         """Save and serialize the iterator as a Protobuf message"""
         saved_reflexive = SavedReflexiveClosureIterator()
-        saved_reflexive.subject = self._subject
-        saved_reflexive.obj = self._obj
-        source_field = self._source.serialized_name() + '_source'
-        getattr(saved_reflexive, source_field).CopyFrom(self._source.save())
+        saved_reflexive.subject = self._source
+        saved_reflexive.obj = self._destination
+        source_field = self._child.serialized_name() + '_source'
+        getattr(saved_reflexive, source_field).CopyFrom(self._child.save())
         saved_reflexive.done = self._done
         if self._current_binding is not None:
             pyDict_to_protoDict(self._current_binding, saved_reflexive.current_binding)

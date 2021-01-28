@@ -19,15 +19,8 @@ class ProjectionIterator(PreemptableIterator):
         self._source = source
         self._projection = projection
 
-    def __len__(self) -> int:
-        """Get an approximation of the result's cardinality of the iterator"""
-        return self._source.__len__()
-
     def __repr__(self) -> str:
         return f"<ProjectionIterator SELECT {self._projection} FROM {self._source}>"
-
-    def __piggyback__(self) -> List[Dict[str, str]]:
-        return self._source.__piggyback__()
 
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""

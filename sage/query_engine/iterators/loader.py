@@ -7,9 +7,10 @@ from sage.database.core.dataset import Dataset
 from sage.query_engine.iterators.filter import FilterIterator
 from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.construct import ConstructIterator
-from sage.query_engine.iterators.dls.piggyback import PiggyBackIterator
-from sage.query_engine.iterators.dls.v1.advanced_depth_annotation_memory import TransitiveClosureIterator
-from sage.query_engine.iterators.reflexive_closure import ReflexiveClosureIterator
+from sage.query_engine.iterators.ppaths.piggyback import PiggyBackIterator
+from sage.query_engine.iterators.ppaths.control_tuples_memory import ControlTuplesBuffer
+from sage.query_engine.iterators.ppaths.v1.advanced_depth_annotation_memory import TransitiveClosureIterator
+from sage.query_engine.iterators.ppaths.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.iterators.projection import ProjectionIterator
@@ -41,7 +42,7 @@ import logging
 SavedProtobufPlan = Union[RootTree,SavedBagUnionIterator,SavedFilterIterator,SavedIndexJoinIterator,SavedProjectionIterator,SavedScanIterator,SavedBindIterator,SavedConstructIterator,SavedReducedIterator]
 
 
-def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator:
+def load(saved_plan: SavedProtobufPlan, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a preemptable physical query execution plan from a saved state.
 
     Args:
@@ -61,29 +62,29 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
             saved_plan = getattr(root, sourceField)
         # load the plan based on the current node
         if type(saved_plan) is SavedFilterIterator:
-            return load_filter(saved_plan, dataset)
+            return load_filter(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedProjectionIterator:
-            return load_projection(saved_plan, dataset)
+            return load_projection(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedReducedIterator:
-            return load_reduced(saved_plan, dataset)
+            return load_reduced(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedScanIterator:
-            return load_scan(saved_plan, dataset)
+            return load_scan(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedIndexJoinIterator:
-            return load_nlj(saved_plan, dataset)
+            return load_nlj(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedBagUnionIterator:
-            return load_union(saved_plan, dataset)
+            return load_union(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedBindIterator:
-            return load_bind(saved_plan, dataset)
+            return load_bind(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedConstructIterator:
-            return load_construct(saved_plan, dataset)
+            return load_construct(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedTransitiveClosureIterator:
-            return load_transitive_closure(saved_plan, dataset)
+            return load_transitive_closure(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedReflexiveClosureIterator:
-            return load_reflexive_closure(saved_plan, dataset)
+            return load_reflexive_closure(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedDLS:
-            return load_dls(saved_plan, dataset)
+            return load_dls(saved_plan, dataset, control_tuples)
         elif type(saved_plan) is SavedPiggyBackIterator:
-            return load_piggyback(saved_plan, dataset)
+            return load_piggyback(saved_plan, dataset, control_tuples)
         else:
             raise Exception(f"Unknown iterator type '{type(saved_plan)}' when loading controls")
     except:
@@ -93,7 +94,7 @@ def load(saved_plan: SavedProtobufPlan, dataset: Dataset) -> PreemptableIterator
         raise
 
 
-def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset) -> PreemptableIterator:
+def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a ProjectionIterator from a protobuf serialization.
 
     Args:
@@ -104,11 +105,11 @@ def load_projection(saved_plan: SavedProjectionIterator, dataset: Dataset) -> Pr
       The pipeline of iterator used to continue query execution.
     """
     sourceField = saved_plan.WhichOneof('source')
-    source = load(getattr(saved_plan, sourceField), dataset)
+    source = load(getattr(saved_plan, sourceField), dataset, control_tuples)
     values = saved_plan.values if len(saved_plan.values) > 0 else None
     return ProjectionIterator(source, values)
 
-def load_reduced(saved_plan: SavedReducedIterator, dataset: Dataset) -> PreemptableIterator:
+def load_reduced(saved_plan: SavedReducedIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a ReducedIterator from a protobuf serialization.
 
     Args:
@@ -119,12 +120,12 @@ def load_reduced(saved_plan: SavedReducedIterator, dataset: Dataset) -> Preempta
       The pipeline of iterator used to continue query execution.
     """
     sourceField = saved_plan.WhichOneof('source')
-    source = load(getattr(saved_plan, sourceField), dataset)
+    source = load(getattr(saved_plan, sourceField), dataset, control_tuples)
     return ReducedIterator(source)
 
 
 
-def load_filter(saved_plan: SavedFilterIterator, dataset: Dataset) -> PreemptableIterator:
+def load_filter(saved_plan: SavedFilterIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a FilterIterator from a protobuf serialization.
 
     Args:
@@ -135,13 +136,13 @@ def load_filter(saved_plan: SavedFilterIterator, dataset: Dataset) -> Preemptabl
       The pipeline of iterator used to continue query execution.
     """
     sourceField = saved_plan.WhichOneof('source')
-    source = load(getattr(saved_plan, sourceField), dataset)
+    source = load(getattr(saved_plan, sourceField), dataset, control_tuples)
     mu = None
     if len(saved_plan.mu) > 0:
         mu = saved_plan.mu
     return FilterIterator(source, saved_plan.expression, mu=mu)
 
-def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIterator:
+def load_bind(saved_plan: SavedBindIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a BindIterator from a protobuf serialization.
 
     Args:
@@ -155,7 +156,7 @@ def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIte
     source = None
     #print("sourcefield:"+str(sourceField))
     if sourceField is not None:
-        source = load(getattr(saved_plan, sourceField), dataset)
+        source = load(getattr(saved_plan, sourceField), dataset, control_tuples)
 
     mu = None
     if len(saved_plan.mu) > 0:
@@ -163,7 +164,7 @@ def load_bind(saved_plan: SavedBindIterator, dataset: Dataset) -> PreemptableIte
     return BindIterator(source, saved_plan.bindexpr,saved_plan.bindvar, mu=mu, delivered=saved_plan.delivered)
 
 
-def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> PreemptableIterator:
+def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a ConstructIterator from a protobuf serialization.
 
     Args:
@@ -174,7 +175,7 @@ def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> Pree
       The pipeline of iterator used to continue query execution.
     """
     sourceField = saved_plan.WhichOneof('source')
-    source = load(getattr(saved_plan, sourceField), dataset)
+    source = load(getattr(saved_plan, sourceField), dataset, control_tuples)
     # saved as a list of triplePattern Objects, but Iterator waits for a list of tuple
     template=[]
     for tp in saved_plan.template:
@@ -182,7 +183,7 @@ def load_construct(saved_plan: SavedConstructIterator, dataset: Dataset) -> Pree
     return ConstructIterator(source, template)
 
 
-def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIterator:
+def load_scan(saved_plan: SavedScanIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a ScanIterator from a protobuf serialization.
 
     Args:
@@ -206,7 +207,7 @@ def load_scan(saved_plan: SavedScanIterator, dataset: Dataset) -> PreemptableIte
     return ScanIterator(pattern, dataset, current_binding=current_binding, cardinality=saved_plan.cardinality, progress=saved_plan.progress, last_read=saved_plan.last_read, as_of=as_of)
 
 
-def load_piggyback(saved_plan: SavedPiggyBackIterator, dataset: Dataset) -> PreemptableIterator:
+def load_piggyback(saved_plan: SavedPiggyBackIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a TransitiveClosureIterator from a protobuf serialization
     
     Args:
@@ -217,16 +218,16 @@ def load_piggyback(saved_plan: SavedPiggyBackIterator, dataset: Dataset) -> Pree
       The pipeline of iterator used to continue query execution.
     """
     sourceField = saved_plan.WhichOneof('source')
-    source = load(getattr(saved_plan, sourceField), dataset)
+    source = load(getattr(saved_plan, sourceField), dataset, control_tuples)
     current_binding = None
     if len(saved_plan.current_binding) > 0:
       current_binding = saved_plan.current_binding
     mu = None
     if len(saved_plan.mu) > 0:
       mu = saved_plan.mu
-    return PiggyBackIterator(source, current_binding=current_binding, mu=mu)
+    return PiggyBackIterator(source, control_tuples, current_binding=current_binding, mu=mu)
 
-def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:
+def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a TransitiveClosureIterator from a protobuf serialization
     
     Args:
@@ -238,16 +239,19 @@ def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> Pr
     """
     id = saved_plan.id
     subject = saved_plan.subject
-    
-    path_field = saved_plan.path.WhichOneof('iterator')
-    path = load(getattr(saved_plan.path, path_field), dataset)
-
+    path = saved_plan.path
     obj = saved_plan.obj
-    source = saved_plan.source if saved_plan.source != '*' else None
-    goal = saved_plan.goal if saved_plan.goal != '*' else None
+    forward = saved_plan.forward
+
+    iterator_field = saved_plan.iterator.WhichOneof('iterator')
+    iterator = load(getattr(saved_plan.iterator, iterator_field), dataset, control_tuples)
+
     min_depth = saved_plan.min_depth
     max_depth = saved_plan.max_depth
-    complete = saved_plan.complete
+
+    mu = None
+    if len(saved_plan.mu) > 0:
+      mu = saved_plan.mu
 
     stack = []
     for iterator in saved_plan.stack:
@@ -259,9 +263,9 @@ def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> Pr
       bindings.append(getattr(binding, 'binding'))
     bindings += [None] * ( (max_depth + 1) - len(bindings) )
 
-    return TransitiveClosureIterator(id, subject, path, obj, dataset, stack, bindings, source, goal, min_depth, max_depth, complete)
+    return TransitiveClosureIterator(id, subject, path, obj, iterator, forward, dataset, stack, mu, bindings, min_depth, max_depth)
 
-def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:
+def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a TransitiveClosureIterator from a protobuf serialization
     
     Args:
@@ -275,17 +279,15 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
     path = saved_plan.path
     obj = saved_plan.obj
     forward = saved_plan.forward
-    var_prefix = saved_plan.var_prefix
     current_depth = saved_plan.current_depth
     min_depth = saved_plan.min_depth
     max_depth = saved_plan.max_depth
-    complete = saved_plan.complete
     id = saved_plan.id
 
     iterators = []
     for iterator in saved_plan.iterators:
       it_field = iterator.WhichOneof('iterator')
-      iterators.append(load(getattr(iterator, it_field), dataset))
+      iterators.append(load(getattr(iterator, it_field), dataset, control_tuples))
 
     mu = None
     if len(saved_plan.mu) > 0:
@@ -296,10 +298,10 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
       bindings.append(getattr(binding, 'binding'))
     bindings += [None] * ( (max_depth + 1) - len(bindings) )
     
-    return TransitiveClosureIterator(subject, path, obj, forward, iterators, var_prefix, mu, bindings, current_depth, min_depth, max_depth, complete, id)
+    return TransitiveClosureIterator(subject, path, obj, forward, iterators, mu, bindings, current_depth, min_depth, max_depth, id)
 
 
-def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset) -> PreemptableIterator:
+def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a TransitiveClosureIterator from a protobuf serialization
     
     Args:
@@ -311,7 +313,7 @@ def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: 
     """
     subject = saved_plan.subject
     obj = saved_plan.obj
-    source = load(saved_plan.scan_source, dataset)
+    source = load(saved_plan.scan_source, dataset, control_tuples)
     current_binding = None
     if len(saved_plan.current_binding) > 0:
         current_binding = saved_plan.current_binding
@@ -322,7 +324,7 @@ def load_reflexive_closure(saved_plan: SavedTransitiveClosureIterator, dataset: 
     return ReflexiveClosureIterator(subject, obj, source, mu, current_binding, done)
 
 
-def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> PreemptableIterator:
+def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a IndexJoinIterator from a protobuf serialization.
 
     Args:
@@ -333,9 +335,9 @@ def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> Preemptabl
       The pipeline of iterator used to continue query execution.
     """
     leftField = saved_plan.WhichOneof('left')
-    left = load(getattr(saved_plan, leftField), dataset)
+    left = load(getattr(saved_plan, leftField), dataset, control_tuples)
     rightField = saved_plan.WhichOneof('right')
-    right = load(getattr(saved_plan, rightField), dataset)
+    right = load(getattr(saved_plan, rightField), dataset, control_tuples)
     current_binding = None
     if len(saved_plan.mu) > 0:
         current_binding = saved_plan.mu
@@ -343,7 +345,7 @@ def load_nlj(saved_plan: SavedIndexJoinIterator, dataset: Dataset) -> Preemptabl
 
 
 
-def load_union(saved_plan: SavedBagUnionIterator, dataset: Dataset) -> PreemptableIterator:
+def load_union(saved_plan: SavedBagUnionIterator, dataset: Dataset, control_tuples: ControlTuplesBuffer) -> PreemptableIterator:
     """Load a BagUnionIterator from a protobuf serialization.
 
     Args:
@@ -354,7 +356,7 @@ def load_union(saved_plan: SavedBagUnionIterator, dataset: Dataset) -> Preemptab
       The pipeline of iterator used to continue query execution.
     """
     leftField = saved_plan.WhichOneof('left')
-    left = load(getattr(saved_plan, leftField), dataset)
+    left = load(getattr(saved_plan, leftField), dataset, control_tuples)
     rightField = saved_plan.WhichOneof('right')
-    right = load(getattr(saved_plan, rightField), dataset)
+    right = load(getattr(saved_plan, rightField), dataset, control_tuples)
     return BagUnionIterator(left, right)

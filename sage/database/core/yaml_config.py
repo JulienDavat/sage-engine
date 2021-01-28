@@ -72,6 +72,18 @@ def load_config(config_file: str) -> Dataset:
         logging.warning("You are using SaGe without limitations on the number of results sent per page. This is fine, but be carefull as very large page of results can have unexpected serialization time.")
         max_results = inf
 
+    if 'max_control_tuples' in config and config['max_control_tuples'] != 'inf':
+        max_control_tuples = config['max_control_tuples']
+    else:
+        logging.warning("You are using SaGe without limitations on the number of control tuples sent per page. This is fine, but be carefull as very large page of results can have unexpected serialization time.")
+        max_control_tuples = inf
+
+    if 'max_depth' in config and config['max_depth'] != 'inf':
+        max_depth = config['max_depth']
+    else:
+        logging.warning("You are using SaGe without limitations on the maximal depth of transitive closures. The maximal depth is set to 20.")
+        max_control_tuples = 20
+
     #get default-graph-uri
     default_graph=None
     if 'default_graph_uri' in config:
@@ -90,6 +102,8 @@ def load_config(config_file: str) -> Dataset:
         g_description = g_config["description"] if "description" in g_config else f"Unnamed RDF graph with id {g_name}"
         g_quantum = g_config["quota"] if "quota" in g_config else quantum
         g_max_results = g_config["max_results"] if "max_results" in g_config else max_results
+        g_max_control_tuples = g_config["max_control_tuples"] if "max_control_tuples" in g_config else max_control_tuples
+        g_max_depth = g_config["max_depth"] if "max_depth" in g_config else max_depth
         g_queries = g_config["queries"] if "queries" in g_config else list()
 
         # load the graph connector using available backends
@@ -100,7 +114,7 @@ def load_config(config_file: str) -> Dataset:
             continue
 
         # build the graph and register it using its URI
-        graphs[g_uri] = Graph(g_uri, g_name, g_description, g_connector, quantum=g_quantum, max_results=g_max_results, default_queries=g_queries)
+        graphs[g_uri] = Graph(g_uri, g_name, g_description, g_connector, quantum=g_quantum, max_results=g_max_results, max_control_tuples=g_max_control_tuples, max_depth=g_max_depth, default_queries=g_queries)
         logging.info(f"RDF Graph '{g_uri}'  (backend: {g_config['backend']}) successfully loaded")
 
     if default_graph is not None and graphs[default_graph] is None:
@@ -108,5 +122,6 @@ def load_config(config_file: str) -> Dataset:
     else:
         logging.info(f"Default Graph is '{default_graph}'")
 
+    
 
     return Dataset(dataset_name, dataset_description, graphs, default_graph=default_graph, public_url=public_url, default_query=default_query, analytics=analytics, stateless=is_stateless, statefull_manager=statefull_manager)

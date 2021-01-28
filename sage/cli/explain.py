@@ -9,6 +9,7 @@ from sage.cli.utils import load_graph
 from sage.database.core.yaml_config import load_config
 from sage.query_engine.sage_engine import SageEngine
 from sage.query_engine.optimizer.query_parser import parse_query
+from sage.query_engine.iterators.ppaths.control_tuples_memory import ControlTuplesBuffer
 from sage.http_server.server import run_app
 from starlette.testclient import TestClient
 from tests.http.utils import post_sparql
@@ -122,7 +123,7 @@ def explain(query,file,config_file,graph_uri,indentnb,update,parse):
     #logical_plan = tq.algebra
     cards = list()
 
-    iterator,cards = parse_query(query, dataset, graph_uri)
+    iterator,cards = parse_query(query, dataset, graph_uri, ControlTuplesBuffer())
 
 
     print("-----------------")

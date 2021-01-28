@@ -18,13 +18,13 @@ from sage.query_engine.protobuf.iterators_pb2 import RootTree
 ExecutionResults = Tuple[List[Dict[str, str]], Optional[RootTree], bool, Optional[str]]
 
 
-async def executor(pipeline: PreemptableIterator, queue: Queue, limit: int) -> None:
+async def executor(pipeline: PreemptableIterator, queue: Queue, max_results: int) -> None:
     """Execute a pipeline of iterator under a time quantum.
 
     Args:
       * pipeline: Root of the pipeline of iterator.
       * queue: Async queue used to store query results.
-      * limit: Maximum number of query results to fetch from the pipeline.
+      * max_results: Maximum number of query results to fetch from the pipeline.
 
     Throws: Any exception raised during query execution.
     """
@@ -35,7 +35,7 @@ async def executor(pipeline: PreemptableIterator, queue: Queue, limit: int) -> N
                 # discard null values
                 if value is not None:
                     await queue.put(value)
-                if queue.qsize() >= limit:
+                if queue.qsize() >= max_results:
                     raise TooManyResults()
                 await loop.tick()
     except StopAsyncIteration:
@@ -48,7 +48,7 @@ class SageEngine(object):
     def __init__(self):
         super(SageEngine, self).__init__()
 
-    async def execute(self, plan: PreemptableIterator, quantum: int, limit=inf) -> ExecutionResults:
+    async def execute(self, plan: PreemptableIterator, quantum: int, max_results=inf) -> ExecutionResults:
         """Execute a preemptable physical query execution plan under a time quantum.
 
         Args:
@@ -64,14 +64,13 @@ class SageEngine(object):
         Throws: Any exception raised during query execution.
         """
         results: List[Dict[str, str]] = list()
-        controls: List[Dict[str, str]] = list()
         queue = Queue()
         loop = get_event_loop()
         query_done = False
         root = None
         abort_reason = None
         try:
-            await wait_for(executor(plan, queue, limit), timeout=quantum)
+            await wait_for(executor(plan, queue, max_results), timeout=quantum)
             # loop.run_until_complete(task)
             query_done = True
         except StopAsyncIteration:
@@ -94,11 +93,9 @@ class SageEngine(object):
                 while not queue.empty():
                     results.append(queue.get_nowait())
             
-            controls = plan.__piggyback__()
-
         # save the plan if query execution is not done yet and no abort has occurred
         if (not query_done) and abort_reason is None:
             root = RootTree()
             source_field = plan.serialized_name() + '_source'
             getattr(root, source_field).CopyFrom(plan.save())
-        return (results, controls, root, query_done, abort_reason)
+        return (results, root, query_done, abort_reason)

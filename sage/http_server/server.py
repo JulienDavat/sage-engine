@@ -23,7 +23,7 @@ from sage.http_server.utils import decode_saved_plan, encode_saved_plan
 from sage.query_engine.iterators.loader import load
 from sage.query_engine.optimizer.query_parser import parse_query
 from sage.query_engine.sage_engine import SageEngine
-
+from sage.query_engine.iterators.ppaths.control_tuples_memory import ControlTuplesBuffer
 
 class SagePostQuery(BaseModel):
     """Data model for the body of POST SPARQL queries"""
@@ -68,6 +68,8 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
         if not dataset.has_graph(default_graph_uri):
             raise HTTPException(status_code=404, detail=f"RDF Graph {default_graph_uri} not found on the server.")
         graph = dataset.get_graph(default_graph_uri)
+        max_control_tuples = graph.max_control_tuples
+        control_tuples = ControlTuplesBuffer(max_control_tuples=max_control_tuples)
 
         # decode next_link or build query execution plan
         cardinalities = dict()
@@ -77,16 +79,16 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
                 saved_plan = next_link
             else:
                 saved_plan = dataset.statefull_manager.get_plan(next_link)
-            plan = load(decode_saved_plan(saved_plan), dataset)
+            plan = load(decode_saved_plan(saved_plan), dataset, control_tuples)
         else:
-            plan, cardinalities = parse_query(query, dataset, default_graph_uri)
+            plan, cardinalities = parse_query(query, dataset, default_graph_uri, control_tuples)
         loading_time = (time() - start) * 1000
 
         # execute query
         engine = SageEngine()
         quota = graph.quota / 1000
         max_results = graph.max_results
-        bindings, controls, saved_plan, is_done, abort_reason = await engine.execute(plan, quota, max_results)
+        bindings, saved_plan, is_done, abort_reason = await engine.execute(plan, quota, max_results)
 
         # commit or abort (if necessary)
         if abort_reason is not None:
@@ -112,7 +114,7 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
         exportTime = (time() - start) * 1000
         stats = {"cardinalities": cardinalities, "import": loading_time, "export": exportTime}
 
-        return (bindings, controls, next_page, stats)
+        return (bindings, control_tuples.collect(), next_page, stats)
     except Exception as err:
         # abort all ongoing transactions, then forward the exception to the main loop
         logging.error(f"sage execute_query error: {err}")

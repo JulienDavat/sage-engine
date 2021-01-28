@@ -64,17 +64,8 @@ class BindIterator(PreemptableIterator):
         #self._compiled_expression = compiled_expr.algebra.p.p.expr
         self._compiled_expression = compiled_expr.algebra.p.p.expr
 
-    def __len__(self) -> str:
-        """Get an approximation of the result's cardinality of the iterator"""
-        return self._source.__len__()
-
     def __repr__(self) -> str:
         return f"<BindIterator BIND {self._expr} AS {self._bindvar} FROM {self._source}>"
-
-    def __piggyback__(self) -> List[Dict[str, str]]:
-        if self._source is None:
-            return []
-        return self._source.__piggyback__()
 
     def serialized_name(self) -> str:
         """Get the name of the iterator, as used in the plan serialization protocol"""

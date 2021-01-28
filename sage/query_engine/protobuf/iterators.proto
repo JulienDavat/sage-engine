@@ -75,12 +75,10 @@ message SavedTransitiveClosureIterator {
   string subject = 1;
   string obj = 2;
   repeated PreemptableIterator iterators = 3;
-  string var_prefix = 4;
   repeated Bindings bindings = 5;
   int64 current_depth = 6;
   int64 min_depth = 7;
   int64 max_depth = 8;
-  bool complete = 9;
   int64 id = 10;
   map<string, string> mu = 11;
   bool forward = 12;
@@ -106,15 +104,15 @@ message SavedDLS {
 
   int64 id = 1;
   string subject = 2;
-  PreemptableIterator path = 3;
+  string path = 3;
   string obj = 4;
   repeated Bindings bindings = 5;
   repeated PreemptableIterator stack = 6;
-  string source = 7;
-  string goal = 8;
+  map<string, string> mu = 7;
   int64 min_depth = 9;
   int64 max_depth = 10;
-  bool complete = 11;
+  bool forward = 11;
+  PreemptableIterator iterator = 12;
 }
 
 message SavedReflexiveClosureIterator {

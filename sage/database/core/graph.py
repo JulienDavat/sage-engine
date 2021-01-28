@@ -21,7 +21,7 @@ class Graph(object):
       * default_queries: List of queries that can be executed with this graph.
     """
 
-    def __init__(self, uri: str, name: str, description: str, connector: DatabaseConnector, quantum=75, max_results=inf, default_queries: List[dict] = list()):
+    def __init__(self, uri: str, name: str, description: str, connector: DatabaseConnector, quantum=75, max_results=inf, max_control_tuples=inf, max_depth=20, default_queries: List[dict] = list()):
         super(Graph, self).__init__()
         self._uri = uri
         self._name = name
@@ -29,6 +29,8 @@ class Graph(object):
         self._connector = connector
         self._quantum = quantum
         self._max_results = max_results
+        self._max_control_tuples = max_control_tuples
+        self._max_depth = max_depth
         self._example_queries = default_queries
     
     @property
@@ -50,6 +52,14 @@ class Graph(object):
     @property
     def max_results(self) -> float:
         return self._max_results
+
+    @property
+    def max_control_tuples(self) -> float:
+        return self._max_control_tuples
+
+    @property
+    def max_depth(self) -> float:
+        return self._max_depth
 
     @property
     def nb_triples(self) -> int:

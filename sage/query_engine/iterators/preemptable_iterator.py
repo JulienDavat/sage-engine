@@ -11,8 +11,8 @@ class PreemptableIterator(ABC):
         """Get an approximation of the result's cardinality of the iterator"""
         return 0
 
-    def __piggyback__(self) -> List[Dict[str, str]]:
-        return []
+    # def __piggyback__(self) -> List[Dict[str, str]]:
+    #     return []
 
     @abstractmethod
     def serialized_name(self) -> str:
