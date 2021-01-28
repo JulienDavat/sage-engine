@@ -53,19 +53,6 @@ class DLSIterator(PreemptableIterator):
                 self._iterator.next_stage({'?source': subject})
             self._stack = [self._iterator.save()]
 
-    # def __len__(self) -> int:
-    #     """Get an approximation of the result's cardinality of the iterator"""
-    #     if not self._subject.startswith('?') or not self._obj.startswith('?'):
-    #         return 1
-    #     return self._path.__len__()
-
-    # def __repr__(self) -> str:
-    #     return f"<TransitiveClosureIterator:AdvancedDepthAnnotationMemory [{self._min_depth}:{self._max_depth}] ({self._path})>"
-
-    # def serialized_name(self):
-    #     """Get the name of the iterator, as used in the plan serialization protocol"""
-    #     return "dls"
-
     def has_next(self) -> bool:
         """Return True if the iterator has more item to yield"""
         return len(self._stack) > 0
@@ -75,7 +62,6 @@ class DLSIterator(PreemptableIterator):
         self._bindings = [None] * (self._max_depth + 1)
         self._mu = binding
         self._reached = dict()
-
         source = None
         if self._subject.startswith('?') and self._subject in binding:
             source = binding[self._subject]
@@ -85,17 +71,6 @@ class DLSIterator(PreemptableIterator):
             self._iterator.next_stage({})
         self._stack = [self._iterator.save()]
        
-        # self._bindings = [None] * (self._max_depth + 1)
-        # if self._subject.startswith('?') and self._subject in binding:
-        #     self._source = binding[self._subject]
-        # if self._obj.startswith('?') and self._obj in binding:
-        #     self._goal = binding[self._obj]
-        # if self._source is not None:
-        #     self._path.next_stage({'?source': self._source})
-        # else:
-        #     self._path.next_stage({})
-        # self._stack = [self._path.save()]
-
     def is_goal_reached(self):
         source = self.get_source()
         if source not in self._reached:
@@ -124,12 +99,6 @@ class DLSIterator(PreemptableIterator):
         else:
             return self._subject
 
-    # def get_source(self) -> str:
-    #     if self._source is not None:
-    #         return self._source
-    #     else:
-    #         return self._bindings[0]['?source']
-
     def get_node(self, depth):
         return self._bindings[depth]['?node']
 
@@ -155,9 +124,6 @@ class DLSIterator(PreemptableIterator):
             return {**self._mu, **solution}
         else:
             return solution
-
-    # def is_solution(self, node: str) -> bool:
-    #     return (self._goal is None) or (node == self._goal) 
 
     @abstractmethod
     async def next(self) -> Optional[Dict[str, str]]:

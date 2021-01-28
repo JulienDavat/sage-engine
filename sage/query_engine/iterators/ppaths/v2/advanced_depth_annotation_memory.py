@@ -76,7 +76,7 @@ class TransitiveClosureIterator(DLSIterator):
             self._thresholds[source] = {}
         self._thresholds[source][node] = threshold
 
-    def visited_at_higher_depth(self, node):
+    def visited_at_different_depth(self, node):
         source = self.get_source()
         if source not in self._thresholds:
             return False
@@ -123,7 +123,7 @@ class TransitiveClosureIterator(DLSIterator):
                         self._current_thresholds[source][parent] = parent_threshold
                     self._bindings[depth] = None
                     return None, False, 0
-                already_visited = self.visited_at_higher_depth(node)
+                already_visited = self.visited_at_different_depth(node)
                 self.update_threshold(node, depth)
                 if depth == self._max_depth - 1:
                     self.update_current_threshold(node, depth)

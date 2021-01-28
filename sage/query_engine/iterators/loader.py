@@ -9,7 +9,7 @@ from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.construct import ConstructIterator
 from sage.query_engine.iterators.ppaths.piggyback import PiggyBackIterator
 from sage.query_engine.iterators.ppaths.control_tuples_memory import ControlTuplesBuffer
-from sage.query_engine.iterators.ppaths.v1.advanced_depth_annotation_memory import TransitiveClosureIterator
+from sage.query_engine.iterators.ppaths.v1.visited_nodes_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.ppaths.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
@@ -254,9 +254,9 @@ def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset, contr
       mu = saved_plan.mu
 
     stack = []
-    for iterator in saved_plan.stack:
-      iterator_field = iterator.WhichOneof('iterator')
-      stack.append(getattr(iterator, iterator_field))
+    for item in saved_plan.stack:
+      iterator_field = item.WhichOneof('iterator')
+      stack.append(getattr(item, iterator_field))
 
     bindings = []
     for binding in saved_plan.bindings:
