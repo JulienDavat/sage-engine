@@ -124,6 +124,8 @@ def parse_closure_expression(path_pattern: Dict[str, str], forward: bool, datase
     max_depth = 1 if path.mod == ZeroOrOne else dataset.get_graph(default_graph).max_depth
     iterators = []
 
+    # Uncomment to use the v2 of the PTC operators (iterators on the stack are suspended)
+
     # if forward:
     #     iterator = parse_path_pattern({
     #         'subject': '?source',
@@ -141,6 +143,8 @@ def parse_closure_expression(path_pattern: Dict[str, str], forward: bool, datase
     #     }, forward, dataset, default_graph, control_tuples, as_of)
     #     transitive_closure = TransitiveClosureIterator(star_id, path_pattern['object'], str(path_pattern['predicate']), path_pattern['subject'], iterator, forward, dataset, min_depth=min_depth, max_depth=max_depth)
     
+    # Uncomment to use the v1 of the PTC operators (iterators on the stack are not suspended)
+
     if forward:
         iterator = parse_path_pattern({
             'subject': path_pattern['subject'],
