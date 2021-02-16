@@ -26,9 +26,10 @@ We appreciate your feedback/comments/questions to be sent to our [mailing list](
 # Installation
 
 Requirements:
-* Python 3.7 (*or higher*)
+* [Python 3.7]() (*or higher*)
 * [pip](https://pip.pypa.io/en/stable/)
 * [Virtualenv](https://pypi.org/project/virtualenv)
+* [PostgreSQL](https://www.postgresql.org/) (only required to use the PostgreSQL backend)
 * **gcc/clang** with **c++11 support**
 * **Python Development headers**
 > You should have the `Python.h` header available on your system.   
@@ -42,9 +43,9 @@ git clone https://github.com/sage-org/sage-engine
 cd sage-engine
 git checkout extended-property-paths
 # Create a virtual environment to isolate SaGe dependencies
-virtualenv --python=/usr/bin/python3 ppaths
+virtualenv --python=/usr/bin/python3 sage-env
 # Activate the virtual environment
-source ppaths/bin/activate
+source sage-env/bin/activate
 # Install SaGe dependencies
 pip install -r requirements.txt
 pip install -e .[hdt,postgres]
@@ -54,10 +55,32 @@ The various SaGe backends are installed as extras dependencies, using the `-e` f
 To make the installation of SaGe easier, SaGe is installed in a virtual environment.
 
 ```bash
-# To activate the SaGe (ppaths) environment
-source ppaths/bin/activate
+# To activate the SaGe (sage-env) environment
+source sage-env/bin/activate
 # To deactivate the SaGe environment
 deactivate
+```
+
+## PostgreSQL configuration
+
+This section is optional and can be skipped if you don't use the PostgreSQL backend.
+
+PostgreSQL needs to be configured to prepare the data loading and tuned for the web preemption
+server. First open the file `postgresql.conf` in the PostgreSQL main directory and apply the
+following changes in the *Planner Method Configuration* section:
+- Uncomment all enable_XYZ options
+- Set *enable_indexscan*, *enable_indexonlyscan* and *enable_nestloop* to **on**
+- Set all the other enable_XYZ options to **off**
+
+Then, open the file `pg_hba.conf` in the PostgreSQL main directory and apply the following change:
+- Set the connection method for the local unix domain socket to **trust**
+
+Finally, create a user and a database, both named `sage`
+```bash 
+$ sudo -u postgres psql
+postgres=$ create database sage
+postgres=$ create user sage with encrypted password 'sage'
+postgres=$ grant all privileges on database sage to sage
 ```
 
 # Getting started
@@ -65,7 +88,7 @@ deactivate
 ## Server configuration
 
 A Sage server is configured using a configuration file in [YAML syntax](http://yaml.org/).
-You will find below a minimal working example of such configuration file.
+You will find below a minimal working example of such a configuration file.
 A full example is available [in the `config_examples/` directory](https://github.com/sage-org/sage-engine/blob/master/config_examples/example.yaml)
 
 ```yaml
@@ -78,7 +101,7 @@ max_control_tuples: 10000
 graphs:
 -
   name: dbpedia
-  uri: http://example.org/dbpedia
+  uri: http://example.org/datasets/dbpedia
   description: DBPedia
   backend: hdt-file
   file: datasets/dbpedia.2016.hdt
@@ -89,8 +112,59 @@ The `quota` and `max_results` fields are used to set the maximum time quantum an
 The `max_depth` and `max_control_tuples` fields are used to set the maximum depth and the maximum number of control tuples allowed per request, respectively. These fields are used for property paths queries that contain transitive closure path expressions.
 
 Each entry in the `graphs` field declare a RDF dataset with a name, description, backend and options specific to this backend.
+
 The `hdt-file` backend allow a SaGe server to load RDF datasets from [HDT files](http://www.rdfhdt.org/). Sage uses [pyHDT](https://github.com/Callidon/pyHDT) to load and query HDT files.
-The `postgres` backend allow a SaGe server to manager RDF datasets stored into [PostgreSQL](https://www.postgresql.org/). SaGe uses [psycopg2](https://pypi.org/project/psycopg2/) to interact with PostgreSQL.
+
+The `postgres` backend allow a SaGe server to manage RDF datasets stored in [PostgreSQL](https://www.postgresql.org/). SaGe uses [psycopg2](https://pypi.org/project/psycopg2/) to interact with PostgreSQL.
+
+## Dataset ingestion with the HDT backend
+
+To load an HDT file `my_dataset.hdt` in SaGe, just create a configuration file `my_config.yaml` and declare a new dataset.
+
+```yaml
+quota: 75
+max_depth: 5
+max_results: 10000
+max_control_tuples: 10000
+graphs:
+-
+  name: my_dataset_name
+  uri: http://example.org/datasets/my_dataset_name
+  backend: hdt-file
+  file: my_dataset.hdt
+```
+
+## Dataset ingestion with the PostgreSQL backend
+
+To load a file `my_dataset.nt` in SaGe using the PostgreSQL backend, first create a configuration file `my_config.yaml` and declare a new dataset.
+
+```yaml
+quota: 75
+max_depth: 5
+max_results: 10000
+max_control_tuples: 10000
+graphs:
+-
+  name: my_dataset_name
+  uri: http://example.org/datasets/my_dataset_name
+  backend: postgres
+  dbname: sage
+  user: sage
+  password: sage
+```
+
+Then, use the SaGe commands to load the file in PostgreSQL.
+
+```bash
+# Activate the SaGe environment
+source sage-env/bin/activate
+# Create a new table in PostgreSQL
+sage-postgres-init --no-index my_config.yaml my_dataset_name
+# Load the file in PostgreSQL
+sage-postgres-sput my_dataset.nt my_config.yaml my_dataset_name
+# Create the SPO, OSP and POS indexes
+sage-postgres-index my_config.yaml my_dataset_name
+```
 
 ## Starting the server
 
@@ -98,7 +172,7 @@ The `sage` executable, installed alongside the Sage server, allows to easily sta
 
 ```bash
 # Do not forget to activate the SaGe environment
-source ppaths/bin/activate
+source sage-env/bin/activate
 # Launch the Sage server with 4 workers on port 8000
 sage my_config.yaml -w 4 -p 8000
 ```
