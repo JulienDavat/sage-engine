@@ -8,8 +8,12 @@ public_url: http://server-url.com
 long_description: config_examples/description.md
 # Time quantum used by the server
 quota: 75
+# (Default 20) Maximum exploration depth for the transitive closures
+max_depth: 5
 # (Optional) Maximum number of results fetched by HTTP request
-max_results: 2000
+max_results: 10000
+# (Optional) Maximum number of control tuples fetched by HTTP request
+max_control_tuples: 10000
 # (Optional) Query selected by default in the "Query" section
 default_query:
   grapg_name: dbpedia

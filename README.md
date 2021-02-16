@@ -1,5 +1,3 @@
-# /!\ this is a fork of the original sage, for weird experimentations /!\
-
 # Sage: a SPARQL query engine for public Linked Data providers
 [![Build Status](https://travis-ci.com/sage-org/sage-engine.svg?branch=master)](https://travis-ci.com/sage-org/sage-engine) [![PyPI version](https://badge.fury.io/py/sage-engine.svg)](https://badge.fury.io/py/sage-engine) [![Docs](https://img.shields.io/badge/docs-passing-brightgreen)](https://sage-org.github.io/sage-engine/)
 
@@ -27,34 +25,40 @@ We appreciate your feedback/comments/questions to be sent to our [mailing list](
 
 # Installation
 
-Installation in a [virtualenv](https://virtualenv.pypa.io/en/stable/) is **strongly advised!**
-
 Requirements:
 * Python 3.7 (*or higher*)
 * [pip](https://pip.pypa.io/en/stable/)
+* [Virtualenv](https://pypi.org/project/virtualenv)
 * **gcc/clang** with **c++11 support**
 * **Python Development headers**
 > You should have the `Python.h` header available on your system.   
 > For example, for Python 3.6, install the `python3.6-dev` package on Debian/Ubuntu systems.
 
-## Installation using pip
+## Manual Installation
 
-The core engine of the SaGe SPARQL query server with [HDT](http://www.rdfhdt.org/) as a backend can be installed as follows:
 ```bash
-pip install sage-engine[hdt,postgres]
-```
-The SaGe query engine uses various **backends** to load RDF datasets.
-The various backends available are installed as extras dependencies. The above command install both the HDT and PostgreSQL backends.
-
-## Manual Installation using poetry
-
-The SaGe SPARQL query server can also be manually installed using the [poetry](https://github.com/sdispater/poetry) dependency manager.
-```bash
+# Download the project and move to the extended-property-paths branch
 git clone https://github.com/sage-org/sage-engine
 cd sage-engine
-poetry install --extras "hdt postgre"
+git checkout extended-property-paths
+# Create a virtual environment to isolate SaGe dependencies
+virtualenv --python=/usr/bin/python3 ppaths
+# Activate the virtual environment
+source ppaths/bin/activate
+# Install SaGe dependencies
+pip install -r requirements.txt
+pip install -e .[hdt,postgres]
 ```
-As with pip, the various SaGe backends are installed as extras dependencies, using the  `--extras` flag.
+The various SaGe backends are installed as extras dependencies, using the `-e` flag.
+
+To make the installation of SaGe easier, SaGe is installed in a virtual environment.
+
+```bash
+# To activate the SaGe (ppaths) environment
+source ppaths/bin/activate
+# To deactivate the SaGe environment
+deactivate
+```
 
 # Getting started
 
@@ -68,7 +72,9 @@ A full example is available [in the `config_examples/` directory](https://github
 name: SaGe Test server
 maintainer: Chuck Norris
 quota: 75
-max_results: 2000
+max_depth: 5
+max_results: 10000
+max_control_tuples: 10000
 graphs:
 -
   name: dbpedia
@@ -78,18 +84,22 @@ graphs:
   file: datasets/dbpedia.2016.hdt
 ```
 
-The `quota` and `max_results` fields are used to set the maximum time quantum and the maximum number of results
-allowed per request, respectively.
+The `quota` and `max_results` fields are used to set the maximum time quantum and the maximum number of results allowed per request, respectively.
 
-Each entry in the `datasets` field declare a RDF dataset with a name, description, backend and options specific to this backend.
-Currently, **only** the `hdt-file` backend is supported, which allow a Sage server to load RDF datasets from [HDT files](http://www.rdfhdt.org/). Sage uses [pyHDT](https://github.com/Callidon/pyHDT) to load and query HDT files.
+The `max_depth` and `max_control_tuples` fields are used to set the maximum depth and the maximum number of control tuples allowed per request, respectively. These fields are used for property paths queries that contain transitive closure path expressions.
+
+Each entry in the `graphs` field declare a RDF dataset with a name, description, backend and options specific to this backend.
+The `hdt-file` backend allow a SaGe server to load RDF datasets from [HDT files](http://www.rdfhdt.org/). Sage uses [pyHDT](https://github.com/Callidon/pyHDT) to load and query HDT files.
+The `postgres` backend allow a SaGe server to manager RDF datasets stored into [PostgreSQL](https://www.postgresql.org/). SaGe uses [psycopg2](https://pypi.org/project/psycopg2/) to interact with PostgreSQL.
 
 ## Starting the server
 
 The `sage` executable, installed alongside the Sage server, allows to easily start a Sage server from a configuration file using [Gunicorn](http://gunicorn.org/), a Python WSGI HTTP Server.
 
 ```bash
-# launch Sage server with 4 workers on port 8000
+# Do not forget to activate the SaGe environment
+source ppaths/bin/activate
+# Launch the Sage server with 4 workers on port 8000
 sage my_config.yaml -w 4 -p 8000
 ```
 
@@ -106,16 +116,6 @@ Options:
                                   The granularity of log outputs  [default:
                                   info]
   --help                          Show this message and exit.
-```
-
-# SaGe Docker image
-
-The Sage server is also available through a [Docker image](https://hub.docker.com/r/callidon/sage/).
-In order to use it, do not forget to [mount in the container](https://docs.docker.com/storage/volumes/) the directory that contains you configuration file and your datasets.
-
-```bash
-docker pull callidon/sage
-docker run -v path/to/config-file:/opt/data/ -p 8000:8000 callidon/sage sage /opt/data/config.yaml -w 4 -p 8000
 ```
 
 # Documentation

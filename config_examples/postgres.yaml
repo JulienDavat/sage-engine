@@ -2,7 +2,9 @@ name: SaGe server with PostgreSQL backend
 maintainer: Thomas Minier <thomas.minier@univ-nantes.fr>
 public_url: http://localhost:8000
 quota: 1000
-max_results: 2000
+max_depth: 5
+max_results: 10000
+max_control_tuples: 10000
 graphs:
 -
   name: bsbm1k
