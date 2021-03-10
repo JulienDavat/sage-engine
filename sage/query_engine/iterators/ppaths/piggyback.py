@@ -16,39 +16,29 @@ from sage.query_engine.iterators.ppaths.control_tuples_memory import ControlTupl
 
 
 class PiggyBackIterator(PreemptableIterator):
-    """A ScanIterator evaluates a triple pattern over a RDF graph.
+    """A PiggyBackIterator collects data from a PTC iterator to build the control tuples that will be sent to the client.
 
     It can be used as the starting iterator in a pipeline of iterators.
 
     Args:
-      * pattern: The triple pattern to evaluate.
-      * dataset: The RDF dataset on which the triple pattern is evaluated.
-      * current_binding: A set of solution mappings. Used by the nested loop joins to bind the triple pattern variables. 
-      * cardinality: The cardinality of the triple pattern given the current binding.
-      * progess: The number of triples read on the database. Used to monitor the query.
-      * last_read: The last triple read on the database. Used to resume the scan iterator.
-      * as_of: The timestamp of the query. Used to read a consistent snapshot of the database (MVCC).
+      * child: A PTC iterator.
+      * control_tuples: A shared memory where control tuples of all PTC iterators are stored.
+      * current_binding: A set of solution mappings. Used to bind the PTC path pattern variables. 
+      * mu: A partial solution mappings returned by the PTC iterator.
     """
 
     def __init__(self, child: PreemptableIterator, control_tuples: ControlTuplesBuffer, current_binding: Optional[Dict[str, str]] = None, mu: Optional[Dict[str, str]] = None):
         super(PiggyBackIterator, self).__init__()
-        self._identifiant = uuid4()
+        self._identifier = uuid4()
         self._control_tuples = control_tuples
         self._child = child
         self._current_binding = current_binding
         self._mu = mu
-        self._piggyback = False
-        self._last_starter = ""
 
     def next_stage(self, binding: Dict[str, str]):
         """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
         self._current_binding = binding
         self._child.next_stage(binding)
-        if self._piggyback:
-            self._control_tuples.flush(self._identifiant)
-        else:
-            self._control_tuples.clear(self._identifiant)
-        self._piggyback = False
 
     def __repr__(self) -> str:
         return f"<PiggyBackIterator {self._child}>"
@@ -96,23 +86,9 @@ class PiggyBackIterator(PreemptableIterator):
             (solution, is_final_solution, solution_depth) = await self._child.next()
             if solution is None:
                 return None
-
             self._mu = solution if is_final_solution else None
-
-            starter = self._child.get_source()
-            if starter != self._last_starter:
-                if self._piggyback:
-                    print('next source: flushing')
-                    self._control_tuples.flush(self._identifiant)
-                else:
-                    print('next source: clearing')
-                    self._control_tuples.clear(self._identifiant)
-                self._last_starter = starter
-                self._piggyback = False
-
             control_tuple = self._create_control_tuple(solution_depth)
-            self._control_tuples.add(self._identifiant, control_tuple)
-            self._piggyback |= (control_tuple['depth'] == control_tuple['max_depth'])
+            self._control_tuples.add(self._identifier, control_tuple)
             return None
         else:
             return None

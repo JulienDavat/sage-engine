@@ -118,7 +118,8 @@ async def execute_query(query: str, default_graph_uri: str, next_link: Optional[
         exportTime = (time() - start) * 1000
         stats = {"cardinalities": cardinalities, "import": loading_time, "export": exportTime}
 
-        return (bindings, control_tuples.collect(), next_page, stats)
+        # return (bindings, control_tuples.collect(), next_page, stats)
+        return (bindings, control_tuples.collect(is_done and next_link is None), next_page, stats)
     except Exception as err:
         # abort all ongoing transactions, then forward the exception to the main loop
         logging.error(f"sage execute_query error: {err}")
