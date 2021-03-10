@@ -58,7 +58,7 @@ class Graph(object):
         return self._max_control_tuples
 
     @property
-    def max_depth(self) -> float:
+    def max_depth(self) -> int:
         return self._max_depth
 
     @property

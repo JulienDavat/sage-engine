@@ -131,7 +131,7 @@ class DLSIterator(PreemptableIterator):
         saved_iterators = []
         for it in self._iterators:
             saved_it = SavedTransitiveClosureIterator.PreemptableIterator()
-            it_field = it.serialized_name() + '_iterator'
+            it_field = it.serialized_name() + '_source'
             getattr(saved_it, it_field).CopyFrom(it.save())
             saved_iterators.append(saved_it)
         saved_transitive.iterators.extend(saved_iterators)

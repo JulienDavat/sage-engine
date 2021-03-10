@@ -147,7 +147,7 @@ class DLSIterator(PreemptableIterator):
         saved_dls.obj = self._obj
         saved_dls.forward = self._forward
         saved_iterator = SavedDLS.PreemptableIterator()
-        path_field = self._iterator.serialized_name() + '_iterator'
+        path_field = self._iterator.serialized_name() + '_source'
         getattr(saved_iterator, path_field).CopyFrom(self._iterator.save())
         saved_dls.iterator.CopyFrom(saved_iterator)
         saved_bindings = []
@@ -161,7 +161,7 @@ class DLSIterator(PreemptableIterator):
         saved_stack = []
         for index in range(len(self._stack)):
             saved_iterator = SavedDLS.PreemptableIterator()
-            iterator_field = self._iterator.serialized_name() + '_iterator'
+            iterator_field = self._iterator.serialized_name() + '_source'
             getattr(saved_iterator, iterator_field).CopyFrom(self._stack[index])
             saved_stack.append(saved_iterator)
         saved_dls.stack.extend(saved_stack)

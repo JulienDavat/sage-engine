@@ -243,7 +243,7 @@ def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset, contr
     obj = saved_plan.obj
     forward = saved_plan.forward
 
-    iterator_field = saved_plan.iterator.WhichOneof('iterator')
+    iterator_field = saved_plan.iterator.WhichOneof('source')
     iterator = load(getattr(saved_plan.iterator, iterator_field), dataset, control_tuples)
 
     min_depth = saved_plan.min_depth
@@ -255,7 +255,7 @@ def load_dls(saved_plan: SavedTransitiveClosureIterator, dataset: Dataset, contr
 
     stack = []
     for item in saved_plan.stack:
-      iterator_field = item.WhichOneof('iterator')
+      iterator_field = item.WhichOneof('source')
       stack.append(getattr(item, iterator_field))
 
     bindings = []
@@ -286,7 +286,7 @@ def load_transitive_closure(saved_plan: SavedTransitiveClosureIterator, dataset:
 
     iterators = []
     for iterator in saved_plan.iterators:
-      it_field = iterator.WhichOneof('iterator')
+      it_field = iterator.WhichOneof('source')
       iterators.append(load(getattr(iterator, it_field), dataset, control_tuples))
 
     mu = None

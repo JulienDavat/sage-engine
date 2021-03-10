@@ -31,6 +31,10 @@ class SagePostQuery(BaseModel):
     defaultGraph: str = Field(None, description="(Optional) The URI of the default RDF graph queried.")
     next: str = Field(None, description="(Optional) A next link used to resume query execution from a saved state.")
 
+class SageOverwriteConfig(BaseModel):
+    quantum: int = Field(75, description="(Optional) Overwrites the time quantum.")
+    maxDepth: int = Field(1500, description="(Optional) Overwrites the maximum depth.")
+
 def choose_void_format(mimetypes):
     if "text/turtle" in mimetypes:
         return "turtle", "text/turtle"
@@ -179,6 +183,14 @@ def run_app(config_file: str) -> FastAPI:
     async def root():
         return "The SaGe SPARQL query server is running!"
 
+    @app.post("/backdoor/overwrite-config")
+    async def overwrite_quantum(request: Request, item: SageOverwriteConfig):
+        print(f"Overwrites time quantum: {item.quantum}")
+        print(f"Overwrites maxDepth: {item.maxDepth}")
+        for graph_uri in dataset.get_graphs().keys():
+            dataset.get_graph(graph_uri)._quantum = item.quantum
+            dataset.get_graph(graph_uri)._max_depth = item.maxDepth
+        return Response(status_code=200)
 
     @app.get("/sparql")
     async def sparql_get(

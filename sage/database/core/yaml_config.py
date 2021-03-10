@@ -82,7 +82,7 @@ def load_config(config_file: str) -> Dataset:
         max_depth = config['max_depth']
     else:
         logging.warning("You are using SaGe without limitations on the maximal depth of transitive closures. The maximal depth is set to 20.")
-        max_control_tuples = 20
+        max_depth = 20
 
     #get default-graph-uri
     default_graph=None

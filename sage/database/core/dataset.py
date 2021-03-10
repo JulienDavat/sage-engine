@@ -110,3 +110,11 @@ class Dataset(object):
           True if the RDF graph exists in the RDF dataset, False otherwise.
         """
         return graph_uri in self._graphs
+
+    def get_graphs(self) -> Dict[str, Graph]:
+        """Get all RDF graphs associated to this dataset.
+
+        Returns:
+          The RDF Graphs associated with this dataset.
+        """
+        return self._graphs

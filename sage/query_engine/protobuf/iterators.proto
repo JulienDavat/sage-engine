@@ -57,14 +57,14 @@ message SavedPiggyBackIterator {
 message SavedTransitiveClosureIterator {
 
   message PreemptableIterator {
-    oneof iterator {
-      SavedScanIterator scan_iterator = 1;
-      SavedProjectionIterator proj_iterator = 2;
-      SavedBagUnionIterator union_iterator = 3;
-      SavedIndexJoinIterator join_iterator = 4;
-      SavedFilterIterator filter_iterator = 5;
-      SavedBindIterator bind_iterator = 6;
-      SavedTransitiveClosureIterator transitive_iterator = 7;
+    oneof source {
+      SavedScanIterator scan_source = 1;
+      SavedProjectionIterator proj_source = 2;
+      SavedBagUnionIterator union_source = 3;
+      SavedIndexJoinIterator join_source = 4;
+      SavedFilterIterator filter_source = 5;
+      SavedBindIterator bind_source = 6;
+      SavedTransitiveClosureIterator transitive_source = 7;
     }
   }
 
@@ -88,13 +88,13 @@ message SavedTransitiveClosureIterator {
 message SavedDLS {
   message PreemptableIterator {
     oneof iterator {
-      SavedScanIterator scan_iterator = 1;
-      SavedProjectionIterator proj_iterator = 2;
-      SavedBagUnionIterator union_iterator = 3;
-      SavedIndexJoinIterator join_iterator = 4;
-      SavedFilterIterator filter_iterator = 5;
-      SavedBindIterator bind_iterator = 6;
-      SavedTransitiveClosureIterator transitive_iterator = 7;
+      SavedScanIterator scan_source = 1;
+      SavedProjectionIterator proj_source = 2;
+      SavedBagUnionIterator union_source = 3;
+      SavedIndexJoinIterator join_source = 4;
+      SavedFilterIterator filter_source = 5;
+      SavedBindIterator bind_source = 6;
+      SavedTransitiveClosureIterator transitive_source = 7;
     }
   }
 
