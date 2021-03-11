@@ -28,7 +28,8 @@ class ControlTuplesBuffer(object):
 
 
     def add(self, control_tuple):
-        ptc_id = xxhash.xxh64(f'{control_tuple["path_pattern_id"]}{json.dumps(control_tuple["context"])}').hexdigest()
+        context = json.dumps(control_tuple["context"])
+        ptc_id = xxhash.xxh64(f'{control_tuple["path_pattern_id"]}{context}').hexdigest()
         if ptc_id not in self._control_tuples:
             self._control_tuples[ptc_id] = dict()
             self._frontier_nodes[ptc_id] = 0
@@ -48,6 +49,14 @@ class ControlTuplesBuffer(object):
         if self._size > self._max_control_tuples:
             logging.info('Too many control tuples !!!')
             raise TooManyResults()
+        return ptc_id
+
+
+    def clear(self, ptc_id):
+        if self._frontier_nodes[ptc_id] == 0:
+            self._size -= len(self._control_tuples[ptc_id])
+            del self._frontier_nodes[ptc_id]
+            del self._control_tuples[ptc_id]
 
 
     def _compress_control_tuples(self, ptc_id):

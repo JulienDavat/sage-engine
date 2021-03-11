@@ -33,6 +33,7 @@ class PiggyBackIterator(PreemptableIterator):
         self._child = child
         self._current_binding = current_binding
         self._mu = mu
+        self._current_ptc = None
 
     def next_stage(self, binding: Dict[str, str]):
         """Set the current binding and reset the scan iterator. Used to compute the nested loop joins"""
@@ -85,7 +86,12 @@ class PiggyBackIterator(PreemptableIterator):
                 return None
             self._mu = partial_mappings if is_final_solution else None
             control_tuple = self._create_control_tuple(visited_node, depth)
-            self._control_tuples.add(control_tuple)
+            ptc_id = self._control_tuples.add(control_tuple)
+            if self._current_ptc != ptc_id:
+                if self._current_ptc is not None:
+                    print('remove PTC control tuples')
+                    self._control_tuples.clear(self._current_ptc)
+                self._current_ptc = ptc_id
             return None
         else:
             return None
