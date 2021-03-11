@@ -87,7 +87,7 @@ message SavedTransitiveClosureIterator {
 
 message SavedDLS {
   message PreemptableIterator {
-    oneof iterator {
+    oneof source {
       SavedScanIterator scan_source = 1;
       SavedProjectionIterator proj_source = 2;
       SavedBagUnionIterator union_source = 3;

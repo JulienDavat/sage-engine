@@ -9,7 +9,7 @@ from sage.query_engine.iterators.bind import BindIterator
 from sage.query_engine.iterators.construct import ConstructIterator
 from sage.query_engine.iterators.ppaths.piggyback import PiggyBackIterator
 from sage.query_engine.iterators.ppaths.control_tuples_memory import ControlTuplesBuffer
-from sage.query_engine.iterators.ppaths.v1.visited_nodes_memory import TransitiveClosureIterator
+from sage.query_engine.iterators.ppaths.v1.simple_depth_annotation_memory import TransitiveClosureIterator
 from sage.query_engine.iterators.ppaths.reflexive_closure import ReflexiveClosureIterator
 from sage.query_engine.iterators.nlj import IndexJoinIterator
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator

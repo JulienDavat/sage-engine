@@ -14,7 +14,6 @@ from sage.query_engine.protobuf.utils import pyDict_to_protoDict
 from sage.query_engine.exceptions import TooManyResults
 from sage.query_engine.iterators.ppaths.control_tuples_memory import ControlTuplesBuffer
 
-
 class PiggyBackIterator(PreemptableIterator):
     """A PiggyBackIterator collects data from a PTC iterator to build the control tuples that will be sent to the client.
 
@@ -51,21 +50,19 @@ class PiggyBackIterator(PreemptableIterator):
         """Return True if the iterator has more item to yield"""
         return self._child.has_next() or self._mu is not None
 
-    def _create_control_tuple(self, depth):
+    def _create_control_tuple(self, node, depth):
         context = dict()
         if self._current_binding is not None:
             context = self._current_binding
         elif self._child._subject.startswith('?'):
             context[self._child._subject] = self._child.get_source()
         return self._control_tuples.create_control_tuple(
+            self._child._path_pattern_id,
             context, 
-            self._child.get_node(depth), 
+            node, 
             depth + 1, 
             self._child._max_depth, 
-            self._child._forward, 
-            self._child._subject if self._child._forward else self._child._obj, 
-            self._child._path, 
-            self._child._obj if self._child._forward else self._child._subject
+            self._child._forward
         )
 
     async def next(self) -> Optional[Dict[str, str]]:
@@ -83,12 +80,12 @@ class PiggyBackIterator(PreemptableIterator):
             self._mu = None
             return solution
         elif self._child.has_next():
-            (solution, is_final_solution, solution_depth) = await self._child.next()
-            if solution is None:
+            (partial_mappings, is_final_solution, visited_node, depth) = await self._child.next()
+            if partial_mappings is None:
                 return None
-            self._mu = solution if is_final_solution else None
-            control_tuple = self._create_control_tuple(solution_depth)
-            self._control_tuples.add(self._identifier, control_tuple)
+            self._mu = partial_mappings if is_final_solution else None
+            control_tuple = self._create_control_tuple(visited_node, depth)
+            self._control_tuples.add(control_tuple)
             return None
         else:
             return None

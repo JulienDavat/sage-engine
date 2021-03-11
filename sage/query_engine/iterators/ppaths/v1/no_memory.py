@@ -47,17 +47,17 @@ class TransitiveClosureIterator(DLSIterator):
             if self._iterators[depth].has_next():
                 current_binding = await self._iterators[depth].next()
                 if current_binding is None:
-                    return None, False, 0
+                    return None, False, None, 0
                 self._bindings[depth] = current_binding
                 node = self.get_node(depth)
                 if not self.must_explore(node) or self.is_goal_reached():
                     self._bindings[depth] = None
-                    return None, False, 0
+                    return None, False, None, 0
                 self._iterators[depth + 1].next_stage(current_binding)
                 if depth < self._max_depth - 1:
                     self._current_depth = depth + 1
                 solution = self.build_solution(node)
-                return solution, self.is_solution(node), depth
+                return solution, self.is_solution(node), node, depth
             else:
                 self._current_depth = depth - 1
-        return None, False, 0
+        return None, False, None, 0

@@ -12,17 +12,14 @@ class ControlTuplesBuffer(object):
         self._size = 0
 
 
-    def create_control_tuple(self, context, node, depth, max_depth, forward, source, pattern, destination):
+    def create_control_tuple(self, pattern_id, context, node, depth, max_depth, forward):
         control_tuple = dict()
-        control_tuple['path'] = dict()
+        control_tuple['path_pattern_id'] = pattern_id
         control_tuple['context'] = context
         control_tuple['node'] = node
         control_tuple['depth'] = depth
         control_tuple['max_depth'] = max_depth
         control_tuple['forward'] = forward
-        control_tuple['path']['subject'] = source
-        control_tuple['path']['predicate'] = pattern
-        control_tuple['path']['object'] = destination
         return control_tuple
 
 
@@ -30,8 +27,8 @@ class ControlTuplesBuffer(object):
         return control_tuple['depth'] == control_tuple['max_depth']
 
 
-    def add(self, path_pattern_id, control_tuple):
-        ptc_id = xxhash.xxh64(f'{path_pattern_id}{json.dumps(control_tuple["context"])}').hexdigest()
+    def add(self, control_tuple):
+        ptc_id = xxhash.xxh64(f'{control_tuple["path_pattern_id"]}{json.dumps(control_tuple["context"])}').hexdigest()
         if ptc_id not in self._control_tuples:
             self._control_tuples[ptc_id] = dict()
             self._frontier_nodes[ptc_id] = 0

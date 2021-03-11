@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='iterators',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0fiterators.proto\x12\titerators\"R\n\rTriplePattern\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x11\n\tpredicate\x18\x02 \x01(\t\x12\x0e\n\x06object\x18\x03 \x01(\t\x12\r\n\x05graph\x18\x04 \x01(\t\"\xe8\x01\n\x11SavedScanIterator\x12)\n\x07pattern\x18\x01 \x01(\x0b\x32\x18.iterators.TriplePattern\x12\x30\n\x02mu\x18\x02 \x03(\x0b\x32$.iterators.SavedScanIterator.MuEntry\x12\x13\n\x0b\x63\x61rdinality\x18\x03 \x01(\x03\x12\x10\n\x08progress\x18\x04 \x01(\x03\x12\x11\n\tlast_read\x18\x05 \x01(\t\x12\x11\n\ttimestamp\x18\x06 \x01(\t\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"[\n\x14SavedReducedIterator\x12\x39\n\x0bproj_source\x18\x01 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x42\x08\n\x06source\"\xbf\x04\n\x17SavedProjectionIterator\x12\x0e\n\x06values\x18\x01 \x03(\t\x12\x33\n\x0bscan_source\x18\x02 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x39\n\x0bproj_source\x18\x07 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x08 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\t \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12=\n\x10piggyback_source\x18\n \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x42\x08\n\x06source\"\xd8\x05\n\x16SavedPiggyBackIterator\x12\x35\n\x02mu\x18\x01 \x03(\x0b\x32).iterators.SavedPiggyBackIterator.MuEntry\x12\x33\n\x0bscan_source\x18\x02 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x39\n\x0bproj_source\x18\x07 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x08 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\t \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12N\n\x0f\x63urrent_binding\x18\n \x03(\x0b\x32\x35.iterators.SavedPiggyBackIterator.CurrentBindingEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x35\n\x13\x43urrentBindingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xf3\x07\n\x1eSavedTransitiveClosureIterator\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x0b\n\x03obj\x18\x02 \x01(\t\x12P\n\titerators\x18\x03 \x03(\x0b\x32=.iterators.SavedTransitiveClosureIterator.PreemptableIterator\x12\x44\n\x08\x62indings\x18\x05 \x03(\x0b\x32\x32.iterators.SavedTransitiveClosureIterator.Bindings\x12\x15\n\rcurrent_depth\x18\x06 \x01(\x03\x12\x11\n\tmin_depth\x18\x07 \x01(\x03\x12\x11\n\tmax_depth\x18\x08 \x01(\x03\x12\n\n\x02id\x18\n \x01(\x03\x12=\n\x02mu\x18\x0b \x03(\x0b\x32\x31.iterators.SavedTransitiveClosureIterator.MuEntry\x12\x0f\n\x07\x66orward\x18\x0c \x01(\x08\x12\x0c\n\x04path\x18\r \x01(\t\x1a\xb9\x03\n\x13PreemptableIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x46\n\x11transitive_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x42\x08\n\x06source\x1a\x8c\x01\n\x08\x42indings\x12P\n\x07\x62inding\x18\x01 \x03(\x0b\x32?.iterators.SavedTransitiveClosureIterator.Bindings.BindingEntry\x1a.\n\x0c\x42indingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xa6\x07\n\x08SavedDLS\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0f\n\x07subject\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t\x12\x0b\n\x03obj\x18\x04 \x01(\t\x12.\n\x08\x62indings\x18\x05 \x03(\x0b\x32\x1c.iterators.SavedDLS.Bindings\x12\x36\n\x05stack\x18\x06 \x03(\x0b\x32\'.iterators.SavedDLS.PreemptableIterator\x12\'\n\x02mu\x18\x07 \x03(\x0b\x32\x1b.iterators.SavedDLS.MuEntry\x12\x11\n\tmin_depth\x18\t \x01(\x03\x12\x11\n\tmax_depth\x18\n \x01(\x03\x12\x0f\n\x07\x66orward\x18\x0b \x01(\x08\x12\x39\n\x08iterator\x18\x0c \x01(\x0b\x32\'.iterators.SavedDLS.PreemptableIterator\x1a\xbb\x03\n\x13PreemptableIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x46\n\x11transitive_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x42\n\n\x08iterator\x1av\n\x08\x42indings\x12:\n\x07\x62inding\x18\x01 \x03(\x0b\x32).iterators.SavedDLS.Bindings.BindingEntry\x1a.\n\x0c\x42indingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf5\x02\n\x1dSavedReflexiveClosureIterator\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x0b\n\x03obj\x18\x02 \x01(\t\x12<\n\x02mu\x18\x03 \x03(\x0b\x32\x30.iterators.SavedReflexiveClosureIterator.MuEntry\x12U\n\x0f\x63urrent_binding\x18\x04 \x03(\x0b\x32<.iterators.SavedReflexiveClosureIterator.CurrentBindingEntry\x12\x0c\n\x04\x64one\x18\x05 \x01(\x08\x12\x31\n\x0bscan_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedScanIterator\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x35\n\x13\x43urrentBindingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x88\t\n\x16SavedIndexJoinIterator\x12\x31\n\tscan_left\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x37\n\tproj_left\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x36\n\nunion_left\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x36\n\tjoin_left\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x35\n\x0b\x66ilter_left\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x31\n\tbind_left\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12L\n\x17transitive_closure_left\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12\'\n\x08\x64ls_left\x18\x08 \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12;\n\x0epiggyback_left\x18\t \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x12\x32\n\nscan_right\x18\n \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x01\x12\x38\n\nproj_right\x18\x0b \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x01\x12\x37\n\x0bunion_right\x18\x0c \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x01\x12\x37\n\njoin_right\x18\r \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x01\x12\x36\n\x0c\x66ilter_right\x18\x0e \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x01\x12\x32\n\nbind_right\x18\x0f \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x01\x12M\n\x18transitive_closure_right\x18\x10 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x01\x12(\n\tdls_right\x18\x11 \x01(\x0b\x32\x13.iterators.SavedDLSH\x01\x12<\n\x0fpiggyback_right\x18\x12 \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x01\x12\x35\n\x02mu\x18\x13 \x03(\x0b\x32).iterators.SavedIndexJoinIterator.MuEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x06\n\x04leftB\x07\n\x05right\"\xbe\t\n\x15SavedBagUnionIterator\x12\x31\n\tscan_left\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x37\n\tproj_left\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x36\n\nunion_left\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x36\n\tjoin_left\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x35\n\x0b\x66ilter_left\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x31\n\tbind_left\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12L\n\x17transitive_closure_left\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12J\n\x16reflexive_closure_left\x18\x08 \x01(\x0b\x32(.iterators.SavedReflexiveClosureIteratorH\x00\x12\'\n\x08\x64ls_left\x18\t \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12;\n\x0epiggyback_left\x18\n \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x12\x32\n\nscan_right\x18\x0b \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x01\x12\x38\n\nproj_right\x18\x0c \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x01\x12\x37\n\x0bunion_right\x18\r \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x01\x12\x37\n\njoin_right\x18\x0e \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x01\x12\x36\n\x0c\x66ilter_right\x18\x0f \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x01\x12\x32\n\nbind_right\x18\x10 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x01\x12M\n\x18transitive_closure_right\x18\x11 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x01\x12K\n\x17reflexive_closure_right\x18\x12 \x01(\x0b\x32(.iterators.SavedReflexiveClosureIteratorH\x01\x12(\n\tdls_right\x18\x13 \x01(\x0b\x32\x13.iterators.SavedDLSH\x01\x12<\n\x0fpiggyback_right\x18\x14 \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x01\x42\x06\n\x04leftB\x07\n\x05right\"\xdf\x04\n\x13SavedFilterIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\x08 \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12\x12\n\nexpression\x18\t \x01(\t\x12\x32\n\x02mu\x18\n \x03(\x0b\x32&.iterators.SavedFilterIterator.MuEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xbc\x05\n\x11SavedBindIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\x08 \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12=\n\x10piggyback_source\x18\t \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x12\x10\n\x08\x62indexpr\x18\n \x01(\t\x12\x0f\n\x07\x62indvar\x18\x0b \x01(\t\x12\x30\n\x02mu\x18\x0c \x03(\x0b\x32$.iterators.SavedBindIterator.MuEntry\x12\x11\n\tdelivered\x18\r \x01(\x08\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xa0\x03\n\x16SavedConstructIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12*\n\x08template\x18\x07 \x03(\x0b\x32\x18.iterators.TriplePatternB\x08\n\x06source\"\x85\x01\n\x0fSavedInsertData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedInsertData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x85\x01\n\x0fSavedDeleteData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedDeleteData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\xf3\x04\n\x08RootTree\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\rinsert_source\x18\x06 \x01(\x0b\x32\x1a.iterators.SavedInsertDataH\x00\x12\x33\n\rdelete_source\x18\x07 \x01(\x0b\x32\x1a.iterators.SavedDeleteDataH\x00\x12\x33\n\x0b\x62ind_source\x18\x08 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12=\n\x10\x63onstruct_source\x18\t \x01(\x0b\x32!.iterators.SavedConstructIteratorH\x00\x12\x37\n\x0creduc_source\x18\n \x01(\x0b\x32\x1f.iterators.SavedReducedIteratorH\x00\x12)\n\ndls_source\x18\x0b \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x42\x08\n\x06sourceb\x06proto3')
+  serialized_pb=_b('\n\x0fiterators.proto\x12\titerators\"R\n\rTriplePattern\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x11\n\tpredicate\x18\x02 \x01(\t\x12\x0e\n\x06object\x18\x03 \x01(\t\x12\r\n\x05graph\x18\x04 \x01(\t\"\xe8\x01\n\x11SavedScanIterator\x12)\n\x07pattern\x18\x01 \x01(\x0b\x32\x18.iterators.TriplePattern\x12\x30\n\x02mu\x18\x02 \x03(\x0b\x32$.iterators.SavedScanIterator.MuEntry\x12\x13\n\x0b\x63\x61rdinality\x18\x03 \x01(\x03\x12\x10\n\x08progress\x18\x04 \x01(\x03\x12\x11\n\tlast_read\x18\x05 \x01(\t\x12\x11\n\ttimestamp\x18\x06 \x01(\t\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"[\n\x14SavedReducedIterator\x12\x39\n\x0bproj_source\x18\x01 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x42\x08\n\x06source\"\xbf\x04\n\x17SavedProjectionIterator\x12\x0e\n\x06values\x18\x01 \x03(\t\x12\x33\n\x0bscan_source\x18\x02 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x39\n\x0bproj_source\x18\x07 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x08 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\t \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12=\n\x10piggyback_source\x18\n \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x42\x08\n\x06source\"\xd8\x05\n\x16SavedPiggyBackIterator\x12\x35\n\x02mu\x18\x01 \x03(\x0b\x32).iterators.SavedPiggyBackIterator.MuEntry\x12\x33\n\x0bscan_source\x18\x02 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x39\n\x0bproj_source\x18\x07 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x08 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\t \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12N\n\x0f\x63urrent_binding\x18\n \x03(\x0b\x32\x35.iterators.SavedPiggyBackIterator.CurrentBindingEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x35\n\x13\x43urrentBindingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xf3\x07\n\x1eSavedTransitiveClosureIterator\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x0b\n\x03obj\x18\x02 \x01(\t\x12P\n\titerators\x18\x03 \x03(\x0b\x32=.iterators.SavedTransitiveClosureIterator.PreemptableIterator\x12\x44\n\x08\x62indings\x18\x05 \x03(\x0b\x32\x32.iterators.SavedTransitiveClosureIterator.Bindings\x12\x15\n\rcurrent_depth\x18\x06 \x01(\x03\x12\x11\n\tmin_depth\x18\x07 \x01(\x03\x12\x11\n\tmax_depth\x18\x08 \x01(\x03\x12\n\n\x02id\x18\n \x01(\x03\x12=\n\x02mu\x18\x0b \x03(\x0b\x32\x31.iterators.SavedTransitiveClosureIterator.MuEntry\x12\x0f\n\x07\x66orward\x18\x0c \x01(\x08\x12\x0c\n\x04path\x18\r \x01(\t\x1a\xb9\x03\n\x13PreemptableIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x46\n\x11transitive_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x42\x08\n\x06source\x1a\x8c\x01\n\x08\x42indings\x12P\n\x07\x62inding\x18\x01 \x03(\x0b\x32?.iterators.SavedTransitiveClosureIterator.Bindings.BindingEntry\x1a.\n\x0c\x42indingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xa4\x07\n\x08SavedDLS\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0f\n\x07subject\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t\x12\x0b\n\x03obj\x18\x04 \x01(\t\x12.\n\x08\x62indings\x18\x05 \x03(\x0b\x32\x1c.iterators.SavedDLS.Bindings\x12\x36\n\x05stack\x18\x06 \x03(\x0b\x32\'.iterators.SavedDLS.PreemptableIterator\x12\'\n\x02mu\x18\x07 \x03(\x0b\x32\x1b.iterators.SavedDLS.MuEntry\x12\x11\n\tmin_depth\x18\t \x01(\x03\x12\x11\n\tmax_depth\x18\n \x01(\x03\x12\x0f\n\x07\x66orward\x18\x0b \x01(\x08\x12\x39\n\x08iterator\x18\x0c \x01(\x0b\x32\'.iterators.SavedDLS.PreemptableIterator\x1a\xb9\x03\n\x13PreemptableIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12\x46\n\x11transitive_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x42\x08\n\x06source\x1av\n\x08\x42indings\x12:\n\x07\x62inding\x18\x01 \x03(\x0b\x32).iterators.SavedDLS.Bindings.BindingEntry\x1a.\n\x0c\x42indingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf5\x02\n\x1dSavedReflexiveClosureIterator\x12\x0f\n\x07subject\x18\x01 \x01(\t\x12\x0b\n\x03obj\x18\x02 \x01(\t\x12<\n\x02mu\x18\x03 \x03(\x0b\x32\x30.iterators.SavedReflexiveClosureIterator.MuEntry\x12U\n\x0f\x63urrent_binding\x18\x04 \x03(\x0b\x32<.iterators.SavedReflexiveClosureIterator.CurrentBindingEntry\x12\x0c\n\x04\x64one\x18\x05 \x01(\x08\x12\x31\n\x0bscan_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedScanIterator\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x35\n\x13\x43urrentBindingEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x88\t\n\x16SavedIndexJoinIterator\x12\x31\n\tscan_left\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x37\n\tproj_left\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x36\n\nunion_left\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x36\n\tjoin_left\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x35\n\x0b\x66ilter_left\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x31\n\tbind_left\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12L\n\x17transitive_closure_left\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12\'\n\x08\x64ls_left\x18\x08 \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12;\n\x0epiggyback_left\x18\t \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x12\x32\n\nscan_right\x18\n \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x01\x12\x38\n\nproj_right\x18\x0b \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x01\x12\x37\n\x0bunion_right\x18\x0c \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x01\x12\x37\n\njoin_right\x18\r \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x01\x12\x36\n\x0c\x66ilter_right\x18\x0e \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x01\x12\x32\n\nbind_right\x18\x0f \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x01\x12M\n\x18transitive_closure_right\x18\x10 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x01\x12(\n\tdls_right\x18\x11 \x01(\x0b\x32\x13.iterators.SavedDLSH\x01\x12<\n\x0fpiggyback_right\x18\x12 \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x01\x12\x35\n\x02mu\x18\x13 \x03(\x0b\x32).iterators.SavedIndexJoinIterator.MuEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x06\n\x04leftB\x07\n\x05right\"\xbe\t\n\x15SavedBagUnionIterator\x12\x31\n\tscan_left\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x37\n\tproj_left\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x36\n\nunion_left\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x36\n\tjoin_left\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x35\n\x0b\x66ilter_left\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x31\n\tbind_left\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12L\n\x17transitive_closure_left\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12J\n\x16reflexive_closure_left\x18\x08 \x01(\x0b\x32(.iterators.SavedReflexiveClosureIteratorH\x00\x12\'\n\x08\x64ls_left\x18\t \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12;\n\x0epiggyback_left\x18\n \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x12\x32\n\nscan_right\x18\x0b \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x01\x12\x38\n\nproj_right\x18\x0c \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x01\x12\x37\n\x0bunion_right\x18\r \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x01\x12\x37\n\njoin_right\x18\x0e \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x01\x12\x36\n\x0c\x66ilter_right\x18\x0f \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x01\x12\x32\n\nbind_right\x18\x10 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x01\x12M\n\x18transitive_closure_right\x18\x11 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x01\x12K\n\x17reflexive_closure_right\x18\x12 \x01(\x0b\x32(.iterators.SavedReflexiveClosureIteratorH\x01\x12(\n\tdls_right\x18\x13 \x01(\x0b\x32\x13.iterators.SavedDLSH\x01\x12<\n\x0fpiggyback_right\x18\x14 \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x01\x42\x06\n\x04leftB\x07\n\x05right\"\xdf\x04\n\x13SavedFilterIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\x08 \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12\x12\n\nexpression\x18\t \x01(\t\x12\x32\n\x02mu\x18\n \x03(\x0b\x32&.iterators.SavedFilterIterator.MuEntry\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xbc\x05\n\x11SavedBindIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0cunion_source\x18\x03 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x04 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12N\n\x19transitive_closure_source\x18\x07 \x01(\x0b\x32).iterators.SavedTransitiveClosureIteratorH\x00\x12)\n\ndls_source\x18\x08 \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x12=\n\x10piggyback_source\x18\t \x01(\x0b\x32!.iterators.SavedPiggyBackIteratorH\x00\x12\x10\n\x08\x62indexpr\x18\n \x01(\t\x12\x0f\n\x07\x62indvar\x18\x0b \x01(\t\x12\x30\n\x02mu\x18\x0c \x03(\x0b\x32$.iterators.SavedBindIterator.MuEntry\x12\x11\n\tdelivered\x18\r \x01(\x08\x1a)\n\x07MuEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x08\n\x06source\"\xa0\x03\n\x16SavedConstructIterator\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\x0b\x62ind_source\x18\x06 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12*\n\x08template\x18\x07 \x03(\x0b\x32\x18.iterators.TriplePatternB\x08\n\x06source\"\x85\x01\n\x0fSavedInsertData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedInsertData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x85\x01\n\x0fSavedDeleteData\x12?\n\x0bnb_inserted\x18\x01 \x03(\x0b\x32*.iterators.SavedDeleteData.NbInsertedEntry\x1a\x31\n\x0fNbInsertedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\xf3\x04\n\x08RootTree\x12\x33\n\x0bscan_source\x18\x01 \x01(\x0b\x32\x1c.iterators.SavedScanIteratorH\x00\x12\x39\n\x0bproj_source\x18\x02 \x01(\x0b\x32\".iterators.SavedProjectionIteratorH\x00\x12\x38\n\x0bjoin_source\x18\x03 \x01(\x0b\x32!.iterators.SavedIndexJoinIteratorH\x00\x12\x38\n\x0cunion_source\x18\x04 \x01(\x0b\x32 .iterators.SavedBagUnionIteratorH\x00\x12\x37\n\rfilter_source\x18\x05 \x01(\x0b\x32\x1e.iterators.SavedFilterIteratorH\x00\x12\x33\n\rinsert_source\x18\x06 \x01(\x0b\x32\x1a.iterators.SavedInsertDataH\x00\x12\x33\n\rdelete_source\x18\x07 \x01(\x0b\x32\x1a.iterators.SavedDeleteDataH\x00\x12\x33\n\x0b\x62ind_source\x18\x08 \x01(\x0b\x32\x1c.iterators.SavedBindIteratorH\x00\x12=\n\x10\x63onstruct_source\x18\t \x01(\x0b\x32!.iterators.SavedConstructIteratorH\x00\x12\x37\n\x0creduc_source\x18\n \x01(\x0b\x32\x1f.iterators.SavedReducedIteratorH\x00\x12)\n\ndls_source\x18\x0b \x01(\x0b\x32\x13.iterators.SavedDLSH\x00\x42\x08\n\x06sourceb\x06proto3')
 )
 
 
@@ -830,11 +830,11 @@ _SAVEDDLS_PREEMPTABLEITERATOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
     _descriptor.OneofDescriptor(
-      name='iterator', full_name='iterators.SavedDLS.PreemptableIterator.iterator',
+      name='source', full_name='iterators.SavedDLS.PreemptableIterator.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=3094,
-  serialized_end=3537,
+  serialized_start=2136,
+  serialized_end=2577,
 )
 
 _SAVEDDLS_BINDINGS_BINDINGENTRY = _descriptor.Descriptor(
@@ -900,8 +900,8 @@ _SAVEDDLS_BINDINGS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3539,
-  serialized_end=3657,
+  serialized_start=3537,
+  serialized_end=3655,
 )
 
 _SAVEDDLS_MUENTRY = _descriptor.Descriptor(
@@ -1038,7 +1038,7 @@ _SAVEDDLS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=2766,
-  serialized_end=3700,
+  serialized_end=3698,
 )
 
 
@@ -1177,8 +1177,8 @@ _SAVEDREFLEXIVECLOSUREITERATOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3703,
-  serialized_end=4076,
+  serialized_start=3701,
+  serialized_end=4074,
 )
 
 
@@ -1377,8 +1377,8 @@ _SAVEDINDEXJOINITERATOR = _descriptor.Descriptor(
       name='right', full_name='iterators.SavedIndexJoinIterator.right',
       index=1, containing_type=None, fields=[]),
   ],
-  serialized_start=4079,
-  serialized_end=5239,
+  serialized_start=4077,
+  serialized_end=5237,
 )
 
 
@@ -1547,8 +1547,8 @@ _SAVEDBAGUNIONITERATOR = _descriptor.Descriptor(
       name='right', full_name='iterators.SavedBagUnionIterator.right',
       index=1, containing_type=None, fields=[]),
   ],
-  serialized_start=5242,
-  serialized_end=6456,
+  serialized_start=5240,
+  serialized_end=6454,
 )
 
 
@@ -1681,8 +1681,8 @@ _SAVEDFILTERITERATOR = _descriptor.Descriptor(
       name='source', full_name='iterators.SavedFilterIterator.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=6459,
-  serialized_end=7066,
+  serialized_start=6457,
+  serialized_end=7064,
 )
 
 
@@ -1836,8 +1836,8 @@ _SAVEDBINDITERATOR = _descriptor.Descriptor(
       name='source', full_name='iterators.SavedBindIterator.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=7069,
-  serialized_end=7769,
+  serialized_start=7067,
+  serialized_end=7767,
 )
 
 
@@ -1912,8 +1912,8 @@ _SAVEDCONSTRUCTITERATOR = _descriptor.Descriptor(
       name='source', full_name='iterators.SavedConstructIterator.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=7772,
-  serialized_end=8188,
+  serialized_start=7770,
+  serialized_end=8186,
 )
 
 
@@ -1950,8 +1950,8 @@ _SAVEDINSERTDATA_NBINSERTEDENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8275,
-  serialized_end=8324,
+  serialized_start=8273,
+  serialized_end=8322,
 )
 
 _SAVEDINSERTDATA = _descriptor.Descriptor(
@@ -1980,8 +1980,8 @@ _SAVEDINSERTDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8191,
-  serialized_end=8324,
+  serialized_start=8189,
+  serialized_end=8322,
 )
 
 
@@ -2018,8 +2018,8 @@ _SAVEDDELETEDATA_NBINSERTEDENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8275,
-  serialized_end=8324,
+  serialized_start=8273,
+  serialized_end=8322,
 )
 
 _SAVEDDELETEDATA = _descriptor.Descriptor(
@@ -2048,8 +2048,8 @@ _SAVEDDELETEDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8327,
-  serialized_end=8460,
+  serialized_start=8325,
+  serialized_end=8458,
 )
 
 
@@ -2152,8 +2152,8 @@ _ROOTTREE = _descriptor.Descriptor(
       name='source', full_name='iterators.RootTree.source',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=8463,
-  serialized_end=9090,
+  serialized_start=8461,
+  serialized_end=9088,
 )
 
 _SAVEDSCANITERATOR_MUENTRY.containing_type = _SAVEDSCANITERATOR
@@ -2279,27 +2279,27 @@ _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['filter_source'].message_type = _SA
 _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['bind_source'].message_type = _SAVEDBINDITERATOR
 _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['transitive_source'].message_type = _SAVEDTRANSITIVECLOSUREITERATOR
 _SAVEDDLS_PREEMPTABLEITERATOR.containing_type = _SAVEDDLS
-_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator'].fields.append(
+_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['scan_source'])
-_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['scan_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator']
-_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator'].fields.append(
+_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['scan_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source']
+_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['proj_source'])
-_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['proj_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator']
-_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator'].fields.append(
+_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['proj_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source']
+_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['union_source'])
-_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['union_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator']
-_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator'].fields.append(
+_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['union_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source']
+_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['join_source'])
-_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['join_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator']
-_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator'].fields.append(
+_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['join_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source']
+_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['filter_source'])
-_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['filter_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator']
-_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator'].fields.append(
+_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['filter_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source']
+_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['bind_source'])
-_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['bind_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator']
-_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator'].fields.append(
+_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['bind_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source']
+_SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source'].fields.append(
   _SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['transitive_source'])
-_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['transitive_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['iterator']
+_SAVEDDLS_PREEMPTABLEITERATOR.fields_by_name['transitive_source'].containing_oneof = _SAVEDDLS_PREEMPTABLEITERATOR.oneofs_by_name['source']
 _SAVEDDLS_BINDINGS_BINDINGENTRY.containing_type = _SAVEDDLS_BINDINGS
 _SAVEDDLS_BINDINGS.fields_by_name['binding'].message_type = _SAVEDDLS_BINDINGS_BINDINGENTRY
 _SAVEDDLS_BINDINGS.containing_type = _SAVEDDLS

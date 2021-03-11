@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 from sage.query_engine.iterators.preemptable_iterator import PreemptableIterator
 from sage.query_engine.protobuf.iterators_pb2 import SavedTransitiveClosureIterator
 from sage.query_engine.protobuf.utils import pyDict_to_protoDict
+from hashlib import md5
 
 class DLSIterator(PreemptableIterator):
     """A TransitiveClosureIterator evaluates the transitive closure of a relation
@@ -40,6 +41,10 @@ class DLSIterator(PreemptableIterator):
         self._min_depth = min_depth
         self._max_depth = max_depth
         self._reached = dict()
+        if forward:
+            self._path_pattern_id = md5(f'{subject}{path}{obj}'.encode('utf-8')).hexdigest()
+        else:
+            self._path_pattern_id = md5(f'{obj}{path}{subject}'.encode('utf-8')).hexdigest()
 
     def has_next(self) -> bool:
         """Return True if the iterator has more item to yield"""
