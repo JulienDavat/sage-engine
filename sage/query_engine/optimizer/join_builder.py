@@ -118,7 +118,6 @@ def parse_negated_property_set_expression(path_pattern: Dict[str, str], dataset:
 
 def parse_closure_expression(path_pattern: Dict[str, str], forward: bool, dataset: Dataset, default_graph: str, control_tuples: ControlTuplesBuffer, as_of: Optional[datetime] = None) -> PreemptableIterator:
     path = path_pattern['predicate']
-    print(path)
     star_id = time.time_ns()
     min_depth = 1 if path.mod == OneOrMore else 0
     max_depth = 1 if path.mod == ZeroOrOne else dataset.get_graph(default_graph).max_depth

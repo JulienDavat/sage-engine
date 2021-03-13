@@ -39,15 +39,10 @@ class ControlTuplesBuffer(object):
             self._size += 1
             if self._isFrontierNode(control_tuple):
                 self._frontier_nodes[ptc_id] += 1
-            logging.info(f'New control tuple for the PTC {ptc_id}: {self._size} control tuples now !')
         elif not self._isFrontierNode(control_tuple) and self._isFrontierNode(self._control_tuples[ptc_id][node]):
             self._control_tuples[ptc_id][node]['depth'] = control_tuple['depth']
             self._frontier_nodes[ptc_id] -= 1
-            logging.info(f'A frontier node has been discarded !!!')
-        else:
-            logging.info(f'Saving one control tuple !')
         if self._size > self._max_control_tuples:
-            logging.info('Too many control tuples !!!')
             raise TooManyResults()
         return ptc_id
 
