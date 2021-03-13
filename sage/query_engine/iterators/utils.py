@@ -19,6 +19,10 @@ class EmptyIterator(object):
         """Return True if the iterator has more item to yield"""
         return False
 
+    def next_stage(self, bindings) -> None:
+        """Used to set the scan iterators current binding in order to compute the nested loop joins"""
+        return
+
     async def next(self) -> None:
         """Get the next item from the iterator, following the iterator protocol.
 

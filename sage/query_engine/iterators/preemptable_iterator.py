@@ -20,7 +20,7 @@ class PreemptableIterator(ABC):
         pass
 
     @abstractmethod
-    def next_stage(self, binding: Dict[str, str]):
+    def next_stage(self, binding: Dict[str, str]) -> None:
         """Used to set the scan iterators current binding in order to compute the nested loop joins"""
         pass
 

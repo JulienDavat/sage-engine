@@ -19,7 +19,7 @@ from sage.query_engine.optimizer.utils import equality_variables, find_connected
 from rdflib.paths import Path, SequencePath, AlternativePath, InvPath, NegatedPath, MulPath, OneOrMore, ZeroOrMore, ZeroOrOne
 from rdflib import URIRef
 import sys, time
-from sage.query_engine.optimizer.estimator import estimate_cardinality
+from sage.query_engine.optimizer.estimator import compute_cardinality
 
 
 def create_equality_expr(variable, values):
@@ -241,7 +241,7 @@ def build_left_join_tree(bgp: List[Dict[str, str]], query_vars: Set[str], datase
         graph_uri = triple['graph'] if 'graph' in triple and len(triple['graph']) > 0 else default_graph
         triple['graph'] = graph_uri
         if dataset.has_graph(graph_uri):
-            selectivity = estimate_cardinality(triple, dataset, default_graph, as_of=as_of)
+            selectivity = compute_cardinality(triple, dataset, default_graph, as_of=as_of)
         else:
             selectivity = 0
         cardinalities += [{'triple': triple, 'cardinality': selectivity}]

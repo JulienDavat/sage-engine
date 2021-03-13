@@ -87,10 +87,9 @@ class PiggyBackIterator(PreemptableIterator):
             self._mu = partial_mappings if is_final_solution else None
             control_tuple = self._create_control_tuple(visited_node, depth)
             ptc_id = self._control_tuples.add(control_tuple)
-            if self._current_ptc != ptc_id:
+            if self._current_ptc != ptc_id: # the transitive closure is complete
                 if self._current_ptc is not None:
-                    print('remove PTC control tuples')
-                    self._control_tuples.clear(self._current_ptc)
+                    self._control_tuples.clear(self._current_ptc) # control tuples are not sent to the client
                 self._current_ptc = ptc_id
             return None
         else:
