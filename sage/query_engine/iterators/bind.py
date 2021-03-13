@@ -37,7 +37,8 @@ def imprint(args: List[str], bindings: Dict[str, str]):
         if arg.startswith('?') and arg in bindings:
             values.append(bindings[arg])
     if len(values) == 0:
-        values.append('md5')
+        values.append('imprint')
+    values = sorted(values, key=str.lower)
     return hashlib.md5(''.join(values).encode('utf-8')).hexdigest()
 
 class BindIterator(PreemptableIterator):

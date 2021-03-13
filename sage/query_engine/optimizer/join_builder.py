@@ -92,7 +92,7 @@ def parse_inverse_path(path_pattern: Dict[str, str], forward: bool, dataset: Dat
             'predicate': path.arg, 
             'object': path_pattern['subject'],
             'graph': path_pattern['graph']
-        }, forward, dataset, default_graph, control_tuples, as_of=as_of)
+        }, not forward, dataset, default_graph, control_tuples, as_of=as_of)
 
 
 def parse_negated_property_set_expression(path_pattern: Dict[str, str], dataset: Dataset, default_graph: str, control_tuples: ControlTuplesBuffer, as_of: Optional[datetime] = None) -> PreemptableIterator:
@@ -248,6 +248,8 @@ def build_left_join_tree(bgp: List[Dict[str, str]], query_vars: Set[str], datase
     # sort triples by ascending selectivity
     triples = sorted(cardinalities, key=lambda v: v['cardinality'])
 
+    emptyResults = (triples[0]['cardinality'] == 0)
+
     # build the left linear tree of joins
     pattern, pos, _ = find_connected_pattern(query_vars, triples)
     if pattern is None:
@@ -268,4 +270,4 @@ def build_left_join_tree(bgp: List[Dict[str, str]], query_vars: Set[str], datase
         pipeline = IndexJoinIterator(pipeline, iterator)
         triples.pop(pos)
 
-    return pipeline, cardinalities, query_vars
+    return pipeline if not emptyResults else EmptyIterator(), cardinalities, query_vars

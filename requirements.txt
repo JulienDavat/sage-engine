@@ -10,3 +10,4 @@ grpcio==1.26
 coloredlogs==14.0
 email-validator==1.0.5
 requests
+xxhash
